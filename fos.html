@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>♡ My F/Os ♡</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+<main class="profile">
+
+    <section class="card fo-manager">
+
+        <h1>
+            ♡ My F/Os ♡
+        </h1>
+
+        <p>
+            Add, edit, and organize your favorite characters! 🌸
+        </p>
+
+
+        <!-- ADD / EDIT FORM -->
+
+        <section class="fo-editor">
+
+            <h2 id="foEditorTitle">
+                ♡ Add an F/O ♡
+            </h2>
+
+
+            <form id="foForm">
+
+
+                <!-- CHARACTER SEARCH -->
+
+                <label for="characterSearch">
+                    Character
+                </label>
+
+                <input
+                    type="text"
+                    id="characterSearch"
+                    placeholder="Search for a character... ♡"
+                    autocomplete="off"
+                >
+
+
+                <div
+                    id="characterResults"
+                    class="character-results"
+                ></div>
+
+                <p class="canonical-help">
+                    Can't find your character or alias?
+                    <a href="suggest.html">
+                        ✨ Suggest a new F/O, fandom, or alias
+                    </a>
+                </p>
+
+                <p
+                    id="selectedCharacter"
+                    class="selected-character"
+                >
+                    No character selected yet.
+                </p>
+
+
+                
+
+
+                <input
+                    type="hidden"
+                    id="characterId"
+                >
+
+                <label for="foDisplayName">
+                    Name on my profile
+                </label>
+
+                <input
+                    type="text"
+                    id="foDisplayName"
+                    placeholder="What do you like to call them? ♡"
+                >
+
+                <small>
+                    This can be their canonical name or one of their aliases.
+                </small>
+
+
+                <!-- RELATIONSHIP -->
+
+                <label for="foRelationship">
+                    Relationship
+                </label>
+
+                <input
+                    type="text"
+                    id="foRelationship"
+                    placeholder="fictional partner, crush, best friend..."
+                >
+
+
+                <!-- DESCRIPTION -->
+
+                <label for="foDescription">
+                    Description
+                </label>
+
+                <textarea
+                    id="foDescription"
+                    rows="5"
+                    placeholder="Tell everyone about your F/O! ♡"
+                ></textarea>
+
+
+                <!-- IMAGE -->
+
+                <label for="foImage">
+                    Image URL
+                </label>
+
+                <input
+                    type="url"
+                    id="foImage"
+                    placeholder="https://..."
+                >
+
+
+                <!-- MAIN / SIDE -->
+
+                <label class="checkbox-label">
+
+                    <input
+                        type="checkbox"
+                        id="isMain"
+                    >
+
+                    This is my main F/O ♡
+
+                </label>
+
+
+                <!-- DOUBLES -->
+
+                <label for="doublesPreference">
+                    Doubles preference
+                </label>
+
+                <select id="doublesPreference">
+
+                    <option value="welcome">
+                        🌸 Doubles welcome
+                    </option>
+
+                    <option value="ask_first" selected>
+                        💭 Ask before interacting
+                    </option>
+
+                    <option value="no">
+                        🔒 No doubles
+                    </option>
+
+                </select>
+
+
+                <div class="fo-form-buttons">
+
+                    <button type="submit">
+                        Save F/O ♡
+                    </button>
+
+                    <button
+                        type="button"
+                        id="cancelEdit"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+
+            </form>
+
+            <p id="foMessage"></p>
+
+        </section>
+
+
+        <!-- F/O LIST -->
+
+        <section class="my-fos">
+
+            <h2>
+                ♡ My F/Os ♡
+            </h2>
+
+            <div
+                id="foList"
+                class="fo-list"
+            >
+
+                <p>
+                    Loading your F/Os...
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <button
+            type="button"
+            id="backButton"
+        >
+            ← Back to Profile
+        </button>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./fo-manager.js"></script>
+
+</body>
+
+</html>

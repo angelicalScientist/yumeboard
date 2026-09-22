@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>♡ Discover People ♡</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+<main class="profile">
+
+    <!-- HEADER -->
+
+    <section class="card discover-header">
+
+        <h1>
+            ♡ Discover People ♡
+        </h1>
+
+        <p>
+            Find other yumeshippers and explore
+            their little corners of the internet! 🌸
+        </p>
+
+
+        <button
+            type="button"
+            id="backToProfile"
+        >
+            ← Back to My Profile
+        </button>
+
+    </section>
+
+
+    <!-- SEARCH -->
+
+    <section class="card discover-search">
+
+        <h2>
+            ♡ Find Someone ♡
+        </h2>
+
+
+        <label for="userSearch">
+            Search by username or display name
+        </label>
+
+
+        <input
+            type="search"
+            id="userSearch"
+            placeholder="Search for someone... ♡"
+            autocomplete="off"
+        >
+
+
+        <p
+            id="searchMessage"
+            class="search-message"
+        ></p>
+
+    </section>
+
+
+    <!-- USER LIST -->
+
+    <section
+        class="card"
+        id="userList"
+    >
+
+        <p class="search-hint">
+            Loading people... 🌸
+        </p>
+
+    </section>
+
+
+    <!-- LOAD MORE -->
+
+    <div
+        class="discover-load-more"
+        id="loadMoreContainer"
+    >
+
+        <button
+            type="button"
+            id="loadMoreButton"
+        >
+            Load More ♡
+        </button>
+
+    </div>
+
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./discover.js"></script>
+
+</body>
+
+</html>

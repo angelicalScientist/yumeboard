@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>♡ Suggest a Tag ♡</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+<main class="profile">
+
+    <section class="card">
+
+        <h1>♡ Suggest Something ♡</h1>
+
+        <p>
+            Can't find a fandom, character, or alias?
+            Suggest it here! 🌸
+        </p>
+
+
+        <form id="suggestionForm">
+
+
+            <!-- ============================== -->
+            <!-- SUGGESTION TYPE -->
+            <!-- ============================== -->
+
+            <label for="suggestionType">
+                What would you like to suggest?
+            </label>
+
+            <select id="suggestionType">
+
+                <option value="fandom">
+                    Fandom
+                </option>
+
+                <option value="character">
+                    Character
+                </option>
+
+                <option value="alias">
+                    Character Alias
+                </option>
+
+            </select>
+
+
+            <!-- ============================== -->
+            <!-- FANDOM -->
+            <!-- ============================== -->
+
+            <div id="fandomFields">
+
+                <label for="suggestedName">
+                    Fandom Name
+                </label>
+
+                <input
+                    type="text"
+                    id="suggestedName"
+                    placeholder="e.g. Vocaloid"
+                    required
+                >
+
+            </div>
+
+
+            <!-- ============================== -->
+            <!-- CHARACTER -->
+            <!-- ============================== -->
+
+            <div
+                id="characterFields"
+                style="display:none;"
+            >
+
+                <label for="characterFandomSearch">
+                    Fandom
+                </label>
+
+                <input
+                    type="text"
+                    id="characterFandomSearch"
+                    placeholder="Search for a fandom..."
+                    autocomplete="off"
+                >
+
+                <div
+                    id="fandomResults"
+                    class="suggestion-results"
+                ></div>
+
+                <p
+                    id="selectedFandom"
+                    class="selected-suggestion"
+                ></p>
+
+
+                <label for="characterName">
+                    Character Name
+                </label>
+
+                <input
+                    type="text"
+                    id="characterName"
+                    placeholder="e.g. Hatsune Miku"
+                >
+
+            </div>
+
+
+            <!-- ============================== -->
+            <!-- ALIAS -->
+            <!-- ============================== -->
+
+            <div
+                id="aliasFields"
+                style="display:none;"
+            >
+
+                <label for="characterSearch">
+                    Character
+                </label>
+
+                <input
+                    type="text"
+                    id="characterSearch"
+                    placeholder="Search for the character..."
+                    autocomplete="off"
+                >
+
+                <div
+                    id="characterResults"
+                    class="suggestion-results"
+                ></div>
+
+                <p
+                    id="selectedCharacter"
+                    class="selected-suggestion"
+                ></p>
+
+
+                <label for="aliasName">
+                    Alias
+                </label>
+
+                <input
+                    type="text"
+                    id="aliasName"
+                    placeholder="Another name this character is known by..."
+                >
+
+            </div>
+
+
+            <!-- ============================== -->
+            <!-- EXTRA INFORMATION -->
+            <!-- ============================== -->
+
+            <label for="suggestedDescription">
+                Extra information
+            </label>
+
+            <textarea
+                id="suggestedDescription"
+                rows="5"
+                placeholder="Anything that might help a moderator verify this suggestion ♡"
+            ></textarea>
+
+
+            <!-- ============================== -->
+            <!-- IMAGE -->
+            <!-- ============================== -->
+
+            <label for="suggestedImage">
+                Image URL
+                <small>(optional)</small>
+            </label>
+
+            <input
+                type="url"
+                id="suggestedImage"
+                placeholder="https://..."
+            >
+
+
+            <!-- ============================== -->
+            <!-- SUBMIT -->
+            <!-- ============================== -->
+
+            <button type="submit">
+                Send Suggestion ♡
+            </button>
+
+        </form>
+
+
+        <p id="suggestionMessage"></p>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./suggest.js"></script>
+
+</body>
+
+</html>

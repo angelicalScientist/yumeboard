@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>My Art Archive ♡</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<main class="profile">
+
+
+<section class="card gallery-page">
+
+    <!-- ============================== -->
+    <!-- HEADER -->
+    <!-- ============================== -->
+
+    <header class="gallery-header">
+        <h1>♡ My Art Archive ♡</h1>
+
+        <p>
+            Keep your artwork, edits, moodboards,
+            and yume creations organized! 🌸
+        </p>
+    </header>
+
+
+    <!-- ============================== -->
+    <!-- FOLDER CONTROLS -->
+    <!-- ============================== -->
+
+    <div class="gallery-toolbar">
+
+        <button
+            type="button"
+            id="newFolderButton"
+            hidden
+        >
+            📁 New Folder
+        </button>
+
+        <button
+            type="button"
+            id="refreshFoldersButton"
+        >
+            🔄 Refresh
+        </button>
+
+    </div>
+
+
+    <!-- ============================== -->
+    <!-- UPLOAD ARTWORK -->
+    <!-- ============================== -->
+
+    <section class="gallery-upload-card">
+
+        <div class="gallery-upload-header">
+
+            <h2>♡ Add to your archive ♡</h2>
+
+            <p>
+                Upload an artwork, edit, moodboard,
+                or anything else you'd like to keep! 🌸
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            id="uploadArtworkButton"
+        >
+            ✨ Upload Image
+        </button>
+
+    </section>
+
+
+    <!-- ============================== -->
+    <!-- STATUS -->
+    <!-- ============================== -->
+
+    <p
+        id="galleryStatus"
+        class="gallery-status"
+        role="status"
+        aria-live="polite"
+    >
+        Loading your archive... 🌸
+    </p>
+
+
+    <!-- ============================== -->
+    <!-- FOLDER LIST -->
+    <!-- ============================== -->
+
+    <section
+        class="gallery-folders-section"
+        aria-labelledby="foldersHeading"
+    >
+
+        <header>
+            <h2 id="foldersHeading">
+                📁 Folders
+            </h2>
+        </header>
+
+        <div
+            id="folderList"
+            class="folder-list"
+        >
+            <!-- Folders are created by gallery.js -->
+        </div>
+
+
+        <!-- ============================== -->
+        <!-- EMPTY FOLDER STATE -->
+        <!-- ============================== -->
+
+        <div
+            id="folderEmpty"
+            class="gallery-empty"
+            hidden
+        >
+
+            <p>
+                ♡ You don't have any folders yet! ♡
+            </p>
+
+            <p>
+                Make one to start organizing your archive. 🌸
+            </p>
+
+            <button
+                type="button"
+                id="emptyNewFolderButton"
+                hidden
+            >
+                ✨ Create your first folder
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================== -->
+    <!-- UNSORTED / ORPHANED ARTWORK -->
+    <!-- ============================== -->
+
+    <section
+        id="orphanArtworkSection"
+        class="gallery-orphan-section"
+        aria-labelledby="orphanArtworkHeading"
+        hidden
+    >
+
+        <header class="gallery-section-header">
+
+            <h2 id="orphanArtworkHeading">
+                🖼️ Unsorted Artwork
+            </h2>
+
+            <p>
+                These artworks are still safely in your archive,
+                but their folder no longer exists. ♡
+            </p>
+
+        </header>
+
+
+        <div
+            id="orphanArtworkGrid"
+            class="artwork-grid"
+        >
+            <!-- Orphaned artwork is rendered by gallery.js -->
+        </div>
+
+
+        <div
+            id="orphanArtworkEmpty"
+            class="gallery-empty"
+            hidden
+        >
+
+            <p>
+                ♡ No unsorted artwork! ♡
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================== -->
+    <!-- BACK -->
+    <!-- ============================== -->
+
+    <div class="gallery-footer">
+
+        <a href="indexter.html">
+            ← Back to profile
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- ============================== -->
+<!-- NEW / RENAME FOLDER DIALOG -->
+<!-- ============================== -->
+
+<dialog
+    id="folderDialog"
+    class="folder-dialog"
+>
+
+    <form id="folderForm">
+
+        <h2 id="folderDialogTitle">
+            📁 New Folder
+        </h2>
+
+        <label for="folderName">
+            Folder name
+        </label>
+
+        <input
+            type="text"
+            id="folderName"
+            name="folderName"
+            maxlength="50"
+            autocomplete="off"
+            required
+        >
+
+        <p
+            id="folderDialogError"
+            class="gallery-error"
+            role="alert"
+            hidden
+        ></p>
+
+
+        <div class="folder-dialog-buttons">
+
+            <button
+                type="button"
+                id="folderCancelButton"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="submit"
+                id="folderSaveButton"
+            >
+                Save ♡
+            </button>
+
+        </div>
+
+    </form>
+
+</dialog>
+
+
+<!-- ============================== -->
+<!-- DELETE FOLDER DIALOG -->
+<!-- ============================== -->
+
+<dialog
+    id="deleteFolderDialog"
+    class="folder-dialog"
+>
+
+    <form id="deleteFolderForm">
+
+        <h2>
+            🗑️ Delete folder?
+        </h2>
+
+        <p id="deleteFolderMessage">
+            Are you sure you want to delete this folder?
+        </p>
+
+        <p>
+            This won't delete the artwork itself.
+            It only removes the folder.
+        </p>
+
+        <p
+            id="deleteDialogError"
+            class="gallery-error"
+            role="alert"
+            hidden
+        ></p>
+
+
+        <div class="folder-dialog-buttons">
+
+            <button
+                type="button"
+                id="deleteCancelButton"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="submit"
+                id="deleteConfirmButton"
+            >
+                Delete
+            </button>
+
+        </div>
+
+    </form>
+
+</dialog>
+
+
+<!-- ============================== -->
+<!-- UPLOAD DIALOG -->
+<!-- ============================== -->
+
+<dialog
+    id="uploadDialog"
+    class="folder-dialog gallery-upload-dialog"
+>
+
+    <form
+        id="uploadForm"
+        enctype="multipart/form-data"
+    >
+
+        <h2>
+            ✨ Upload Image
+        </h2>
+
+
+        <!-- IMAGE -->
+
+        <label for="galleryImage">
+            Image
+        </label>
+
+        <input
+            type="file"
+            id="galleryImage"
+            name="galleryImage"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            required
+        >
+
+        <p
+            id="uploadFileError"
+            class="gallery-error"
+            role="alert"
+            hidden
+        ></p>
+
+
+        <!-- TITLE -->
+
+        <label for="galleryTitle">
+            Title
+        </label>
+
+        <input
+            type="text"
+            id="galleryTitle"
+            name="galleryTitle"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Give your image a title..."
+        >
+
+
+        <!-- DESCRIPTION -->
+
+        <label for="galleryDescription">
+            Description
+        </label>
+
+        <textarea
+            id="galleryDescription"
+            name="galleryDescription"
+            maxlength="2000"
+            rows="4"
+            placeholder="Optional description..."
+        ></textarea>
+
+
+        <!-- FOLDERS -->
+
+        <fieldset class="gallery-folder-selector">
+
+            <legend>
+                📁 Add to folders
+            </legend>
+
+            <p class="gallery-folder-selector-hint">
+                You can put the same image in multiple folders! ♡
+                You can also leave it unsorted.
+            </p>
+
+            <div
+                id="uploadFolderList"
+                class="upload-folder-list"
+            >
+                <p>
+                    Loading folders...
+                </p>
+            </div>
+
+        </fieldset>
+
+
+        <!-- ERROR -->
+
+        <p
+            id="uploadDialogError"
+            class="gallery-error"
+            role="alert"
+            hidden
+        ></p>
+
+
+        <!-- BUTTONS -->
+
+        <div class="folder-dialog-buttons">
+
+            <button
+                type="button"
+                id="uploadCancelButton"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="submit"
+                id="uploadSaveButton"
+            >
+                Upload ♡
+            </button>
+
+        </div>
+
+    </form>
+
+</dialog>
+
+
+</main>
+
+<!-- ============================== -->
+
+<!-- SUPABASE -->
+
+<!-- ============================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./gallery.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,2952 @@
+/* =========================================================
+   🌸 YUME SITE — GLOBAL STYLES
+   ========================================================= */
+
+
+/* =========================================================
+   1. BASE / GLOBAL
+   ========================================================= */
+
+:root {
+    --border-color: #e5b8e8;
+    --box-background: #ffffff;
+    --accent-color: #d89bdc;
+    --soft-background: #fff5ff;
+    --muted-background: #f6dff7;
+    --text-color: #4b3555;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    background: #fcecff;
+    color: var(--text-color);
+}
+
+button {
+    display: inline-block;
+    margin: 10px 0;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 20px;
+    background: var(--accent-color);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* =========================================================
+   2. MAIN PROFILE LAYOUT
+   ========================================================= */
+
+.profile {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.page-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 20px;
+    align-items: start;
+}
+
+.main-content {
+    min-width: 0;
+}
+
+.blocked-user-actions {
+    margin-top: 12px;
+}
+
+.unblock-user-button {
+    margin: 0;
+}
+
+
+/* =========================================================
+   3. PROFILE HEADER
+   ========================================================= */
+
+.profile-header {
+    padding: 25px;
+    margin-bottom: 20px;
+    text-align: center;
+    background: white;
+    border: 3px solid var(--border-color);
+    border-radius: 20px;
+}
+
+.profile-header h1 {
+    margin-top: 0;
+}
+
+
+/* Block + friendship buttons */
+
+.profile-action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 15px auto;
+}
+
+.profile-action-buttons > button,
+#friendshipControls button {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+#friendshipControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+#friendshipStatus {
+    flex: 0 0 100%;
+    width: 100%;
+    margin: 4px 0 0;
+    text-align: center;
+}
+
+
+/* =========================================================
+   4. PROFILE INTRO / AVATAR
+   ========================================================= */
+
+.intro {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: white;
+    border: 3px solid var(--border-color);
+    border-radius: 20px;
+}
+
+.avatar {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid var(--accent-color);
+}
+
+.status {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 6px 12px;
+    background: var(--muted-background);
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   5. GENERAL CARDS
+   ========================================================= */
+
+.card {
+    padding: 20px;
+    margin-bottom: 20px;
+    background: white;
+    border: 3px solid var(--border-color);
+    border-radius: 20px;
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+
+/* =========================================================
+   6. SETTINGS / NAVIGATION
+   ========================================================= */
+
+.settings-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    background: white;
+    border: 3px solid var(--border-color);
+    border-radius: 20px;
+}
+
+.settings-group {
+    position: relative;
+}
+
+.settings-group-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+    padding: 9px 14px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+}
+
+.settings-group-button:hover {
+    background: #fff0fc;
+    border-color: var(--border-color);
+    transform: none;
+}
+
+.settings-arrow {
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.settings-group.open .settings-arrow {
+    transform: rotate(90deg);
+}
+
+.settings-group-options {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 180px;
+    padding: 8px;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(180, 120, 180, 0.15);
+    z-index: 100;
+}
+
+.settings-group-options a,
+.settings-group-options button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    text-align: left;
+    text-decoration: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.settings-group-options a:hover,
+.settings-group-options button:hover {
+    background: #fff0fc;
+    transform: none;
+}
+
+.settings-group-options[hidden] {
+    display: none;
+}
+
+
+/* =========================================================
+   7. COLLAPSIBLE SECTIONS
+   ========================================================= */
+
+.section-title {
+    cursor: pointer;
+    user-select: none;
+}
+
+.section-title:hover {
+    text-decoration: underline;
+}
+
+.section-title::after {
+    content: " ▼";
+    font-size: 14px;
+}
+
+.collapsed .section-content {
+    display: none;
+}
+
+.collapsed .section-title::after {
+    content: " ▶";
+}
+
+
+/* =========================================================
+   8. DISCOVER SIDEBAR
+   ========================================================= */
+
+.discover {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    padding: 20px;
+    background: white;
+    border: 3px solid var(--border-color);
+    border-radius: 20px;
+}
+
+.discover h2 {
+    margin-top: 0;
+}
+
+.discover-header {
+    text-align: center;
+}
+
+.discover-search {
+    margin-top: 20px;
+}
+
+.search-message,
+.search-hint {
+    text-align: center;
+}
+
+.discover-load-more {
+    text-align: center;
+    margin: 20px 0;
+}
+
+
+/* =========================================================
+   9. USER CARDS
+   ========================================================= */
+
+#userList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.user-card {
+    position: relative;
+    z-index: 101;
+    padding: 20px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.user-card:hover {
+    transform: translateY(-3px);
+}
+
+.user-card-avatar {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.user-card-content {
+    width: 100%;
+}
+
+.user-card h2 {
+    margin-bottom: 4px;
+}
+
+.user-card-username {
+    opacity: 0.7;
+}
+
+.user-card-mood {
+    margin: 8px 0;
+}
+
+.user-card-bio {
+    margin: 12px 0;
+}
+
+.view-profile {
+    position: relative;
+    z-index: 102;
+    margin-top: 10px;
+}
+
+.view-profile-button {
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   10. PROFILE VIEWER
+   ========================================================= */
+
+.profile-viewer {
+    margin-top: 20px;
+}
+
+.profile-viewer h2 {
+    margin-top: 0;
+}
+
+
+/* =========================================================
+   11. F/O DISPLAY
+   ========================================================= */
+
+.fo-card {
+    overflow: hidden;
+}
+
+.fo-layout {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.fo-image {
+    width: 200px;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 18px;
+    border: 3px solid var(--accent-color);
+}
+
+.fo-info {
+    flex: 1;
+}
+
+.fo-info h3 {
+    margin-top: 0;
+    font-size: 24px;
+}
+
+.fo-quote {
+    padding: 12px 15px;
+    background: var(--muted-background);
+    border-radius: 15px;
+    font-style: italic;
+}
+
+.main-fo {
+    padding: 20px;
+    background: var(--soft-background);
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+}
+
+.side-fos-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.side-fo {
+    padding: 15px;
+    background: var(--soft-background);
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    transition: transform 0.2s ease;
+}
+
+.side-fo:hover {
+    transform: translateY(-3px);
+}
+
+.side-fo-image,
+.main-fo .side-fo-image {
+    display: block;
+    width: 100%;
+    max-height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.doubles-preference {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+
+/* =========================================================
+   12. ART GALLERY
+   ========================================================= */
+
+.art-gallery {
+    text-align: center;
+}
+
+.carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.art-display {
+    width: 100%;
+    max-width: 500px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--muted-background);
+    border: 3px solid var(--border-color);
+    border-radius: 18px;
+}
+
+.art-display img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.carousel-button {
+    flex-shrink: 0;
+    width: 45px;
+    height: 45px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 30px;
+    line-height: 1;
+}
+
+#artCounter {
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.art-caption {
+    min-height: 24px;
+    margin: 12px auto;
+    font-style: italic;
+    font-size: 15px;
+}
+
+.upload-art {
+    display: inline-block;
+    padding: 10px 18px;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.upload-art input {
+    display: none;
+}
+
+.caption-editor {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 15px auto;
+    max-width: 500px;
+}
+
+.caption-editor input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    font-size: 14px;
+    outline: none;
+}
+
+.caption-editor input:focus {
+    border-color: var(--accent-color);
+}
+
+.caption-editor button {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   13. PROFILE BANNER
+   ========================================================= */
+
+.profile-banner {
+    width: 100%;
+    height: 180px;
+    margin-bottom: 20px;
+    background: var(--muted-background);
+    background-size: cover;
+    background-position: center;
+    border: 3px solid var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.profile-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.banner-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+    font-weight: bold;
+    color: #8b638f;
+}
+
+.banner-upload {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 9px 16px;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.banner-upload input {
+    display: none;
+}
+
+
+/* =========================================================
+   14. GUESTBOOK
+   ========================================================= */
+
+.guestbook-intro {
+    text-align: center;
+}
+
+.guestbook-entries {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 5px 10px 5px 5px;
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    background: #fcecff;
+}
+
+.guestbook-entry {
+    padding: 15px;
+    margin: 10px 0;
+    background: var(--soft-background);
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+}
+
+.guestbook-entry:first-child {
+    margin-top: 0;
+}
+
+.guestbook-entry:last-child {
+    margin-bottom: 0;
+}
+
+.entry-header {
+    margin-bottom: 8px;
+}
+
+.guestbook-entry p {
+    margin: 8px 0;
+}
+
+.guestbook-form {
+    margin-top: 20px;
+}
+
+.guestbook-form input,
+.guestbook-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.guestbook-form textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.guestbook-form button {
+    margin: 10px auto 0;
+}
+
+.reply-button {
+    margin: 8px 0 0;
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+.replies {
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.reply {
+    padding: 10px;
+    margin-top: 8px;
+    background: var(--muted-background);
+    border-left: 3px solid var(--accent-color);
+    border-radius: 10px;
+}
+
+.reply-form {
+    margin-top: 10px;
+}
+
+.reply-form input,
+.reply-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.reply-form textarea {
+    margin-top: 7px;
+    resize: vertical;
+}
+
+.reply-form button {
+    margin: 7px 0 0;
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   15. ACCOUNT PAGE
+   ========================================================= */
+
+.account-card {
+    max-width: 500px;
+    margin: 50px auto;
+    text-align: center;
+}
+
+.account-card input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    margin: 12px 0;
+    padding: 12px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    font-size: 15px;
+}
+
+.account-card input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+#loginArea {
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 2px dashed var(--border-color);
+}
+
+#accountMessage {
+    min-height: 24px;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   16. PROFILE EDITOR
+   ========================================================= */
+
+.editor-card {
+    max-width: 650px;
+    margin: 30px auto;
+}
+
+.editor-card h1,
+.editor-card > p {
+    text-align: center;
+}
+
+.editor-card h2 {
+    margin-top: 30px;
+    padding-bottom: 8px;
+    border-bottom: 2px dashed var(--border-color);
+}
+
+.editor-card label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+.editor-card input,
+.editor-card textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+}
+
+.editor-card textarea {
+    resize: vertical;
+}
+
+.editor-card input:focus,
+.editor-card textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.editor-card small {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+#editorMessage {
+    min-height: 25px;
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#backButton {
+    margin-top: 10px;
+}
+
+
+/* =========================================================
+   17. DASHBOARD
+   ========================================================= */
+
+.dashboard-card {
+    max-width: 600px;
+    margin: 50px auto;
+    text-align: center;
+}
+
+.dashboard-card h1 {
+    margin-top: 0;
+}
+
+.dashboard-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.dashboard-buttons button {
+    margin: 0;
+}
+
+
+/* =========================================================
+   18. F/O MANAGER
+   ========================================================= */
+
+.fo-manager {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.fo-editor {
+    padding: 20px;
+    margin-bottom: 25px;
+    background: var(--soft-background);
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+}
+
+.fo-editor form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fo-editor input,
+.fo-editor textarea,
+.fo-editor select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.checkbox-label input {
+    width: auto;
+}
+
+.fo-form-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.fo-form-buttons button {
+    margin: 0;
+}
+
+.my-fos {
+    margin-top: 25px;
+}
+
+.fo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.managed-fo {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: var(--soft-background);
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+}
+
+.managed-fo img,
+.managed-fo-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.managed-fo-info {
+    flex: 1;
+}
+
+.managed-fo-info h3 {
+    margin-top: 0;
+}
+
+.fo-fandom {
+    opacity: 0.75;
+}
+
+.main-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 4px 8px;
+    background: var(--muted-background);
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.managed-fo-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.managed-fo-buttons button {
+    margin: 0;
+    padding: 8px 14px;
+    font-size: 14px;
+}
+
+.managed-fo-no-image {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--muted-background);
+    border-radius: 12px;
+    font-size: 30px;
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   19. CHARACTER SEARCH
+   ========================================================= */
+
+.character-results {
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px;
+    background: var(--soft-background);
+    border-radius: 12px;
+}
+
+.character-result {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 14px;
+    text-align: left;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.character-result:hover {
+    transform: translateY(-1px);
+}
+
+.character-result-name {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.character-result-fandom {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.character-result small {
+    display: block;
+    margin-top: 3px;
+    opacity: 0.7;
+}
+
+.search-hint,
+.search-more {
+    margin: 5px;
+    padding: 8px;
+    text-align: center;
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+.search-more {
+    font-size: 12px;
+    opacity: 0.65;
+}
+
+.selected-character {
+    padding: 10px;
+    background: var(--muted-background);
+    border-radius: 10px;
+}
+
+.selected-character small {
+    display: block;
+    margin-top: 3px;
+}
+
+
+/* =========================================================
+   20. SUGGESTIONS / MODERATION
+   ========================================================= */
+
+.suggestion-card {
+    padding: 20px;
+    margin-bottom: 15px;
+    background: var(--soft-background);
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+}
+
+.suggestion-type {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-bottom: 5px;
+}
+
+.suggestion-card h2 {
+    margin-top: 5px;
+}
+
+.suggestion-image {
+    display: block;
+    max-width: 250px;
+    max-height: 250px;
+    object-fit: contain;
+    margin: 15px 0;
+    border-radius: 12px;
+}
+
+.suggestion-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.suggestion-actions button {
+    margin: 0;
+}
+
+.approve-button {
+    background: #b8dcb8;
+}
+
+.reject-button {
+    background: #e5b8b8;
+}
+
+.suggestion-results {
+    max-height: 180px;
+    overflow-y: auto;
+    margin: 6px 0 12px;
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.suggestion-result {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    margin: 3px 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.suggestion-result small {
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+.selected-suggestion {
+    margin: 5px 0 12px;
+    font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   21. DARK MODE
+   ========================================================= */
+
+.dark-mode {
+    --border-color: #72577d;
+    --box-background: #33283b;
+    --accent-color: #d89bdc;
+    --soft-background: #403148;
+    --muted-background: #4b3853;
+    --text-color: #f5eaf7;
+
+    background: #211b29;
+    color: var(--text-color);
+}
+
+.dark-mode .profile-header,
+.dark-mode .intro,
+.dark-mode .card,
+.dark-mode .settings,
+.dark-mode .settings-nav,
+.dark-mode .discover {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .settings-group-options {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .settings-group-button:hover,
+.dark-mode .settings-group-options a:hover,
+.dark-mode .settings-group-options button:hover {
+    background: #403148;
+}
+
+.dark-mode .user-card {
+    background: #403148;
+    border-color: var(--border-color);
+}
+
+.dark-mode .status {
+    background: var(--muted-background);
+}
+
+.dark-mode button {
+    background: #72577d;
+    color: #fff;
+}
+
+.dark-mode .section-title:hover {
+    color: #f6dff7;
+}
+
+.dark-mode .profile-viewer {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .fo-quote {
+    background: var(--muted-background);
+}
+
+.dark-mode .main-fo,
+.dark-mode .side-fo {
+    background: var(--soft-background);
+    border-color: var(--border-color);
+}
+
+.dark-mode .art-display {
+    background: var(--muted-background);
+}
+
+.dark-mode .caption-editor input {
+    background: #403148;
+    color: #fff;
+    border-color: var(--border-color);
+}
+
+.dark-mode .caption-editor input::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode .guestbook-entries {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .guestbook-entry {
+    background: #403148;
+    border-color: var(--border-color);
+}
+
+.dark-mode .reply {
+    background: var(--muted-background);
+}
+
+.dark-mode .guestbook-form input,
+.dark-mode .guestbook-form textarea,
+.dark-mode .reply-form input,
+.dark-mode .reply-form textarea {
+    background: #403148;
+    color: white;
+    border-color: var(--border-color);
+}
+
+.dark-mode .guestbook-form input::placeholder,
+.dark-mode .guestbook-form textarea::placeholder,
+.dark-mode .reply-form input::placeholder,
+.dark-mode .reply-form textarea::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode .account-card input {
+    background: #403148;
+    color: white;
+    border-color: var(--border-color);
+}
+
+.dark-mode .account-card input::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode .editor-card input,
+.dark-mode .editor-card textarea {
+    background: #403148;
+    color: white;
+    border-color: var(--border-color);
+}
+
+.dark-mode .editor-card input::placeholder,
+.dark-mode .editor-card textarea::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode .character-results {
+    background: #33283b;
+}
+
+.dark-mode .character-result {
+    background: #403148;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .selected-character {
+    background: var(--muted-background);
+}
+
+.dark-mode .fo-editor,
+.dark-mode .managed-fo {
+    background: var(--soft-background);
+    border-color: var(--border-color);
+}
+
+.dark-mode .suggestion-card {
+    background: #403148;
+    border-color: var(--border-color);
+}
+
+.dark-mode .profile-banner {
+    background: linear-gradient(
+        135deg,
+        #403148,
+        #33283b
+    );
+}
+
+.dark-mode .banner-placeholder {
+    color: #d8c8dc;
+}
+
+/* ============================================================
+   22. ART ARCHIVE
+   ============================================================ */
+
+.gallery-page {
+    width: 100%;
+}
+
+.gallery-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.gallery-header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.gallery-header p {
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.gallery-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+
+.gallery-toolbar button {
+    width: auto;
+    min-width: 150px;
+    margin: 0;
+}
+
+.gallery-status {
+    min-height: 1.5em;
+    margin: 1rem 0 1.5rem;
+    text-align: center;
+}
+
+.gallery-status.error {
+    font-weight: bold;
+}
+
+/* Folder list itself */
+.folder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* ============================================================
+   FOLDER
+   ============================================================ */
+
+/*
+   IMPORTANT:
+   The folder contains:
+   1. .gallery-folder-header
+   2. .gallery-folder-artwork
+
+   They MUST stack vertically.
+*/
+.gallery-folder {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Folder title + rename/delete buttons */
+.gallery-folder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    margin-bottom: 0.75rem;
+}
+
+.gallery-folder-header h2 {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+}
+
+/* Folder buttons */
+.gallery-folder-actions {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.4rem;
+}
+
+.gallery-folder-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: auto;
+    min-width: 80px;
+    height: 36px;
+
+    padding: 0 0.7rem;
+    margin: 0;
+
+    border-radius: 8px;
+
+    font: inherit;
+    font-size: 0.8rem;
+    line-height: 1;
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+/* Kept for compatibility with any older folder markup */
+.gallery-folder-open {
+    min-width: 0;
+}
+
+.gallery-folder-icon {
+    flex: 0 0 auto;
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.gallery-folder-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+}
+
+.gallery-empty {
+    padding: 2rem 1rem;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.gallery-empty p {
+    margin: 0.5rem 0;
+}
+
+.gallery-empty button {
+    width: auto;
+    margin-top: 1rem;
+}
+
+.gallery-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+
+/* ============================================================
+   23. FOLDER DIALOGS
+   ============================================================ */
+
+.folder-dialog {
+    width: min(90vw, 450px);
+    max-width: 450px;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+}
+
+.folder-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.folder-dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+}
+
+.folder-dialog h2 {
+    margin: 0 0 0.25rem;
+}
+
+.folder-dialog label {
+    font-weight: bold;
+}
+
+.folder-dialog input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font: inherit;
+}
+
+.folder-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.folder-dialog-buttons button {
+    width: auto;
+    min-width: 100px;
+    margin: 0;
+}
+
+.gallery-error {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   24. ARTWORK GRID
+   ============================================================ */
+
+/*
+   One consistent desktop grid.
+   Cards stay small instead of stretching across the page.
+*/
+.artwork-grid,
+.gallery-folder-artwork {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(150px, 180px)
+    );
+    gap: 1rem;
+    width: 100%;
+    margin-top: 0;
+    align-items: start;
+}
+
+
+/* ============================================================
+   25. ARTWORK CARD
+   ============================================================ */
+
+.artwork-card,
+.gallery-artwork {
+    width: 100%;
+    min-width: 0;
+    max-width: 180px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Main clickable image */
+.artwork-card-button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+}
+
+.artwork-card-button img,
+.gallery-artwork img,
+.artwork-card > img,
+.artwork-card-image {
+    display: block;
+    width: 100%;
+    height: 180px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* Artwork information */
+.artwork-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding-top: 0.55rem;
+}
+
+.artwork-card-title,
+.artwork-card-button h3,
+.gallery-artwork-info h3,
+.artwork-card-content h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.artwork-card-description,
+.gallery-artwork-info p,
+.artwork-card-content p {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    opacity: 0.8;
+}
+
+.gallery-artwork-info {
+    padding: 0.4rem 0.2rem 0;
+}
+
+
+/* ============================================================
+   26. ARTWORK ACTION BUTTONS
+   ============================================================ */
+
+.artwork-card-actions,
+.artwork-card-moderation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+    margin-top: 0.35rem;
+}
+
+.artwork-card-action,
+.artwork-card-actions button,
+.artwork-card-moderation-actions button {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+
+    box-sizing: border-box;
+
+    padding: 0.4rem 0.55rem;
+    margin: 0;
+
+    border-radius: 7px;
+
+    font: inherit;
+    font-size: 0.76rem;
+    line-height: 1.2;
+
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+/* Folder label underneath artwork */
+.artwork-card-folder {
+    margin-top: 0.1rem;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    opacity: 0.7;
+}
+
+
+/* ============================================================
+   HIDDEN MODERATOR ARTWORK
+   ============================================================ */
+
+.artwork-card-hidden {
+    opacity: 0.7;
+}
+
+.artwork-card-hidden > img {
+    filter: grayscale(35%);
+}
+
+.artwork-card-hidden-badge {
+    margin-bottom: 0.15rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.artwork-card-moderation-action {
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   27. UPLOAD PREVIEW
+   ============================================================ */
+
+.upload-preview {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.upload-preview img {
+    display: block;
+    max-width: 100%;
+    max-height: 300px;
+    margin: 0 auto;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
+
+/* ============================================================
+   28. FOLDER CHECKBOXES
+   ============================================================ */
+
+.upload-folder-list {
+    display: grid;
+    gap: 0.5rem;
+    max-height: 220px;
+    margin-top: 0.75rem;
+    overflow-y: auto;
+}
+
+.upload-folder-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.upload-folder-option input {
+    flex: 0 0 auto;
+}
+
+
+/* ============================================================
+   29. ARTWORK DIALOG + GALLERY RESPONSIVE
+   ============================================================ */
+
+.artwork-dialog {
+    width: min(900px, 92vw);
+    max-width: 900px;
+    max-height: 90vh;
+    padding: 1.25rem;
+    border: 0;
+    border-radius: 16px;
+    overflow: auto;
+}
+
+.artwork-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.artwork-dialog img {
+    display: block;
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+#artworkCloseButton {
+    display: block;
+    margin: 0 0 0.5rem auto;
+    border: 0;
+    background: transparent;
+    font-size: 1.8rem;
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   GALLERY MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+    .folder-list {
+        gap: 1.5rem;
+    }
+
+    .gallery-folder-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .gallery-folder-actions {
+        width: 100%;
+    }
+
+    .gallery-folder-actions button {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .artwork-grid,
+    .gallery-folder-artwork {
+        grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
+        gap: 0.75rem;
+    }
+
+    .artwork-card,
+    .gallery-artwork {
+        max-width: none;
+    }
+
+    .artwork-card-button img,
+    .gallery-artwork img,
+    .artwork-card > img,
+    .artwork-card-image {
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    .artwork-card-actions,
+    .artwork-card-moderation-actions {
+        flex-direction: column;
+    }
+
+    .artwork-card-action,
+    .artwork-card-actions button,
+    .artwork-card-moderation-actions button {
+        width: 100%;
+        flex: none;
+    }
+
+    .folder-dialog-buttons {
+        justify-content: stretch;
+    }
+
+    .folder-dialog-buttons button {
+        flex: 1;
+    }
+
+    .gallery-toolbar {
+        flex-direction: row;
+    }
+
+    .gallery-toolbar button {
+        flex: 1 1 140px;
+        min-width: 0;
+    }
+}
+
+/* =========================================================
+   30. IMAGEBOARD
+   ========================================================= */
+
+.imageboard-page {
+    width: min(100% - 24px, 900px);
+    margin: 0 auto;
+    padding: 20px 0 40px;
+}
+
+.imageboard-intro {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.imageboard-intro h2 {
+    margin-bottom: 8px;
+}
+
+.imageboard-intro p {
+    margin: 0 0 15px;
+}
+
+
+/* Board directory */
+
+.boards-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 35px;
+}
+
+.board-card {
+    display: block;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--box-background);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.board-card:hover,
+.board-card:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent-color);
+}
+
+.board-card:active {
+    transform: translateY(0);
+}
+
+.board-card-slug {
+    margin: 0 0 5px;
+    font-size: 0.85rem;
+    opacity: 0.65;
+    font-weight: 600;
+}
+
+.board-card h3 {
+    margin: 0 0 8px;
+}
+
+.board-card p:not(.board-card-slug) {
+    margin: 0 0 14px;
+    line-height: 1.5;
+}
+
+.board-card span {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+
+/* Board page header */
+
+.board-header {
+    padding: 22px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--box-background);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.board-slug {
+    margin: 0 0 5px;
+    font-size: 0.9rem;
+    opacity: 0.65;
+    font-weight: 600;
+}
+
+.board-header h2 {
+    margin: 0 0 8px;
+}
+
+.board-header > p:not(.board-slug) {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.board-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+
+/* Threads */
+
+.recent-threads-section {
+    margin-top: 20px;
+}
+
+.board-thread-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.board-thread-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+
+.board-thread-list-header h2 {
+    margin: 0;
+}
+
+.board-thread-list-header span {
+    font-size: 0.9rem;
+    opacity: 0.65;
+}
+
+.thread-preview {
+    padding: 17px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--box-background);
+}
+
+.thread-preview-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.thread-preview h3 {
+    margin: 0;
+}
+
+.thread-preview-meta,
+.thread-preview-bump {
+    margin: 6px 0 0;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.thread-preview-board {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.thread-status {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(128, 128, 128, 0.12);
+}
+
+
+/* =========================================================
+   31. NEW THREAD
+   ========================================================= */
+
+.new-thread-box {
+    width: min(100%, 700px);
+    margin: 0 auto;
+    padding: 22px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--box-background);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.new-thread-board {
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.new-thread-board h2 {
+    margin: 0 0 8px;
+}
+
+.new-thread-board p:last-child {
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+#newThreadForm {
+    display: flex;
+    flex-direction: column;
+}
+
+#newThreadForm label {
+    margin: 0 0 6px;
+    font-weight: 600;
+}
+
+#newThreadForm input,
+#newThreadForm textarea {
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 11px 13px;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    background: inherit;
+    color: inherit;
+    font: inherit;
+}
+
+#newThreadForm textarea {
+    min-height: 180px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+#newThreadForm input:focus,
+#newThreadForm textarea:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+}
+
+.new-thread-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.new-thread-actions button,
+.new-thread-actions a {
+    flex: 0 0 auto;
+}
+
+
+/* =========================================================
+   32. NEW THREAD IMAGE UPLOAD
+   ========================================================= */
+
+.upload-help {
+    margin: -10px 0 18px;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.optional-label {
+    font-size: 0.8rem;
+    font-weight: normal;
+    opacity: 0.6;
+}
+
+.image-preview {
+    margin: 0 0 20px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    text-align: center;
+    overflow: hidden;
+}
+
+.image-preview img {
+    display: block;
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 7px;
+}
+
+.image-preview p {
+    margin: 9px 0 0;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+#threadImage {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+
+/* =========================================================
+   33. IMAGEBOARD THREAD
+   ========================================================= */
+
+.thread-header {
+    padding: 22px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--box-background);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.thread-header h2 {
+    margin: 0 0 8px;
+}
+
+.thread-header-meta {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.thread-header-actions {
+    margin-top: 18px;
+}
+
+.thread-statuses {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.thread-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.thread-post {
+    padding: 17px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--box-background);
+}
+
+.thread-op {
+    padding: 20px;
+}
+
+.thread-post-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.thread-post-header time {
+    font-size: 0.85rem;
+    opacity: 0.65;
+}
+
+.thread-post-username {
+    font-size: 0.9rem;
+    opacity: 0.65;
+}
+
+.thread-post-label {
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(128, 128, 128, 0.12);
+}
+
+.thread-post-body {
+    overflow-wrap: anywhere;
+}
+
+.thread-post-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.thread-post-image {
+    max-width: min(100%, 500px);
+}
+
+.thread-post-image img {
+    display: block;
+    max-width: 100%;
+    max-height: 700px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.thread-post-content {
+    line-height: 1.6;
+    white-space: normal;
+}
+
+.thread-replies {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.thread-empty {
+    margin: 5px 0;
+    padding: 20px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.thread-error {
+    padding: 22px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--box-background);
+}
+
+
+/* =========================================================
+   34. IMAGEBOARD REPLY FORM
+   ========================================================= */
+
+#replyForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#replyForm > label {
+    display: block;
+    margin-top: 6px;
+    margin-bottom: -4px;
+    font-weight: 700;
+}
+
+#replyForm > textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 140px;
+    resize: vertical;
+}
+
+#replyForm > input[type="file"] {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+#replyForm .optional-label {
+    margin-left: 5px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    opacity: 0.6;
+}
+
+#replyForm .upload-help {
+    margin: -6px 0 4px;
+    font-size: 0.82rem;
+    opacity: 0.65;
+}
+
+#replyForm .image-preview {
+    margin-top: 2px;
+}
+
+#replyForm .image-preview img {
+    display: block;
+    max-width: 100%;
+    max-height: 300px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+#replyForm .image-preview p {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+#replyForm .editor-message {
+    margin: 0;
+}
+
+
+/* =========================================================
+   35. IMAGEBOARD RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+    .imageboard-page {
+        width: min(100% - 18px, 900px);
+        padding-top: 12px;
+    }
+
+    .boards-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .board-card {
+        padding: 17px;
+        border-radius: 12px;
+    }
+
+    .board-header {
+        padding: 17px;
+        border-radius: 12px;
+    }
+
+    .board-header-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .board-header-actions a,
+    .board-header-actions button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .thread-preview {
+        padding: 15px;
+    }
+
+    .board-thread-list-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .new-thread-box {
+        padding: 17px;
+        border-radius: 12px;
+    }
+
+    .new-thread-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .new-thread-actions button,
+    .new-thread-actions a {
+        width: 100%;
+        text-align: center;
+    }
+
+    .image-preview {
+        padding: 8px;
+    }
+
+    .image-preview img {
+        max-height: 350px;
+    }
+
+    .thread-header {
+        padding: 17px;
+        border-radius: 12px;
+    }
+
+    .thread-post,
+    .thread-op {
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .thread-post-image {
+        max-width: 100%;
+    }
+
+    .thread-post-image img {
+        max-height: 500px;
+    }
+}
+
+/* =========================================================
+   IMAGEBOARD POST FORMATTING
+   ========================================================= */
+
+.thread-post {
+    scroll-margin-top: 90px;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.thread-post-number {
+    color: var(--text-color, #4b3555);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.thread-post-number:hover {
+    text-decoration: underline;
+}
+
+
+.thread-post-reference {
+    color: #8a3f72;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.thread-post-reference:hover {
+    text-decoration: underline;
+}
+
+
+.thread-quotetext {
+    color: #8f3f73;
+}
+
+
+.dark-mode .thread-quotetext {
+    color: #d78bc2;
+}
+
+.dark-mode .thread-post-reference {
+    color: #d78bc2;
+}
+
+
+.thread-post-reference-highlight {
+    border-color: #b86aa2 !important;
+    background-color: #fff0fa !important;
+    box-shadow:
+        0 0 0 3px rgba(184, 106, 162, 0.22),
+        0 8px 24px rgba(111, 56, 102, 0.14);
+}
+
+.dark-mode .thread-post-reference-highlight {
+    background-color: #493247 !important;
+    box-shadow:
+        0 0 0 3px rgba(215, 139, 194, 0.18),
+        0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+
+.thread-post-content {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+
+.thread-post-content .thread-quotetext {
+    display: inline;
+}
+
+
+@media (max-width: 600px) {
+    .thread-post {
+        scroll-margin-top: 70px;
+    }
+}
+
+/* =========================================================
+   IMAGEBOARD IMAGE THUMBNAILS
+   ========================================================= */
+
+.thread-post-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.thread-post-image-link {
+    display: block;
+    width: 220px;
+    height: 220px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #e5b8e8);
+    border-radius: 10px;
+    background: var(--soft-background, #f6dff7);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.thread-post-image-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(111, 56, 102, 0.14);
+}
+
+.thread-post-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   BOARD THREAD IMAGE PREVIEWS
+   ========================================================= */
+
+.thread-preview {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.thread-preview-thumbnail-link {
+    flex: 0 0 120px;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #e5b8e8);
+    border-radius: 10px;
+    background: var(--soft-background, #f6dff7);
+    text-decoration: none;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.thread-preview-thumbnail-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(111, 56, 102, 0.14);
+}
+
+.thread-preview-thumbnail {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.thread-preview-no-image {
+    font-size: 2rem;
+    color: var(--accent-color, #d89bdc);
+}
+
+.thread-preview-content {
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* =========================================================
+   MOBILE IMAGEBOARD PREVIEWS
+   ========================================================= */
+
+@media (max-width: 600px) {
+    .thread-post-image-link {
+        width: 150px;
+        height: 150px;
+    }
+
+    .thread-preview {
+        gap: 10px;
+    }
+
+    .thread-preview-thumbnail-link {
+        flex-basis: 90px;
+        width: 90px;
+        height: 90px;
+    }
+}
+
+.report-card {
+    margin-bottom: 1.5rem;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.report-status {
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.report-reason,
+.reported-content {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.report-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.moderation-button {
+    cursor: pointer;
+}
+
+.moderation-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.moderation-button.danger {
+    border-color: #c66;
+}
+
+.moderation-button.secondary {
+    opacity: 0.85;
+}
+
+.reported-content-image {
+    display: block;
+    max-width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin: 0.75rem 0;
+}
+
+.reported-post-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.reported-image {
+    margin: 0;
+    max-width: 100%;
+}
+
+.reported-post-content {
+    margin-top: 0.75rem;
+    padding: 0.8rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.small-text {
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+
+#moderationSearchForm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#moderationSearchForm input,
+#moderationSearchForm select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.moderation-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.moderation-checkbox-label input {
+    width: auto;
+}
+
+.moderation-result-card {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.moderation-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.moderation-result-header h2 {
+    margin-bottom: 0.25rem;
+}
+
+.moderation-hidden-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.moderation-content {
+    margin-top: 1rem;
+}
+
+.moderation-message {
+    margin-top: 0.75rem;
+    padding: 0.85rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.moderation-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.moderation-image {
+    display: block;
+    max-width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.moderation-result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.moderation-result-actions button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.moderation-result-actions .danger {
+    border-color: #c66;
+}
+
+.small-text {
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+
+/* ============================================================
+   MODERATOR HIDDEN GALLERY ARTWORK
+   ============================================================ */
+
+.artwork-card-hidden {
+    opacity: 0.65;
+}
+
+.artwork-card-hidden-badge {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    text-align: center;
+}
+
+.artwork-card-moderation-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.artwork-card-moderation-action {
+    cursor: pointer;
+}
+
+
+/* =========================================
+   ARTWORK ACTION BUTTONS
+========================================= */
+
+.artwork-card-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+
+.artwork-action-button {
+    width: auto;
+    flex: 0 0 auto;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0.35rem 0.65rem;
+
+    font-size: 0.85rem;
+    line-height: 1.2;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   FOLDER SELECTION DIALOG
+========================================= */
+
+.gallery-folder-manager-dialog {
+    width: min(420px, calc(100vw - 2rem));
+}
+
+.gallery-folder-manager-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    margin: 1rem 0;
+}
+
+.gallery-folder-manager-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+
+    padding: 0.65rem 0.75rem;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+.gallery-folder-manager-option input {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+}
+
+.gallery-folder-manager-option span {
+    flex: 1;
+}

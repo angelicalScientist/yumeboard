@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>New Thread</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+    <header class="site-header">
+        <h1>♡ New Thread ♡</h1>
+
+        <p>
+            Start a new thread on the imageboard!
+        </p>
+    </header>
+
+
+    <main class="imageboard-page">
+
+        <section class="new-thread-box">
+
+            <div id="boardInfo">
+                <p class="loading-message">
+                    Loading board... ♡
+                </p>
+            </div>
+
+
+            <form id="newThreadForm" hidden>
+
+                <label for="threadTitle">
+                    Thread title
+                </label>
+
+                <input
+                    type="text"
+                    id="threadTitle"
+                    name="threadTitle"
+                    maxlength="120"
+                    required
+                    autocomplete="off"
+                    placeholder="Give your thread a title..."
+                >
+
+
+                <label for="threadImage">
+                    Image <span aria-hidden="true">*</span>
+                </label>
+
+                <input
+                    type="file"
+                    id="threadImage"
+                    name="threadImage"
+                    accept="image/*"
+                    required
+                >
+
+                <p class="upload-help">
+                    Your thread must start with an image.
+                    Maximum file size: 10 MB.
+                </p>
+
+
+                <div
+                    id="imagePreview"
+                    class="image-preview"
+                    hidden
+                >
+                    <img
+                        id="imagePreviewImage"
+                        src=""
+                        alt="Selected image preview"
+                    >
+
+                    <p id="imagePreviewName"></p>
+                </div>
+
+
+                <label for="threadContent">
+                    Message
+                    <span class="optional-label">
+                        optional
+                    </span>
+                </label>
+
+                <textarea
+                    id="threadContent"
+                    name="threadContent"
+                    rows="8"
+                    maxlength="10000"
+                    placeholder="Say something about your post... ♡"
+                ></textarea>
+
+
+                <p
+                    id="threadMessage"
+                    class="editor-message"
+                    aria-live="polite"
+                ></p>
+
+                <label class="imageboard-anonymous-option">
+                    <input
+                        type="checkbox"
+                        id="anonymousPost"
+                    >
+                    Post anonymously
+                </label>
+                <div class="new-thread-actions">
+
+                    <a
+                        id="cancelThreadButton"
+                        href="imageboard.html"
+                    >
+                        ← Cancel
+                    </a>
+
+                    <button
+                        type="submit"
+                        id="createThreadButton"
+                    >
+                        ✨ Create thread
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase.js"></script>
+    <script src="./imageboard-new-thread.js"></script>
+
+</body>
+
+</html>

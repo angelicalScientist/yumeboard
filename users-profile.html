@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile ♡</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<main class="profile">
+
+    <!-- Banner -->
+    <div class="profile-banner">
+        <img id="profileBanner" alt="Profile banner">
+        <div id="bannerPlaceholder" class="banner-placeholder">
+            ♡
+        </div>
+    </div>
+
+    <!-- Header -->
+    <section class="profile-header">
+        <h1 id="profileUsername">Loading... ♡</h1>
+        <p id="profileMood" class="status">💭 loading...</p>
+    </section>
+    <div class="profile-action-buttons">
+        <button
+            type="button"
+            id="blockUserButton"
+        >
+            🚫 Block User
+        </button>
+        <div id="friendshipControls" style="display: none;">
+            <button type="button" id="addFriendButton" style="display: none;">
+                ♡ Add Friend
+            </button>
+
+            <button type="button" id="acceptFriendButton" style="display: none;">
+                ♡ Accept Request
+            </button>
+
+            <button type="button" id="declineFriendButton" style="display: none;">
+                Decline
+            </button>
+
+            <button type="button" id="removeFriendButton" style="display: none;">
+                ♡ Remove Friend
+            </button>
+
+            <p id="friendshipStatus"></p>
+        </div>
+    </div>
+    <!-- Intro -->
+    <section class="intro">
+        <img
+            id="profileAvatar"
+            class="avatar"
+            src=""
+            alt="Profile avatar"
+        >
+
+        <div>
+            <h2 id="profileDisplayName">Loading...</h2>
+            <p id="profileBio">Loading profile...</p>
+        </div>
+    </section>
+
+    <!-- Fandoms -->
+    <section class="card">
+        <h2>♡ Fandoms</h2>
+        <div id="profileFandoms">
+            Loading...
+        </div>
+    </section>
+
+    <!-- F/O section -->
+    <section class="card">
+        <h2>♡ F/O's</h2>
+        <div id="profileFos">
+            Loading...
+        </div>
+    </section>
+
+    <!-- Art -->
+    <section class="card art-gallery">
+        <h2>♡ Art Gallery</h2>
+
+        <div id="artEmpty" class="search-hint">
+            This user hasn't uploaded any artwork yet. ♡
+        </div>
+
+        <div id="artGallery" hidden>
+
+            <div class="carousel">
+
+                <button
+                    id="previousArt"
+                    class="carousel-button"
+                    type="button"
+                >
+                    ‹
+                </button>
+
+                <div class="art-display">
+                    <img id="artImage" alt="Artwork">
+                </div>
+
+                <button
+                    id="nextArt"
+                    class="carousel-button"
+                    type="button"
+                >
+                    ›
+                </button>
+
+            </div>
+
+            <div id="artCounter">0 / 0</div>
+
+            <p id="artCaption" class="art-caption"></p>
+
+        </div>
+    </section>
+
+    <!-- Guestbook -->
+
+        <section class="card">
+
+        <div class="guestbook-intro">
+            <h2>♡ Guestbook</h2>
+            <p>Leave this user a little message!</p>
+        </div>
+
+        <p id="guestbookPostingAs">
+            Posting as: Loading... ♡
+        </p>
+
+        <label>
+            <input
+                type="checkbox"
+                id="guestbookAnonymous"
+            >
+            Post anonymously ♡
+        </label>
+
+        <div
+            id="guestbookEntries"
+            class="guestbook-entries"
+        >
+            <p class="search-hint">
+                No messages yet. Be the first! ♡
+            </p>
+        </div>
+
+        <form
+            id="guestbookForm"
+            class="guestbook-form"
+        >
+            <textarea
+                id="guestMessage"
+                maxlength="500"
+                placeholder="Write a message..."
+                rows="4"
+                required
+            ></textarea>
+
+            <button type="submit">
+                Sign Guestbook ♡
+            </button>
+        </form>
+
+    </section>
+
+    <button
+        id="backButton"
+        type="button"
+    >
+        ← Back
+    </button>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="users-profile.js"></script>
+
+</body>
+</html>

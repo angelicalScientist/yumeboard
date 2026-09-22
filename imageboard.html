@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Imageboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <h1>♡ Yumeboard ♡</h1>
+    </header>
+
+    <main class="imageboard-page">
+
+        <section class="imageboard-intro">
+            <h2>Yumeboard</h2>
+
+            <p>
+                Pick a board to browse threads, or start a new one!
+            </p>
+
+            <button
+                type="button"
+                id="newThreadButton"
+            >
+                ✨ New thread
+            </button>
+        </section>
+
+        <section
+            id="boardsList"
+            class="boards-list"
+        >
+            <p class="loading-message">
+                Loading boards... ♡
+            </p>
+        </section>
+
+        <section class="recent-threads-section">
+
+            <h2>Recent threads</h2>
+
+            <div id="recentThreads">
+                <p class="loading-message">
+                    Loading threads... ♡
+                </p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase.js"></script>
+    <script src="./imageboard.js"></script>
+
+</body>
+</html>

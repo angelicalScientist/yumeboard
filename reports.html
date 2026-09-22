@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>♡ Reports ♡</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+<body>
+
+    <main>
+
+        <section class="card">
+
+            <h1>♡ Reports ♡</h1>
+
+            <p>
+                Review reports submitted by the community. 🌸
+            </p>
+
+            <p id="reportsMessage"></p>
+
+        </section>
+
+
+        <section class="card">
+
+            <div class="moderation-filter-buttons">
+
+                <button
+                    type="button"
+                    class="report-filter-button active"
+                    data-status="open"
+                >
+                    Open
+                </button>
+
+                <button
+                    type="button"
+                    class="report-filter-button"
+                    data-status="resolved"
+                >
+                    Resolved
+                </button>
+
+                <button
+                    type="button"
+                    class="report-filter-button"
+                    data-status="dismissed"
+                >
+                    Dismissed
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <section
+            class="card"
+            id="reportList"
+        >
+
+            <p>
+                Loading reports... ♡
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <script src="supabase.js"></script>
+    <script src="reports.js"></script>
+
+</body>
+</html>

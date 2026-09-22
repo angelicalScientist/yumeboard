@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Friends ♡</title>
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+  <main class="page-container">
+
+    <!-- =====================================
+         PAGE HEADER
+    ====================================== -->
+
+    <section class="card">
+      <h1>♡ Friends ♡</h1>
+
+      <p id="friendsStatus">
+        Loading your friends...
+      </p>
+    </section>
+
+
+    <!-- =====================================
+         FRIENDS
+    ====================================== -->
+
+    <section class="card">
+
+      <h2>♡ Your Friends ♡</h2>
+
+      <div id="friendsList">
+        <p>Loading...</p>
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         FRIEND REQUESTS
+    ====================================== -->
+
+    <section class="card">
+
+      <h2>♡ Friend Requests ♡</h2>
+
+      <div id="friendRequests">
+        <p>Loading...</p>
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         NOTIFICATIONS
+    ====================================== -->
+
+    <section class="card">
+
+      <h2>♡ Notifications ♡</h2>
+
+      <p id="notificationCount"></p>
+
+      <div id="friendNotifications">
+        <p>Loading...</p>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================
+       SCRIPTS
+  ====================================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="./supabase.js"></script>
+
+  <script src="./friends.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Yume Profile ♡</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="profile">
+
+
+    <!-- ============================== -->
+    <!-- SETTINGS -->
+    <!-- ============================== -->
+
+    <nav class="settings-nav">
+
+        <!-- SITE SETTINGS -->
+        <section class="settings-group">
+            <button
+                type="button"
+                class="settings-group-button"
+                data-settings-group="site"
+            >
+                <span>🌐 Site Settings</span>
+                <span class="settings-arrow">›</span>
+            </button>
+
+            <div
+                class="settings-group-options"
+                id="settings-site"
+                hidden
+            >
+                <button
+                    type="button"
+                    id="themeButton"
+                >
+                    🌙 Dark mode
+                </button>
+
+                <button
+                    type="button"
+                    id="logoutButton"
+                >
+                    🚪 Log out
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ACCOUNT -->
+        <section class="settings-group">
+            <button
+                type="button"
+                class="settings-group-button"
+                data-settings-group="account"
+            >
+                <span>👤 Account</span>
+                <span class="settings-arrow">›</span>
+            </button>
+
+            <div
+                class="settings-group-options"
+                id="settings-account"
+                hidden
+            >
+                <a href="edit-profile.html">
+                    ✏️ Edit profile
+                </a>
+
+                <a href="fos.html">
+                    💕 Manage F/Os
+                </a>
+            </div>
+        </section>
+
+
+        <!-- SOCIAL -->
+        <section class="settings-group">
+            <button
+                type="button"
+                class="settings-group-button"
+                data-settings-group="social"
+            >
+                <span>🫂 Social</span>
+                <span class="settings-arrow">›</span>
+            </button>
+
+            <div
+                class="settings-group-options"
+                id="settings-social"
+                hidden
+            >
+                <a href="friends.html">
+                    👥 Friends
+                </a>
+
+                <a href="blocked-users.html">
+                    🚫 Blocked users
+                </a>
+            </div>
+        </section>
+
+
+        <!-- MODERATION -->
+        <section
+            class="settings-group"
+            id="modSettingsGroup"
+            hidden
+        >
+            <button
+                type="button"
+                class="settings-group-button"
+                data-settings-group="mod"
+            >
+                <span>🛡️ Mod</span>
+                <span class="settings-arrow">›</span>
+            </button>
+
+            <div
+                class="settings-group-options"
+                id="settings-mod"
+                hidden
+            >
+                <a href="modsuggestions.html">
+                    📋 Mod queue
+                </a>
+
+                <a href="reports.html">
+                    🚨 Reports
+                </a>
+
+                <a href="moderation.html">
+                    ⚖️ moderation
+                </a>
+            </div>
+        </section>
+
+    </nav>
+
+
+    <!-- ============================== -->
+    <!-- PAGE LAYOUT -->
+    <!-- ============================== -->
+
+    <div class="page-layout">
+
+        <!-- ============================== -->
+        <!-- MAIN PROFILE -->
+        <!-- ============================== -->
+
+        <div class="main-content">
+
+            <!-- PROFILE HEADER -->
+            <header class="profile-header">
+                <div
+                    class="profile-banner"
+                    id="profileBanner"
+                ></div>
+
+                <h1 id="profileName">
+                    ♡ Loading Profile... ♡
+                </h1>
+
+                <p id="profileWelcome">
+                    Welcome to this little corner of the internet! 🌸
+                </p>
+            </header>
+
+
+            <!-- INTRO -->
+            <section class="intro">
+
+                <img
+                    class="avatar"
+                    id="profileAvatar"
+                    src="https://placehold.co/150x150"
+                    alt="Profile picture"
+                >
+
+                <div>
+                    <h2 id="profileDisplayName">
+                        Loading...
+                    </h2>
+
+                    <p id="profileBio">
+                        Loading profile...
+                    </p>
+
+                    <p
+                        class="status"
+                        id="profileMood"
+                    >
+                        🌸 loading...
+                    </p>
+                </div>
+
+            </section>
+
+
+            <!-- CURRENT MOOD -->
+            <section class="card">
+
+                <h2>
+                    ♡ Current Mood ♡
+                </h2>
+
+                <p id="mood">
+                    🌸 loading...
+                </p>
+
+                <button
+                    type="button"
+                    id="moodButton"
+                >
+                    Change mood
+                </button>
+
+            </section>
+
+
+            <!-- ABOUT ME -->
+            <section class="card collapsible">
+
+                <h2 class="section-title">
+                    ♡ About Me ♡
+                </h2>
+
+                <div class="section-content">
+                    <p id="profileAbout">
+                        Loading...
+                    </p>
+                </div>
+
+            </section>
+
+
+            <!-- FANDOMS -->
+            <section class="card collapsible">
+
+                <h2 class="section-title">
+                    ♡ My Fandoms ♡
+                </h2>
+
+                <div class="section-content">
+                    <p id="profileFandoms">
+                        Loading...
+                    </p>
+                </div>
+
+            </section>
+
+
+            <!-- MAIN F/O -->
+            <section class="card fo-card">
+
+                <h2>
+                    ♡ My F/O ♡
+                </h2>
+
+                <div id="mainFo">
+                    <p>
+                        Loading F/O...
+                    </p>
+                </div>
+
+            </section>
+
+
+            <!-- SIDE F/Os -->
+            <section class="card side-fos-card">
+
+                <h2>
+                    ♡ My Side F/Os ♡
+                </h2>
+
+                <div
+                    id="sideFosList"
+                    class="side-fos-list"
+                >
+                    <p>
+                        Loading...
+                    </p>
+                </div>
+
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- ART GALLERY -->
+            <!-- ============================== -->
+
+            <section class="card art-gallery">
+
+                <h2>
+                    ♡ My Art Gallery ♡
+                </h2>
+
+                <div class="carousel">
+
+                    <button
+                        class="carousel-button previous"
+                        id="previousArt"
+                        type="button"
+                        aria-label="Previous artwork"
+                    >
+                        ‹
+                    </button>
+
+                    <div class="art-display">
+                        <img
+                            id="artImage"
+                            src="https://placehold.co/500x400"
+                            alt="Gallery artwork"
+                        >
+                    </div>
+
+                    <button
+                        class="carousel-button next"
+                        id="nextArt"
+                        type="button"
+                        aria-label="Next artwork"
+                    >
+                        ›
+                    </button>
+
+                </div>
+
+                <p id="artCounter">
+                    0 / 0
+                </p>
+
+                <p
+                    id="artCaption"
+                    class="art-caption"
+                >
+                    No artwork uploaded yet! 🌸
+                </p>
+
+            </section>
+
+
+            <!-- ============================== -->
+            <!-- GUESTBOOK -->
+            <!-- ============================== -->
+
+            <section class="card guestbook">
+
+                <div class="guestbook-intro">
+                    <h2>
+                        ♡ Guestbook
+                    </h2>
+
+                    <p>
+                        Leave this user a little message!
+                    </p>
+                </div>
+
+
+                <!-- Who is currently posting -->
+                <p id="guestbookIdentity">
+                    Posting as: Loading... ♡
+                </p>
+
+
+                <!-- Anonymous option -->
+                <label class="guestbook-anonymous-option">
+
+                    <input
+                        type="checkbox"
+                        id="guestAnonymous"
+                    >
+
+                    Post anonymously ♡
+
+                </label>
+
+
+                <!-- Existing entries -->
+                <div
+                    id="guestbookEntries"
+                    class="guestbook-entries"
+                >
+                    <p class="search-hint">
+                        No messages yet. Be the first! ♡
+                    </p>
+                </div>
+
+
+                <!-- New entry form -->
+                <form
+                    id="guestbookForm"
+                    class="guestbook-form"
+                >
+
+                    <textarea
+                        id="guestMessage"
+                        maxlength="500"
+                        placeholder="Write a message..."
+                        rows="4"
+                        required
+                    ></textarea>
+
+                    <button
+                        type="submit"
+                        id="guestbookButton"
+                    >
+                        Sign Guestbook ♡
+                    </button>
+
+                </form>
+
+            </section>
+
+        </div>
+        <!-- ============================== -->
+        <!-- DISCOVER SIDEBAR -->
+        <!-- ============================== -->
+
+        <aside class="discover">
+
+            <h2>
+                ♡ Discover People ♡
+            </h2>
+
+            <p>
+                Find other yumeshippers and explore their profiles! 🌸
+            </p>
+
+            <button
+                type="button"
+                id="discoverButton"
+            >
+                ✨ Discover People
+            </button>
+
+        
+
+            <h2>
+                ♡ Imageboard ♡
+            </h2>
+
+            <p>
+                Enter the imageboard and interact with others 🌸
+            </p>
+
+            <button
+                type="button"
+                id="imageboardButton"
+            >
+                ✨ Imageboard
+            </button>
+        </aside>
+        
+
+    </div>
+
+</main>
+
+
+<!-- ============================== -->
+<!-- SCRIPTS -->
+<!-- ============================== -->
+
+<!-- Supabase library MUST load first -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Creates window.supabaseClient -->
+<script src="./supabase.js"></script>
+
+<!-- Profile-related scripts -->
+<script src="./side-fos.js"></script>
+<script src="./profile.js"></script>
+
+<!-- General page behavior -->
+<script src="./script.js"></script>
+<script src="./navigation.js"></script>
+
+</body>
+</html>

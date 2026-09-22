@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>♡ Edit My Profile ♡</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+<main class="profile">
+
+    <section class="card editor-card">
+
+        <h1>♡ Edit My Profile ♡</h1>
+
+        <p>
+            Make this little corner feel like yours! 🌸
+        </p>
+
+
+        <form id="profileForm">
+
+
+            <h2>♡ Basic Info ♡</h2>
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                required
+            >
+
+
+            <label for="displayName">
+                Display Name
+            </label>
+
+            <input
+                type="text"
+                id="displayName"
+            >
+
+
+            <label for="bio">
+                Bio
+            </label>
+
+            <textarea
+                id="bio"
+                rows="5"
+                placeholder="Tell people a little about yourself! ♡"
+            ></textarea>
+
+
+            <h2>♡ My F/O ♡</h2>
+
+
+            <label for="foName">
+                F/O Name
+            </label>
+
+            <input
+                type="text"
+                id="foName"
+                placeholder="Who is your favorite character? ♡"
+            >
+
+
+            <label for="foRelationship">
+                Relationship
+            </label>
+
+            <input
+                type="text"
+                id="foRelationship"
+                placeholder="e.g. fictional partner, crush, soulmate..."
+            >
+
+
+            <label for="foDescription">
+                Tell us about them
+            </label>
+
+            <textarea
+                id="foDescription"
+                rows="6"
+                placeholder="All the silly little things you love about them... ♡"
+            ></textarea>
+
+
+            <h2>♡ Fandoms & Mood ♡</h2>
+
+
+            <label for="fandomSearch">
+                Fandoms
+            </label>
+
+            <input
+                type="text"
+                id="fandomSearch"
+                placeholder="Search for a fandom..."
+                autocomplete="off"
+            >
+
+            <div
+                id="fandomResults"
+                class="suggestion-results"
+            ></div>
+
+            <div
+                id="selectedFandoms"
+                class="selected-tags"
+                aria-live="polite"
+            ></div>
+
+            <p class="canonical-help">
+                Can't find your fandom?
+                <a href="suggest.html">
+                    ✨ Suggest a new fandom
+                </a>
+            </p>
+
+
+            <label for="mood">
+                Current Mood
+            </label>
+
+            <input
+                type="text"
+                id="mood"
+                placeholder="🌸 happy!"
+            >
+
+
+            <h2>♡ Profile Appearance ♡</h2>
+
+
+            <label for="avatarUrl">
+                Avatar Image URL
+            </label>
+
+            <input
+                type="url"
+                id="avatarUrl"
+                placeholder="https://..."
+            >
+
+
+            <label for="bannerUrl">
+                Banner Image URL
+            </label>
+
+            <input
+                type="url"
+                id="bannerUrl"
+                placeholder="https://..."
+            >
+
+
+            <button type="submit">
+                Save Profile ♡
+            </button>
+
+        </form>
+
+
+        <p id="editorMessage"></p>
+
+
+        <button
+            type="button"
+            id="backButton"
+        >
+            ← Back to Profile
+        </button>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./edit-profile.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>♡ Blocked Users ♡</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+<main class="profile">
+
+    <!-- HEADER -->
+
+    <section class="card discover-header">
+
+        <h1>
+            ♡ Blocked Users ♡
+        </h1>
+
+        <p>
+            Manage the people you've blocked. 🌸
+        </p>
+
+        <button
+            type="button"
+            id="backToProfile"
+        >
+            ← Back to My Profile
+        </button>
+
+    </section>
+
+
+    <!-- BLOCKED USERS -->
+
+    <section
+        class="card"
+        id="blockedUsersList"
+    >
+
+        <p class="search-hint">
+            Loading blocked users... 🌸
+        </p>
+
+    </section>
+
+
+    <!-- EMPTY STATE -->
+
+    <section
+        class="card"
+        id="blockedUsersEmpty"
+        hidden
+    >
+
+        <h2>
+            ♡ No Blocked Users ♡
+        </h2>
+
+        <p>
+            You haven't blocked anyone yet! 🌸
+        </p>
+
+        <button
+            type="button"
+            id="discoverButton"
+        >
+            ✨ Discover People
+        </button>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./blocked-users.js"></script>
+
+</body>
+</html>

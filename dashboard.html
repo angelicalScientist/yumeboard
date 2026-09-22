@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Cool dashboard!!</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+<main class="profile">
+    <div
+        id="punishmentNotice"
+        class="punishment-notice-container"
+        hidden
+    ></div>
+    <section class="card dashboard-card">
+
+        <h1 id="welcomeMessage">
+            ♡ Welcome! ♡
+        </h1>
+
+        <p id="dashboardUsername">
+            Loading your profile...
+        </p>
+
+
+        <div class="dashboard-buttons">
+
+            <button id="profileButton">
+                ♡ My Profile
+            </button>
+
+            <button id="editButton">
+                ✎ Edit Profile
+            </button>
+
+            <button id="homeButton">
+                🌸 Discover
+            </button>
+
+            <button id="logoutButton">
+                🚪 Log Out
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./dashboard.js"></script>
+
+</body>
+
+</html>

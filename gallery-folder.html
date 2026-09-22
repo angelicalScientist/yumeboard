@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Gallery Folder ♡</title>
+
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+
+<main class="profile">
+
+
+<section class="card gallery-page">
+
+    <!-- ============================== -->
+    <!-- HEADER -->
+    <!-- ============================== -->
+
+    <header class="gallery-header">
+
+        <h1 id="folderTitle">
+            📁 Loading folder...
+        </h1>
+
+        <p id="folderDescription">
+            Loading your artwork... 🌸
+        </p>
+
+    </header>
+
+
+    <!-- ============================== -->
+    <!-- TOOLBAR -->
+    <!-- ============================== -->
+
+    <div class="gallery-toolbar">
+
+        <a href="gallery.html">
+            ← All Folders
+        </a>
+
+        <button
+            type="button"
+            id="uploadArtworkButton"
+        >
+            ✨ Upload Artwork
+        </button>
+
+        <button
+            type="button"
+            id="refreshArtworkButton"
+        >
+            🔄 Refresh
+        </button>
+
+    </div>
+
+
+    <!-- ============================== -->
+    <!-- FOLDER NOT FOUND / DELETED -->
+    <!-- ============================== -->
+
+    <section
+        id="folderUnavailable"
+        class="gallery-empty"
+        hidden
+        aria-live="polite"
+    >
+
+        <p>
+            ♡ This folder no longer exists. ♡
+        </p>
+
+        <p>
+            Don't worry — the artwork itself is still safe
+            in your archive.
+        </p>
+
+        <p>
+            You can manage it from your unsorted artwork.
+        </p>
+
+        <a href="gallery.html">
+            ← View My Art Archive
+        </a>
+
+    </section>
+
+
+    <!-- ============================== -->
+    <!-- STATUS -->
+    <!-- ============================== -->
+
+    <p
+        id="folderStatus"
+        class="gallery-status"
+        role="status"
+        aria-live="polite"
+    >
+        Loading artwork... 🌸
+    </p>
+
+
+    <!-- ============================== -->
+    <!-- ARTWORK -->
+    <!-- ============================== -->
+
+    <section
+        id="folderArtworkSection"
+        aria-labelledby="folderArtworkHeading"
+    >
+
+        <header class="gallery-section-header">
+
+            <h2 id="folderArtworkHeading">
+                🖼️ Artwork
+            </h2>
+
+        </header>
+
+        <div
+            id="artworkGrid"
+            class="artwork-grid"
+        >
+            <!-- Artwork is rendered by gallery-folder.js -->
+        </div>
+
+    </section>
+
+
+    <!-- ============================== -->
+    <!-- EMPTY STATE -->
+    <!-- ============================== -->
+
+    <div
+        id="artworkEmpty"
+        class="gallery-empty"
+        hidden
+    >
+
+        <p>
+            ♡ This folder is empty! ♡
+        </p>
+
+        <p>
+            Upload something to give it some love. 🌸
+        </p>
+
+        <button
+            type="button"
+            id="emptyUploadButton"
+        >
+            ✨ Upload your first artwork
+        </button>
+
+    </div>
+
+
+    <!-- ============================== -->
+    <!-- FOOTER -->
+    <!-- ============================== -->
+
+    <div class="gallery-footer">
+
+        <a href="gallery.html">
+            ← Back to Art Archive
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- ============================== -->
+<!-- UPLOAD DIALOG -->
+<!-- ============================== -->
+
+<dialog
+    id="uploadDialog"
+    class="folder-dialog"
+>
+
+    <form
+        id="uploadForm"
+        enctype="multipart/form-data"
+    >
+
+        <h2>
+            ✨ Upload Artwork
+        </h2>
+
+
+        <!-- IMAGE -->
+
+        <label for="artworkFile">
+            Image
+        </label>
+
+        <input
+            type="file"
+            id="artworkFile"
+            name="artworkFile"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            required
+        >
+
+
+        <!-- PREVIEW -->
+
+        <div
+            id="uploadPreview"
+            class="upload-preview"
+            hidden
+        >
+
+            <img
+                id="uploadPreviewImage"
+                alt="Artwork preview"
+            >
+
+        </div>
+
+
+        <!-- TITLE -->
+
+        <label for="artworkTitle">
+            Title
+        </label>
+
+        <input
+            type="text"
+            id="artworkTitle"
+            name="artworkTitle"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Give your artwork a name..."
+        >
+
+
+        <!-- DESCRIPTION -->
+
+        <label for="artworkDescription">
+            Description
+        </label>
+
+        <textarea
+            id="artworkDescription"
+            name="artworkDescription"
+            maxlength="2000"
+            rows="4"
+            placeholder="Optional description..."
+        ></textarea>
+
+
+        <!-- FOLDERS -->
+
+        <fieldset class="gallery-folder-selector">
+
+            <legend>
+                📁 Add to folders
+            </legend>
+
+            <p class="gallery-folder-selector-hint">
+                Select any folders you'd like this artwork
+                to belong to. ♡
+            </p>
+
+            <div
+                id="uploadFolderList"
+                class="upload-folder-list"
+            >
+                Loading folders...
+            </div>
+
+        </fieldset>
+
+
+        <!-- ERROR -->
+
+        <p
+            id="uploadError"
+            class="gallery-error"
+            role="alert"
+            hidden
+        ></p>
+
+
+        <!-- BUTTONS -->
+
+        <div class="folder-dialog-buttons">
+
+            <button
+                type="button"
+                id="uploadCancelButton"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="submit"
+                id="uploadSaveButton"
+            >
+                Upload ♡
+            </button>
+
+        </div>
+
+    </form>
+
+</dialog>
+
+
+<!-- ============================== -->
+<!-- ARTWORK VIEW DIALOG -->
+<!-- ============================== -->
+
+<dialog
+    id="artworkDialog"
+    class="artwork-dialog"
+>
+
+    <button
+        type="button"
+        id="artworkCloseButton"
+        aria-label="Close artwork"
+    >
+        ×
+    </button>
+
+    <img
+        id="artworkDialogImage"
+        alt=""
+    >
+
+    <h2 id="artworkDialogTitle"></h2>
+
+    <p id="artworkDialogDescription"></p>
+
+</dialog>
+
+
+</main>
+
+<!-- ============================== -->
+
+<!-- SUPABASE -->
+
+<!-- ============================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./supabase.js"></script>
+
+<script src="./gallery-folder.js"></script>
+
+</body>
+</html>

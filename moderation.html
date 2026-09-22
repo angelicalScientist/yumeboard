@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>♡ Moderation ♡</title>
+
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+
+
+<main>
+
+    <section class="card">
+        <h1>♡ Moderation ♡</h1>
+
+        <p>
+            Search and manage community content directly. 🌸
+        </p>
+
+        <p id="moderationMessage"></p>
+    </section>
+
+
+    <section class="card">
+
+        <form id="moderationSearchForm">
+
+            <label for="moderationSearch">
+                Search
+            </label>
+
+            <input
+                type="search"
+                id="moderationSearch"
+                placeholder="Search by username, title, or content..."
+                autocomplete="off"
+            >
+
+
+            <label for="moderationType">
+                Content type
+            </label>
+
+            <select id="moderationType">
+
+                <option value="all">
+                    Everything
+                </option>
+
+                <option value="imageboard_thread">
+                    Imageboard threads
+                </option>
+
+                <option value="imageboard_post">
+                    Imageboard posts
+                </option>
+
+                <option value="gallery_item">
+                    Gallery items
+                </option>
+
+                <option value="guestbook_entry">
+                    Guestbook entries
+                </option>
+
+                <option value="guestbook_reply">
+                    Guestbook replies
+                </option>
+
+            </select>
+
+
+            <label for="moderationVisibility">
+                Visibility
+            </label>
+
+            <select id="moderationVisibility">
+
+                <option value="visible">
+                    Visible only
+                </option>
+
+                <option value="hidden">
+                    Hidden only
+                </option>
+
+                <option value="all">
+                    All content
+                </option>
+
+            </select>
+
+
+            <button
+                type="submit"
+                id="moderationSearchButton"
+            >
+                Search
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <section class="card" id="moderationResults">
+
+        <p>
+            Search for something to begin. ♡
+        </p>
+
+    </section>
+
+</main>
+
+<section class="card" id="punishmentPanel">
+
+    <h2>♡ User punishments ♡</h2>
+
+    <p>
+        Apply or revoke account and feature restrictions.
+    </p>
+
+    <form id="punishmentForm">
+
+        <label for="punishmentUsername">
+            Username
+        </label>
+
+        <input
+            type="text"
+            id="punishmentUsername"
+            placeholder="Username..."
+            autocomplete="off"
+            required
+        >
+
+        <label for="punishmentType">
+            Punishment type
+        </label>
+
+        <select id="punishmentType">
+            <option value="warning">Warning</option>
+            <option value="restriction">Restriction</option>
+            <option value="temporary_ban">Temporary ban</option>
+            <option value="permanent_ban">Permanent ban</option>
+        </select>
+
+        <label for="punishmentScope">
+            Scope
+        </label>
+
+        <select id="punishmentScope">
+            <option value="account">Entire account</option>
+            <option value="imageboard">Imageboard</option>
+            <option value="imageboard_threads">Imageboard threads</option>
+            <option value="imageboard_posts">Imageboard posts</option>
+            <option value="image_uploads">Image uploads</option>
+            <option value="gallery">Gallery</option>
+            <option value="guestbook">Guestbook</option>
+            <option value="suggestions">Suggestions</option>
+        </select>
+
+        <label for="punishmentDuration">
+            Duration
+        </label>
+
+        <select id="punishmentDuration">
+            <option value="">
+                No expiration
+            </option>
+            <option value="1d">
+                1 day
+            </option>
+            <option value="3d">
+                3 days
+            </option>
+            <option value="7d">
+                7 days
+            </option>
+            <option value="14d">
+                14 days
+            </option>
+            <option value="30d">
+                30 days
+            </option>
+            <option value="90d">
+                90 days
+            </option>
+        </select>
+
+        <label for="punishmentReason">
+            Reason
+        </label>
+
+        <textarea
+            id="punishmentReason"
+            rows="4"
+            maxlength="2000"
+            placeholder="Why is this punishment being issued?"
+        ></textarea>
+
+        <button type="submit">
+            Apply punishment
+        </button>
+
+    </form>
+
+    <p id="punishmentMessage"></p>
+
+    <div id="activePunishments">
+        <p>
+            Search for a user to view active punishments.
+        </p>
+    </div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script src="supabase.js"></script>
+
+<script src="moderation.js"></script>
+<script src="moderation-punishments.js"></script>
+
+</body>
+</html>
