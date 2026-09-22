@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>404 — Page Not Found</title>
+
+    <style>
+        :root {
+            --border-color: #e5b8e8;
+            --accent-color: #d89bdc;
+            --soft-background: #fff5ff;
+            --muted-background: #f6dff7;
+            --text-color: #4b3555;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-family: Arial, sans-serif;
+            background: #fcecff;
+            color: var(--text-color);
+        }
+
+        .error-card {
+            width: 100%;
+            max-width: 600px;
+            padding: 45px 30px;
+
+            text-align: center;
+
+            background: white;
+            border: 3px solid var(--border-color);
+            border-radius: 20px;
+
+            box-shadow: 0 6px 18px rgba(180, 120, 180, 0.12);
+        }
+
+        .error-icon {
+            margin-bottom: 10px;
+            font-size: 52px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 42px;
+            color: var(--text-color);
+        }
+
+        h2 {
+            margin: 10px 0;
+            font-size: 24px;
+        }
+
+        p {
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+
+        .error-message {
+            display: inline-block;
+            margin: 15px 0 25px;
+            padding: 8px 14px;
+
+            background: var(--muted-background);
+            border-radius: 15px;
+
+            font-size: 14px;
+        }
+
+        .home-button {
+            display: inline-block;
+
+            padding: 12px 25px;
+
+            border: none;
+            border-radius: 20px;
+
+            background: var(--accent-color);
+            color: white;
+
+            font-size: 16px;
+            text-decoration: none;
+
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .home-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="error-card">
+        <div class="error-icon">🌸</div>
+
+        <h1>404</h1>
+
+        <h2>Oops! This page wandered off. :3</h2>
+
+        <p>
+            It looks like the page you're looking for doesn't exist
+            or may have moved somewhere else, or maybe it's the friends
+            we made all along the way.
+        </p>
+
+        <div class="error-message">
+            Maybe it was nothing but a dream... ✨
+        </div>
+
+        <br>
+
+        <a class="home-button" href="dashboard.html">
+            Take Me Home, Cunty Roads.
+        </a>
+    </main>
+</body>
+</html>
