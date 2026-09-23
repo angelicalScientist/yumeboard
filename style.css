@@ -16,6 +16,26 @@
     --text-color: #4b3555;
 }
 
+@font-face {
+    font-family: "Pixelated Times New Roman";
+    src: url("fonts/pixelated-times-new-roman.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+body {
+    font-family: "Pixelated Times New Roman", serif;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+}
+
+
 * {
     box-sizing: border-box;
 }
@@ -23,7 +43,7 @@
 body {
     margin: 0;
     padding: 30px;
-    font-family: Arial, sans-serif;
+    font-family: "Pixelated Times New Roman", serif;
     background: #fcecff;
     color: var(--text-color);
 }
@@ -690,7 +710,7 @@ button:disabled {
     padding: 12px;
     border: 2px solid var(--border-color);
     border-radius: 15px;
-    font-family: Arial, sans-serif;
+    font-family: "Pixelated Times New Roman", serif;
     font-size: 14px;
 }
 
@@ -733,7 +753,7 @@ button:disabled {
     padding: 8px 10px;
     border: 2px solid var(--border-color);
     border-radius: 12px;
-    font-family: Arial, sans-serif;
+    font-family: "Pixelated Times New Roman", serif;
 }
 
 .reply-form textarea {
@@ -821,7 +841,7 @@ button:disabled {
     padding: 12px 14px;
     border: 2px solid var(--border-color);
     border-radius: 15px;
-    font-family: Arial, sans-serif;
+    font-family: "Pixelated Times New Roman", serif;
     font-size: 15px;
 }
 
