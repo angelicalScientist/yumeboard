@@ -3183,8 +3183,10 @@ button:disabled {
         width: 100%;
     }
 }
+
 /* =========================================================
-   SITE HEADER / LOGO
+   SITE LOGO
+   please override the other stuff pleas eeee
    ========================================================= */
 
 .site-header {
@@ -3197,16 +3199,18 @@ button:disabled {
 .site-logo-link {
     display: inline-flex;
     align-items: center;
+    width: 180px;
+    max-width: 180px;
     text-decoration: none;
     line-height: 0;
 }
 
 .site-logo {
     display: block;
-    width: 180px;
-    height: auto;
-    max-width: 100%;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    width: 180px !important;
+    max-width: 180px !important;
+    height: 60px !important;
+    object-fit: contain;
 }
 
 .site-logo-link:hover .site-logo {
@@ -3214,18 +3218,15 @@ button:disabled {
     opacity: 0.9;
 }
 
-.site-logo-link:focus-visible {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 5px;
-    border-radius: 6px;
-}
-
 @media (max-width: 700px) {
-    .site-header {
-        padding: 8px 0 14px;
+    .site-logo-link {
+        width: 145px;
+        max-width: 145px;
     }
 
     .site-logo {
-        width: 145px;
+        width: 145px !important;
+        max-width: 145px !important;
+        height: auto !important;
     }
 }
