@@ -37,7 +37,7 @@ input,
 textarea,
 select {
     font-family: inherit;
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.55;
 }
 
@@ -64,7 +64,7 @@ button {
     border-radius: 20px;
     background: var(--accent-color);
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
     transition:
         transform 0.2s ease,
@@ -719,7 +719,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 15px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .guestbook-form textarea {
@@ -762,7 +762,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 12px;
     font-family: "Pixelated Times New Roman", serif;
-        font-size: 16px;
+        font-size: 18px;
         line-height: 1.55;
 }
 
@@ -852,7 +852,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 15px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .editor-card textarea {
@@ -941,7 +941,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 10px;
     font-family: inherit;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .checkbox-label {
