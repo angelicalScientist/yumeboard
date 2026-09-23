@@ -19,6 +19,8 @@
 @font-face {
     font-family: "Pixelated Times New Roman";
     src: url("fonts/pixelated-times-new-roman.otf") format("opentype");
+    font-size: 18px;
+    line-height: 1.55;
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -26,6 +28,8 @@
 
 body {
     font-family: "Pixelated Times New Roman", serif;
+    font-size: 18px;
+    line-height: 1.55;
 }
 
 button,
@@ -33,6 +37,8 @@ input,
 textarea,
 select {
     font-family: inherit;
+    font-size: 16px;
+    line-height: 1.55;
 }
 
 
@@ -44,6 +50,8 @@ body {
     margin: 0;
     padding: 30px;
     font-family: "Pixelated Times New Roman", serif;
+    font-size: 18px;
+    line-height: 1.55;
     background: #fcecff;
     color: var(--text-color);
 }
@@ -711,7 +719,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 15px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .guestbook-form textarea {
@@ -754,6 +762,8 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 12px;
     font-family: "Pixelated Times New Roman", serif;
+        font-size: 16px;
+        line-height: 1.55;
 }
 
 .reply-form textarea {
@@ -842,7 +852,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 15px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 .editor-card textarea {
@@ -931,7 +941,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 10px;
     font-family: inherit;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 .checkbox-label {
