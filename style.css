@@ -411,20 +411,7 @@ button:disabled {
 
 
 /* =========================================================
-   10. PROFILE VIEWER
-   ========================================================= */
-
-.profile-viewer {
-    margin-top: 20px;
-}
-
-.profile-viewer h2 {
-    margin-top: 0;
-}
-
-
-/* =========================================================
-   11. F/O DISPLAY
+   10. F/O DISPLAY
    ========================================================= */
 
 .fo-card {
@@ -503,7 +490,7 @@ button:disabled {
 
 
 /* =========================================================
-   12. ART GALLERY
+   11. ART GALLERY
    ========================================================= */
 
 .art-gallery {
@@ -601,7 +588,7 @@ button:disabled {
 
 
 /* =========================================================
-   13. PROFILE BANNER
+   12. PROFILE BANNER
    ========================================================= */
 
 .profile-banner {
@@ -651,7 +638,7 @@ button:disabled {
 
 
 /* =========================================================
-   14. GUESTBOOK
+   13. GUESTBOOK
    ========================================================= */
 
 .guestbook-intro {
@@ -762,7 +749,7 @@ button:disabled {
 
 
 /* =========================================================
-   15. ACCOUNT PAGE
+   14. ACCOUNT PAGE
    ========================================================= */
 
 .account-card {
@@ -801,7 +788,7 @@ button:disabled {
 
 
 /* =========================================================
-   16. PROFILE EDITOR
+   15. PROFILE EDITOR
    ========================================================= */
 
 .editor-card {
@@ -867,7 +854,7 @@ button:disabled {
 
 
 /* =========================================================
-   17. DASHBOARD
+   16. DASHBOARD
    ========================================================= */
 
 .dashboard-card {
@@ -893,7 +880,7 @@ button:disabled {
 
 
 /* =========================================================
-   18. F/O MANAGER
+   17. F/O MANAGER
    ========================================================= */
 
 .fo-manager {
@@ -1024,7 +1011,7 @@ button:disabled {
 
 
 /* =========================================================
-   19. CHARACTER SEARCH
+   18. CHARACTER SEARCH
    ========================================================= */
 
 .character-results {
@@ -1101,7 +1088,7 @@ button:disabled {
 
 
 /* =========================================================
-   20. SUGGESTIONS / MODERATION
+   19. SUGGESTIONS / MODERATION
    ========================================================= */
 
 .suggestion-card {
@@ -1179,7 +1166,7 @@ button:disabled {
 
 
 /* =========================================================
-   21. DARK MODE
+   20. DARK MODE
    ========================================================= */
 
 .dark-mode {
@@ -1352,7 +1339,7 @@ button:disabled {
 }
 
 /* ============================================================
-   22. ART ARCHIVE
+   21. ART ARCHIVE
    ============================================================ */
 
 .gallery-page {
@@ -1409,17 +1396,9 @@ button:disabled {
 }
 
 /* ============================================================
-   FOLDER
+   22. FOLDER
    ============================================================ */
 
-/*
-   IMPORTANT:
-   The folder contains:
-   1. .gallery-folder-header
-   2. .gallery-folder-artwork
-
-   They MUST stack vertically.
-*/
 .gallery-folder {
     display: block;
     width: 100%;
@@ -1578,10 +1557,7 @@ button:disabled {
    24. ARTWORK GRID
    ============================================================ */
 
-/*
-   One consistent desktop grid.
-   Cards stay small instead of stretching across the page.
-*/
+
 .artwork-grid,
 .gallery-folder-artwork {
     display: grid;
@@ -1700,7 +1676,6 @@ button:disabled {
     cursor: pointer;
 }
 
-/* Folder label underneath artwork */
 .artwork-card-folder {
     margin-top: 0.1rem;
     font-size: 0.72rem;
@@ -2949,4 +2924,262 @@ button:disabled {
 
 .gallery-folder-manager-option span {
     flex: 1;
+}
+
+/* =========================================================
+   36. GLOBAL MOBILE RESPONSIVE FIXES
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    /* Give phones more usable screen width */
+    body {
+        padding: 15px;
+    }
+
+    /* -----------------------------------------------------
+       PROFILE PAGE LAYOUT
+       ----------------------------------------------------- */
+
+    .page-layout {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .discover {
+        position: static;
+        width: 100%;
+    }
+
+    /* -----------------------------------------------------
+       PROFILE HEADER
+       ----------------------------------------------------- */
+
+    .profile-header {
+        padding: 18px 15px;
+    }
+
+    .profile-action-buttons {
+        gap: 8px;
+    }
+
+    .profile-action-buttons button,
+    #friendshipControls button {
+        max-width: 100%;
+    }
+
+    /* -----------------------------------------------------
+       PROFILE INTRO
+       ----------------------------------------------------- */
+
+    .intro {
+        flex-direction: column;
+        text-align: center;
+        padding: 18px 15px;
+        gap: 12px;
+    }
+
+    .avatar {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* -----------------------------------------------------
+       USER CARDS
+       ----------------------------------------------------- */
+
+    #userList {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .user-card {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .user-card-content {
+        min-width: 0;
+    }
+
+    /* -----------------------------------------------------
+       F/O DISPLAY
+       ----------------------------------------------------- */
+
+    .fo-layout {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .fo-image {
+        width: 100%;
+        max-width: 240px;
+        height: auto;
+        aspect-ratio: 5 / 6;
+        margin: 0 auto;
+    }
+
+    /* -----------------------------------------------------
+       MANAGED F/O ITEMS
+       ----------------------------------------------------- */
+
+    .managed-fo {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .managed-fo img,
+    .managed-fo-image,
+    .managed-fo-no-image {
+        width: 100px;
+        height: 100px;
+    }
+
+    .managed-fo-info {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .managed-fo-buttons {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* -----------------------------------------------------
+       SIDE F/O CARDS
+       ----------------------------------------------------- */
+
+    .side-fos-list {
+        grid-template-columns: 1fr;
+    }
+
+    /* -----------------------------------------------------
+       ART GALLERY / CAROUSEL
+       ----------------------------------------------------- */
+
+    .carousel {
+        gap: 8px;
+    }
+
+    .art-display {
+        height: auto;
+        aspect-ratio: 1 / 1;
+        min-width: 0;
+    }
+
+    .carousel-button {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
+    }
+
+    .caption-editor {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .caption-editor input,
+    .caption-editor button {
+        width: 100%;
+    }
+
+    /* -----------------------------------------------------
+       PROFILE BANNER
+       ----------------------------------------------------- */
+
+    .profile-banner {
+        height: 130px;
+    }
+
+    /* -----------------------------------------------------
+       GUESTBOOK
+       ----------------------------------------------------- */
+
+    .guestbook-entries {
+        padding: 5px;
+    }
+
+    .replies {
+        margin-left: 10px;
+    }
+
+    /* -----------------------------------------------------
+       SETTINGS NAVIGATION
+       ----------------------------------------------------- */
+
+    .settings-nav {
+        flex-wrap: wrap;
+        padding: 8px;
+    }
+
+    .settings-group-button {
+        padding: 8px 10px;
+    }
+
+    /* -----------------------------------------------------
+       DASHBOARD
+       ----------------------------------------------------- */
+
+    .dashboard-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    /* -----------------------------------------------------
+       GENERAL CARDS
+       ----------------------------------------------------- */
+
+    .card {
+        padding: 15px;
+    }
+
+    /* -----------------------------------------------------
+       PROFILE / EDITOR / MANAGERS
+       ----------------------------------------------------- */
+
+    .account-card,
+    .editor-card,
+    .fo-manager {
+        width: 100%;
+    }
+
+    .account-card {
+        margin: 25px auto;
+    }
+
+    .editor-card {
+        margin: 20px auto;
+    }
+
+    .fo-form-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .fo-form-buttons button {
+        width: 100%;
+    }
+
+    /* -----------------------------------------------------
+       MODERATION
+       ----------------------------------------------------- */
+
+    .report-header,
+    .moderation-result-header {
+        flex-direction: column;
+    }
+
+    .report-actions,
+    .moderation-result-actions,
+    .suggestion-actions {
+        flex-direction: column;
+    }
+
+    .report-actions button,
+    .moderation-result-actions button,
+    .suggestion-actions button {
+        width: 100%;
+    }
 }
