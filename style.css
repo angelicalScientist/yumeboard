@@ -36,8 +36,6 @@ input,
 textarea,
 select {
     font-family: inherit;
-    font-size: 18px;
-    line-height: 1.55;
 }
 
 
@@ -58,28 +56,74 @@ body {
 button {
     display: inline-block;
     margin: 10px 0;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 20px;
-    background: var(--accent-color);
-    color: white;
+    padding: 9px 18px;
+
+    border: 3px solid #9a6f98;
+    border-radius: 5px;
+
+    background: linear-gradient(
+        to bottom,
+        #fff8ff 0%,
+        #f5dff3 45%,
+        #dfb9dc 100%
+    );
+
+    color: #4b3555;
+    font-family: inherit;
     font-size: 18px;
+    line-height: 1.3;
+
     cursor: pointer;
+
+    box-shadow:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -2px 0 rgba(120, 75, 115, 0.22),
+        2px 2px 0 rgba(90, 60, 85, 0.28);
+
     transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
+        transform 0.08s ease,
+        box-shadow 0.08s ease,
+        background 0.12s ease;
 }
 
 button:hover {
-    transform: scale(1.05);
+    background: linear-gradient(
+        to bottom,
+        #ffffff 0%,
+        #f8e8f7 45%,
+        #e8c7e5 100%
+    );
+
+    transform: translate(-1px, -1px);
+
+    box-shadow:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -2px 0 rgba(120, 75, 115, 0.18),
+        3px 3px 0 rgba(90, 60, 85, 0.28);
+}
+
+button:active {
+    transform: translate(1px, 1px);
+
+    box-shadow:
+        inset 2px 2px 2px rgba(90, 60, 85, 0.25),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.7);
 }
 
 button:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+
+    box-shadow:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.7),
+        1px 1px 0 rgba(90, 60, 85, 0.15);
 }
 
+button:focus-visible {
+    outline: 2px dashed var(--accent-color);
+    outline-offset: 3px;
+}
 
 /* =========================================================
    2. MAIN PROFILE LAYOUT
@@ -1022,7 +1066,7 @@ button:disabled {
 
 .managed-fo-buttons button {
     margin: 0;
-    padding: 8px 14px;
+    padding: 7px 14px;
     font-size: 14px;
 }
 
@@ -1158,11 +1202,45 @@ button:disabled {
 }
 
 .approve-button {
-    background: #b8dcb8;
+    background: linear-gradient(
+        to bottom,
+        #f4fff4 0%,
+        #d9eed9 45%,
+        #b8dcb8 100%
+    );
+
+    border-color: #719871;
+    color: #355235;
+}
+
+.approve-button:hover {
+    background: linear-gradient(
+        to bottom,
+        #ffffff 0%,
+        #e5f6e5 45%,
+        #c8e5c8 100%
+    );
 }
 
 .reject-button {
-    background: #e5b8b8;
+    background: linear-gradient(
+        to bottom,
+        #fff6f6 0%,
+        #f2d8d8 45%,
+        #dfb5b5 100%
+    );
+
+    border-color: #9a6d6d;
+    color: #633c3c;
+}
+
+.reject-button:hover {
+    background: linear-gradient(
+        to bottom,
+        #ffffff 0%,
+        #f7e2e2 45%,
+        #e8c4c4 100%
+    );
 }
 
 .suggestion-results {
@@ -1241,8 +1319,24 @@ button:disabled {
 }
 
 .dark-mode button {
-    background: #72577d;
+    background: linear-gradient(
+        to bottom,
+        #85698f 0%,
+        #72577d 48%,
+        #604b68 100%
+    );
+
+    border-color: #a487ad;
     color: #fff;
+}
+
+.dark-mode button:hover {
+    background: linear-gradient(
+        to bottom,
+        #967aa0 0%,
+        #806389 48%,
+        #6c5575 100%
+    );
 }
 
 .dark-mode .section-title:hover {
@@ -1471,7 +1565,7 @@ button:disabled {
     padding: 0 0.7rem;
     margin: 0;
 
-    border-radius: 8px;
+    border-radius: 5px;
 
     font: inherit;
     font-size: 0.8rem;
@@ -1695,7 +1789,7 @@ button:disabled {
     padding: 0.4rem 0.55rem;
     margin: 0;
 
-    border-radius: 7px;
+    border-radius: 5px;
 
     font: inherit;
     font-size: 0.76rem;
@@ -2725,7 +2819,23 @@ button:disabled {
 }
 
 .moderation-button.danger {
-    border-color: #c66;
+    border-color: #9a6d6d;
+    background: linear-gradient(
+        to bottom,
+        #fff6f6 0%,
+        #f2d8d8 45%,
+        #dfb5b5 100%
+    );
+    color: #633c3c;
+}
+
+.moderation-button.danger:hover {
+    background: linear-gradient(
+        to bottom,
+        #ffffff 0%,
+        #f7e2e2 45%,
+        #e8c4c4 100%
+    );
 }
 
 .moderation-button.secondary {
@@ -2852,7 +2962,23 @@ button:disabled {
 }
 
 .moderation-result-actions .danger {
-    border-color: #c66;
+    border-color: #9a6d6d;
+    background: linear-gradient(
+        to bottom,
+        #fff6f6 0%,
+        #f2d8d8 45%,
+        #dfb5b5 100%
+    );
+    color: #633c3c;
+}
+
+.moderation-result-actions .danger:hover {
+    background: linear-gradient(
+        to bottom,
+        #ffffff 0%,
+        #f7e2e2 45%,
+        #e8c4c4 100%
+    );
 }
 
 .small-text {
@@ -2901,18 +3027,13 @@ button:disabled {
 .artwork-action-button {
     width: auto;
     flex: 0 0 auto;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     padding: 0.35rem 0.65rem;
-
     font-size: 0.85rem;
     line-height: 1.2;
-
-    border-radius: 8px;
-
+    border-radius: 5px;
     cursor: pointer;
 }
 
