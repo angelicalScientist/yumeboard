@@ -19,9 +19,6 @@ let editingFolder = null;
 let deletingFolder = null;
 let uploading = false;
 
-let moderatorHiddenArtworkIds = new Set();
-let showModeratorDismissed = false;
-
 
 // =========================================================
 // INITIALIZATION
@@ -62,13 +59,17 @@ async function loadGallery() {
             null;
 
         if (!galleryOwnerId) {
-            showStatus("Please sign in to view a gallery.", true);
+            showStatus(
+                "Please sign in to view a gallery.",
+                true
+            );
             return;
         }
 
         isGalleryOwner =
             Boolean(currentUser) &&
-            String(currentUser.id) === String(galleryOwnerId);
+            String(currentUser.id) ===
+                String(galleryOwnerId);
 
         await loadModeratorState();
 
@@ -85,7 +86,10 @@ async function loadGallery() {
         renderGallery();
 
     } catch (error) {
-        console.error("GALLERY: load error:", error);
+        console.error(
+            "GALLERY: load error:",
+            error
+        );
 
         showStatus(
             `Couldn't load the gallery: ${
@@ -109,15 +113,15 @@ async function loadModeratorState() {
     }
 
     try {
-
-
-        if (typeof window.isModeratorUser === "function") {
-            isModerator =
-                Boolean(
-                    await window.isModeratorUser(
-                        currentUser.id
-                    )
-                );
+        if (
+            typeof window.isModeratorUser ===
+            "function"
+        ) {
+            isModerator = Boolean(
+                await window.isModeratorUser(
+                    currentUser.id
+                )
+            );
         }
     } catch (error) {
         console.error(
@@ -142,7 +146,9 @@ function updateOwnerInterface() {
         element.hidden = !isGalleryOwner;
 
         if (isGalleryOwner) {
-            element.style.removeProperty("display");
+            element.style.removeProperty(
+                "display"
+            );
         } else {
             element.style.setProperty(
                 "display",
@@ -168,7 +174,9 @@ function updateModeratorInterface() {
         element.hidden = !isModerator;
 
         if (isModerator) {
-            element.style.removeProperty("display");
+            element.style.removeProperty(
+                "display"
+            );
         } else {
             element.style.setProperty(
                 "display",
@@ -294,9 +302,11 @@ async function loadArtworkFolderRelations() {
     }
 
     (data || []).forEach(relation => {
-        if (!artworkFolderMap.has(
-            relation.gallery_item_id
-        )) {
+        if (
+            !artworkFolderMap.has(
+                relation.gallery_item_id
+            )
+        ) {
             artworkFolderMap.set(
                 relation.gallery_item_id,
                 []
@@ -326,7 +336,9 @@ function renderGallery() {
 
 function renderFolders() {
     const container =
-        document.getElementById("folderList");
+        document.getElementById(
+            "folderList"
+        );
 
     if (!container) {
         return;
@@ -401,14 +413,14 @@ function createFolderElement(folder) {
             document.createElement("button");
 
         renameButton.type = "button";
-        renameButton.textContent = "✏️ Rename";
+        renameButton.textContent =
+            "✏️ Rename";
 
         renameButton.addEventListener(
             "click",
             event => {
                 event.preventDefault();
                 event.stopPropagation();
-
                 openRenameFolder(folder);
             }
         );
@@ -417,14 +429,14 @@ function createFolderElement(folder) {
             document.createElement("button");
 
         deleteButton.type = "button";
-        deleteButton.textContent = "🗑️ Delete";
+        deleteButton.textContent =
+            "🗑️ Delete";
 
         deleteButton.addEventListener(
             "click",
             event => {
                 event.preventDefault();
                 event.stopPropagation();
-
                 openDeleteFolder(folder);
             }
         );
@@ -437,7 +449,7 @@ function createFolderElement(folder) {
 
     wrapper.appendChild(header);
 
-    const artwork =
+    const folderArtwork =
         getFolderArtwork(folder.id);
 
     const artworkGrid =
@@ -446,9 +458,9 @@ function createFolderElement(folder) {
     artworkGrid.className =
         "artwork-grid";
 
-    artwork.forEach(item => {
+    folderArtwork.forEach(artwork => {
         artworkGrid.appendChild(
-            createArtworkCard(item)
+            createArtworkCard(artwork)
         );
     });
 
@@ -470,7 +482,9 @@ function getFolderArtwork(folderId) {
             ) || [];
 
         return folderIds.some(
-            id => String(id) === String(folderId)
+            id =>
+                String(id) ===
+                String(folderId)
         );
     });
 }
@@ -558,8 +572,7 @@ function createArtworkCard(artwork) {
         artwork.title ||
         "Artwork";
 
-    image.loading =
-        "lazy";
+    image.loading = "lazy";
 
     image.addEventListener(
         "click",
@@ -597,7 +610,9 @@ function createArtworkCard(artwork) {
         description.textContent =
             artwork.description;
 
-        content.appendChild(description);
+        content.appendChild(
+            description
+        );
     }
 
     const actions =
@@ -633,30 +648,15 @@ function createArtworkCard(artwork) {
             "click",
             event => {
                 event.stopPropagation();
+
                 openArtworkFolderManager(
                     artwork
                 );
             }
         );
 
-        const deleteButton =
-            document.createElement("button");
-
-        deleteButton.type = "button";
-        deleteButton.textContent =
-            "🗑️ Delete";
-
-        deleteButton.addEventListener(
-            "click",
-            event => {
-                event.stopPropagation();
-                deleteArtwork(artwork);
-            }
-        );
-
         actions.appendChild(editButton);
         actions.appendChild(folderButton);
-        actions.appendChild(deleteButton);
     }
 
     if (isModerator) {
@@ -772,7 +772,7 @@ function openArtworkViewer(artwork) {
 // EDIT ARTWORK
 // =========================================================
 
-async function editArtwork(artwork) {
+function editArtwork(artwork) {
     if (
         !isGalleryOwner ||
         !currentUser ||
@@ -782,74 +782,300 @@ async function editArtwork(artwork) {
         return;
     }
 
-    const title =
-        window.prompt(
-            "Artwork title:",
-            artwork.title || ""
-        );
+    const dialog =
+        document.createElement("dialog");
 
-    if (title === null) {
-        return;
-    }
+    dialog.className =
+        "artwork-edit-dialog";
 
-    const description =
-        window.prompt(
-            "Artwork description:",
-            artwork.description || ""
-        );
+    const heading =
+        document.createElement("h2");
 
-    if (description === null) {
-        return;
-    }
+    heading.textContent =
+        "✏️ Edit artwork";
 
-    showStatus(
-        "Saving artwork... 🌸"
+    dialog.appendChild(heading);
+
+    const preview =
+        document.createElement("img");
+
+    preview.className =
+        "artwork-edit-preview";
+
+    preview.src =
+        artwork.image_url;
+
+    preview.alt =
+        artwork.title ||
+        "Artwork";
+
+    dialog.appendChild(preview);
+
+    const form =
+        document.createElement("form");
+
+    form.method = "dialog";
+    form.className =
+        "artwork-edit-form";
+
+    const titleLabel =
+        document.createElement("label");
+
+    titleLabel.textContent =
+        "Title";
+
+    const titleInput =
+        document.createElement("input");
+
+    titleInput.type = "text";
+    titleInput.name = "title";
+    titleInput.maxLength = 200;
+    titleInput.value =
+        artwork.title || "";
+
+    titleLabel.appendChild(
+        titleInput
     );
 
-    const {
-        error
-    } = await client
-        .from("gallery_items")
-        .update({
-            title:
-                title.trim() || null,
+    const descriptionLabel =
+        document.createElement("label");
 
-            description:
-                description.trim() || null,
+    descriptionLabel.textContent =
+        "Description";
 
-            updated_at:
-                new Date().toISOString()
-        })
-        .eq(
-            "id",
-            artwork.id
-        )
-        .eq(
-            "user_id",
-            currentUser.id
-        );
+    const descriptionInput =
+        document.createElement("textarea");
 
-    if (error) {
-        console.error(
-            "GALLERY: edit artwork error:",
-            error
-        );
+    descriptionInput.name =
+        "description";
 
-        showStatus(
-            `Couldn't update artwork: ${
-                error.message
-            }`,
-            true
-        );
+    descriptionInput.rows = 5;
+    descriptionInput.maxLength = 2000;
 
-        return;
-    }
+    descriptionInput.value =
+        artwork.description || "";
 
-    await loadGallery();
-
-    showStatus(
-        "Artwork updated! ♡"
+    descriptionLabel.appendChild(
+        descriptionInput
     );
+
+    const status =
+        document.createElement("p");
+
+    status.className =
+        "artwork-edit-status";
+
+    const buttons =
+        document.createElement("div");
+
+    buttons.className =
+        "artwork-edit-actions";
+
+    const cancelButton =
+        document.createElement("button");
+
+    cancelButton.type = "button";
+    cancelButton.textContent =
+        "Cancel";
+
+    cancelButton.addEventListener(
+        "click",
+        () => dialog.close()
+    );
+
+    const deleteButton =
+        document.createElement("button");
+
+    deleteButton.type = "button";
+    deleteButton.textContent =
+        "🗑️ Delete artwork";
+
+    deleteButton.addEventListener(
+        "click",
+        async () => {
+            const confirmed =
+                window.confirm(
+                    `Delete "${
+                        artwork.title ||
+                        "this artwork"
+                    }" permanently?\n\n` +
+                    "The artwork and uploaded image will be removed. This cannot be undone."
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            deleteButton.disabled = true;
+            cancelButton.disabled = true;
+            saveButton.disabled = true;
+
+            status.textContent =
+                "Deleting artwork... 🌸";
+
+            try {
+                await performArtworkDelete(
+                    artwork
+                );
+
+                dialog.close();
+
+                await loadGallery();
+
+                showStatus(
+                    "Artwork deleted. ♡"
+                );
+
+            } catch (error) {
+                console.error(
+                    "GALLERY: edit dialog delete error:",
+                    error
+                );
+
+                status.textContent =
+                    `Couldn't delete artwork: ${
+                        error?.message ||
+                        "Unknown error"
+                    }`;
+
+                deleteButton.disabled =
+                    false;
+
+                cancelButton.disabled =
+                    false;
+
+                saveButton.disabled =
+                    false;
+            }
+        }
+    );
+
+    const saveButton =
+        document.createElement("button");
+
+    saveButton.type = "submit";
+    saveButton.textContent =
+        "Save changes ♡";
+
+    form.addEventListener(
+        "submit",
+        async event => {
+            event.preventDefault();
+
+            saveButton.disabled =
+                true;
+
+            cancelButton.disabled =
+                true;
+
+            deleteButton.disabled =
+                true;
+
+            status.textContent =
+                "Saving artwork... 🌸";
+
+            try {
+                const {
+                    error
+                } = await client
+                    .from("gallery_items")
+                    .update({
+                        title:
+                            titleInput.value.trim() ||
+                            null,
+
+                        description:
+                            descriptionInput.value.trim() ||
+                            null,
+
+                        updated_at:
+                            new Date().toISOString()
+                    })
+                    .eq(
+                        "id",
+                        artwork.id
+                    )
+                    .eq(
+                        "user_id",
+                        currentUser.id
+                    );
+
+                if (error) {
+                    throw error;
+                }
+
+                dialog.close();
+
+                await loadGallery();
+
+                showStatus(
+                    "Artwork updated! ♡"
+                );
+
+            } catch (error) {
+                console.error(
+                    "GALLERY: edit artwork error:",
+                    error
+                );
+
+                status.textContent =
+                    `Couldn't update artwork: ${
+                        error?.message ||
+                        "Unknown error"
+                    }`;
+
+                saveButton.disabled =
+                    false;
+
+                cancelButton.disabled =
+                    false;
+
+                deleteButton.disabled =
+                    false;
+            }
+        }
+    );
+
+    buttons.appendChild(
+        cancelButton
+    );
+
+    buttons.appendChild(
+        deleteButton
+    );
+
+    buttons.appendChild(
+        saveButton
+    );
+
+    form.appendChild(
+        titleLabel
+    );
+
+    form.appendChild(
+        descriptionLabel
+    );
+
+    form.appendChild(
+        status
+    );
+
+    form.appendChild(
+        buttons
+    );
+
+    dialog.appendChild(form);
+
+    document.body.appendChild(dialog);
+
+    dialog.addEventListener(
+        "close",
+        () => dialog.remove()
+    );
+
+    dialog.showModal();
+
+    titleInput.focus();
 }
 
 
@@ -867,15 +1093,13 @@ async function deleteArtwork(artwork) {
         return;
     }
 
-    const title =
-        artwork.title ||
-        "this artwork";
-
     const confirmed =
         window.confirm(
-            `Delete "${title}" permanently?\n\n` +
-            "This will remove the artwork from your gallery " +
-            "and delete its uploaded image. This cannot be undone."
+            `Delete "${
+                artwork.title ||
+                "this artwork"
+            }" permanently?\n\n` +
+            "The artwork and uploaded image will be removed. This cannot be undone."
         );
 
     if (!confirmed) {
@@ -887,80 +1111,9 @@ async function deleteArtwork(artwork) {
     );
 
     try {
-        /*
-         * Remove folder relationships first.
-         */
-        const {
-            error: relationError
-        } = await client
-            .from("gallery_item_folders")
-            .delete()
-            .eq(
-                "gallery_item_id",
-                artwork.id
-            );
-
-        if (relationError) {
-            throw relationError;
-        }
-
-        /*
-         * Delete the database row.
-         */
-        const {
-            error: artworkError
-        } = await client
-            .from("gallery_items")
-            .delete()
-            .eq(
-                "id",
-                artwork.id
-            )
-            .eq(
-                "user_id",
-                currentUser.id
-            );
-
-        if (artworkError) {
-            throw artworkError;
-        }
-
-        /*
-         * New uploads store storage_path.
-         *
-         * Older uploads may only have image_path,
-         * so use it as a fallback.
-         */
-        const storagePath =
-            artwork.storage_path ||
-            artwork.image_path ||
-            null;
-
-        if (storagePath) {
-            const {
-                error: storageError
-            } = await client
-                .storage
-                .from("gallery")
-                .remove([
-                    storagePath
-                ]);
-
-            if (storageError) {
-                console.error(
-                    "GALLERY: storage deletion error:",
-                    storageError
-                );
-
-                showStatus(
-                    "Artwork deleted, but its image couldn't be removed from storage.",
-                    true
-                );
-
-                await loadGallery();
-                return;
-            }
-        }
+        await performArtworkDelete(
+            artwork
+        );
 
         await loadGallery();
 
@@ -986,10 +1139,102 @@ async function deleteArtwork(artwork) {
 
 
 // =========================================================
+// ACTUAL ARTWORK DELETE
+// =========================================================
+
+async function performArtworkDelete(
+    artwork
+) {
+    if (
+        !currentUser ||
+        !isGalleryOwner ||
+        String(artwork.user_id) !==
+            String(currentUser.id)
+    ) {
+        throw new Error(
+            "You don't own this artwork."
+        );
+    }
+
+    const storagePath =
+        artwork.storage_path ||
+        artwork.image_path ||
+        null;
+
+    // -----------------------------------------------------
+    // Delete the Storage file first.
+    //
+    // If Storage deletion is blocked by RLS, we stop here
+    // instead of deleting the database row and leaving a
+    // broken gallery item behind.
+    // -----------------------------------------------------
+
+    if (storagePath) {
+        const {
+            error: storageError
+        } = await client
+            .storage
+            .from("gallery")
+            .remove([
+                storagePath
+            ]);
+
+        if (storageError) {
+            throw new Error(
+                `The image couldn't be removed from storage: ${storageError.message}`
+            );
+        }
+    }
+
+    // -----------------------------------------------------
+    // Remove folder relationships.
+    // -----------------------------------------------------
+
+    const {
+        error: relationError
+    } = await client
+        .from("gallery_item_folders")
+        .delete()
+        .eq(
+            "gallery_item_id",
+            artwork.id
+        );
+
+    if (relationError) {
+        throw relationError;
+    }
+
+    // -----------------------------------------------------
+    // Delete database row.
+    // -----------------------------------------------------
+
+    const {
+        error: artworkError
+    } = await client
+        .from("gallery_items")
+        .delete()
+        .eq(
+            "id",
+            artwork.id
+        )
+        .eq(
+            "user_id",
+            currentUser.id
+        );
+
+    if (artworkError) {
+        throw artworkError;
+    }
+}
+
+
+// =========================================================
 // ARTWORK FOLDER MANAGER
 // =========================================================
 
-function openArtworkFolderManager(artwork) {
+function openArtworkFolderManager(
+    artwork
+) {
     if (
         !isGalleryOwner ||
         !currentUser ||
@@ -1019,7 +1264,9 @@ function openArtworkFolderManager(artwork) {
     description.textContent =
         "Choose which folders this artwork belongs to. ♡";
 
-    dialog.appendChild(description);
+    dialog.appendChild(
+        description
+    );
 
     const list =
         document.createElement("div");
@@ -1040,6 +1287,7 @@ function openArtworkFolderManager(artwork) {
             "You don't have any folders yet. ♡";
 
         list.appendChild(empty);
+
     } else {
         folders.forEach(folder => {
             const label =
@@ -1071,10 +1319,17 @@ function openArtworkFolderManager(artwork) {
                 folder.name ||
                 "Untitled Folder";
 
-            label.appendChild(checkbox);
-            label.appendChild(text);
+            label.appendChild(
+                checkbox
+            );
 
-            list.appendChild(label);
+            label.appendChild(
+                text
+            );
+
+            list.appendChild(
+                label
+            );
         });
     }
 
@@ -1146,7 +1401,8 @@ function openArtworkFolderManager(artwork) {
 
                 showStatus(
                     `Couldn't update folders: ${
-                        error.message
+                        error?.message ||
+                        "Unknown error"
                     }`,
                     true
                 );
@@ -1160,8 +1416,13 @@ function openArtworkFolderManager(artwork) {
         }
     );
 
-    buttons.appendChild(cancelButton);
-    buttons.appendChild(saveButton);
+    buttons.appendChild(
+        cancelButton
+    );
+
+    buttons.appendChild(
+        saveButton
+    );
 
     dialog.appendChild(buttons);
 
@@ -1313,8 +1574,7 @@ function openRenameFolder(folder) {
         return;
     }
 
-    editingFolder =
-        folder;
+    editingFolder = folder;
 
     const dialog =
         document.getElementById(
@@ -1336,9 +1596,7 @@ function openRenameFolder(folder) {
                 folder.name || ""
             );
 
-        if (
-            newName !== null
-        ) {
+        if (newName !== null) {
             renameFolder(
                 folder,
                 newName
@@ -1364,10 +1622,6 @@ function openRenameFolder(folder) {
     }
 }
 
-
-// =========================================================
-// RENAME FOLDER
-// =========================================================
 
 async function renameFolder(
     folder,
@@ -1431,21 +1685,13 @@ function openDeleteFolder(folder) {
         );
 
     if (!confirmed) {
-        deletingFolder =
-            null;
-
+        deletingFolder = null;
         return;
     }
 
-    handleDeleteFolder(
-        folder
-    );
+    handleDeleteFolder(folder);
 }
 
-
-// =========================================================
-// DELETE FOLDER
-// =========================================================
 
 async function handleDeleteFolder(
     folder
@@ -1504,13 +1750,14 @@ async function handleDeleteFolder(
 
         showStatus(
             `Couldn't delete folder: ${
-                error.message
+                error?.message ||
+                "Unknown error"
             }`,
             true
         );
+
     } finally {
-        deletingFolder =
-            null;
+        deletingFolder = null;
     }
 }
 
@@ -1599,7 +1846,6 @@ function openUploadDialog() {
         console.error(
             "GALLERY: #uploadDialog not found."
         );
-
         return;
     }
 
@@ -1613,6 +1859,26 @@ function openUploadDialog() {
     clearUploadErrors();
 
     renderUploadFolderList();
+
+    const preview =
+        document.getElementById(
+            "uploadPreview"
+        );
+
+    const previewImage =
+        document.getElementById(
+            "uploadPreviewImage"
+        );
+
+    if (preview) {
+        preview.hidden = true;
+    }
+
+    if (previewImage) {
+        previewImage.removeAttribute(
+            "src"
+        );
+    }
 
     if (
         typeof dialog.showModal ===
@@ -1684,10 +1950,17 @@ function renderUploadFolderList() {
             folder.name ||
             "Untitled Folder";
 
-        label.appendChild(checkbox);
-        label.appendChild(text);
+        label.appendChild(
+            checkbox
+        );
 
-        container.appendChild(label);
+        label.appendChild(
+            text
+        );
+
+        container.appendChild(
+            label
+        );
     });
 }
 
@@ -1711,17 +1984,17 @@ async function uploadArtworkFromDialog(
 
     const fileInput =
         document.getElementById(
-            "galleryImage"
+            "artworkFile"
         );
 
     const titleInput =
         document.getElementById(
-            "galleryTitle"
+            "artworkTitle"
         );
 
     const descriptionInput =
         document.getElementById(
-            "galleryDescription"
+            "artworkDescription"
         );
 
     const saveButton =
@@ -1729,14 +2002,9 @@ async function uploadArtworkFromDialog(
             "uploadSaveButton"
         );
 
-    const fileError =
+    const errorElement =
         document.getElementById(
-            "uploadFileError"
-        );
-
-    const dialogError =
-        document.getElementById(
-            "uploadDialogError"
+            "uploadError"
         );
 
     const dialog =
@@ -1750,14 +2018,9 @@ async function uploadArtworkFromDialog(
         fileInput?.files?.[0];
 
     if (!file) {
-        if (fileError) {
-            fileError.textContent =
-                "Please choose an image first. ♡";
-
-            fileError.hidden =
-                false;
-        }
-
+        showUploadError(
+            "Please choose an image first. ♡"
+        );
         return;
     }
 
@@ -1773,14 +2036,9 @@ async function uploadArtworkFromDialog(
             file.type
         )
     ) {
-        if (fileError) {
-            fileError.textContent =
-                "Please choose a PNG, JPEG, WEBP, or GIF image.";
-
-            fileError.hidden =
-                false;
-        }
-
+        showUploadError(
+            "Please choose a PNG, JPEG, WEBP, or GIF image."
+        );
         return;
     }
 
@@ -1788,14 +2046,9 @@ async function uploadArtworkFromDialog(
         file.size >
         10 * 1024 * 1024
     ) {
-        if (fileError) {
-            fileError.textContent =
-                "Images must be 10 MB or smaller.";
-
-            fileError.hidden =
-                false;
-        }
-
+        showUploadError(
+            "Images must be 10 MB or smaller."
+        );
         return;
     }
 
@@ -1810,6 +2063,7 @@ async function uploadArtworkFromDialog(
     }
 
     let storagePath = null;
+    let artworkId = null;
 
     try {
         const extension =
@@ -1822,9 +2076,9 @@ async function uploadArtworkFromDialog(
             "Uploading your artwork... 🌸"
         );
 
-        // -----------------------------------------
+        // -------------------------------------------------
         // STORAGE
-        // -----------------------------------------
+        // -------------------------------------------------
 
         const {
             error: uploadError
@@ -1850,9 +2104,9 @@ async function uploadArtworkFromDialog(
             throw uploadError;
         }
 
-        // -----------------------------------------
+        // -------------------------------------------------
         // PUBLIC URL
-        // -----------------------------------------
+        // -------------------------------------------------
 
         const {
             data: publicUrlData
@@ -1872,9 +2126,9 @@ async function uploadArtworkFromDialog(
             );
         }
 
-        // -----------------------------------------
+        // -------------------------------------------------
         // DATABASE
-        // -----------------------------------------
+        // -------------------------------------------------
 
         const title =
             titleInput?.value.trim() ||
@@ -1896,10 +2150,8 @@ async function uploadArtworkFromDialog(
                 image_url:
                     imageUrl,
 
-                /*
-                 * Keep both fields for compatibility
-                 * with older gallery rows/code.
-                 */
+                // Keep both names so this page and
+                // gallery-folder.js remain compatible.
                 image_path:
                     storagePath,
 
@@ -1907,6 +2159,7 @@ async function uploadArtworkFromDialog(
                     storagePath,
 
                 title,
+
                 description,
 
                 is_hidden:
@@ -1919,9 +2172,12 @@ async function uploadArtworkFromDialog(
             throw itemError;
         }
 
-        // -----------------------------------------
+        artworkId =
+            artwork.id;
+
+        // -------------------------------------------------
         // FOLDERS
-        // -----------------------------------------
+        // -------------------------------------------------
 
         const selectedFolderIds =
             Array.from(
@@ -1952,23 +2208,14 @@ async function uploadArtworkFromDialog(
                 .insert(rows);
 
             if (folderError) {
-                /*
-                 * The artwork itself exists, so don't
-                 * delete it just because folder assignment
-                 * failed.
-                 */
                 console.error(
                     "GALLERY: folder assignment error:",
                     folderError
                 );
 
-                if (dialogError) {
-                    dialogError.textContent =
-                        `Artwork uploaded, but folders couldn't be assigned: ${folderError.message}`;
-
-                    dialogError.hidden =
-                        false;
-                }
+                showUploadError(
+                    `Artwork uploaded, but folders couldn't be assigned: ${folderError.message}`
+                );
             }
         }
 
@@ -1988,11 +2235,9 @@ async function uploadArtworkFromDialog(
             error
         );
 
-        /*
-         * If the database insert failed after the
-         * Storage upload, clean up the uploaded file.
-         */
-        if (storagePath) {
+        // If the DB insert failed after the
+        // Storage upload, remove the uploaded file.
+        if (storagePath && !artworkId) {
             try {
                 await client
                     .storage
@@ -2008,14 +2253,14 @@ async function uploadArtworkFromDialog(
             }
         }
 
-        if (dialogError) {
-            dialogError.textContent =
+        if (errorElement) {
+            errorElement.textContent =
                 `Couldn't upload image: ${
                     error?.message ||
                     "Unknown error"
                 }`;
 
-            dialogError.hidden =
+            errorElement.hidden =
                 false;
         }
 
@@ -2035,6 +2280,30 @@ async function uploadArtworkFromDialog(
                 "Upload ♡";
         }
     }
+}
+
+
+// =========================================================
+// UPLOAD ERROR
+// =========================================================
+
+function showUploadError(
+    message
+) {
+    const element =
+        document.getElementById(
+            "uploadError"
+        );
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent =
+        message || "";
+
+    element.hidden =
+        !message;
 }
 
 
@@ -2108,7 +2377,8 @@ async function handleFolderFormSubmit(
         );
 
     const name =
-        input?.value.trim() || "";
+        input?.value.trim() ||
+        "";
 
     if (!name) {
         return;
@@ -2127,8 +2397,11 @@ async function handleFolderFormSubmit(
             showStatus(
                 "Folder renamed! ♡"
             );
+
         } else {
-            await client
+            const {
+                error
+            } = await client
                 .from("gallery_folders")
                 .insert({
                     user_id:
@@ -2136,6 +2409,10 @@ async function handleFolderFormSubmit(
 
                     name
                 });
+
+            if (error) {
+                throw error;
+            }
 
             await loadGallery();
 
@@ -2161,7 +2438,8 @@ async function handleFolderFormSubmit(
 
         showStatus(
             `Couldn't save folder: ${
-                error.message
+                error?.message ||
+                "Unknown error"
             }`,
             true
         );
@@ -2178,9 +2456,7 @@ async function handleDeleteFolderSubmit(
 ) {
     event.preventDefault();
 
-    if (
-        !deletingFolder
-    ) {
+    if (!deletingFolder) {
         return;
     }
 
@@ -2204,23 +2480,20 @@ async function handleDeleteFolderSubmit(
 // =========================================================
 
 function clearUploadErrors() {
-    [
-        "uploadFileError",
-        "uploadDialogError"
-    ].forEach(id => {
-        const element =
-            document.getElementById(id);
+    const element =
+        document.getElementById(
+            "uploadError"
+        );
 
-        if (!element) {
-            return;
-        }
+    if (!element) {
+        return;
+    }
 
-        element.textContent =
-            "";
+    element.textContent =
+        "";
 
-        element.hidden =
-            true;
-    });
+    element.hidden =
+        true;
 }
 
 
@@ -2229,25 +2502,22 @@ function clearUploadErrors() {
 // =========================================================
 
 function bindGalleryButtons() {
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // UPLOAD
-    // -----------------------------------------
+    // -----------------------------------------------------
 
-    const uploadButton =
-        document.getElementById(
+    document
+        .getElementById(
             "uploadArtworkButton"
+        )
+        ?.addEventListener(
+            "click",
+            openUploadDialog
         );
 
-    uploadButton?.addEventListener(
-        "click",
-        openUploadDialog
-    );
-
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // NEW FOLDER
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2267,10 +2537,9 @@ function bindGalleryButtons() {
             createFolder
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // REFRESH
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2283,10 +2552,9 @@ function bindGalleryButtons() {
             }
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // FOLDER FORM
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2297,10 +2565,9 @@ function bindGalleryButtons() {
             handleFolderFormSubmit
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // FOLDER CANCEL
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2323,10 +2590,9 @@ function bindGalleryButtons() {
             }
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // DELETE FOLDER FORM
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2337,10 +2603,9 @@ function bindGalleryButtons() {
             handleDeleteFolderSubmit
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // DELETE FOLDER CANCEL
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2363,10 +2628,9 @@ function bindGalleryButtons() {
             }
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // UPLOAD FORM
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2377,10 +2641,9 @@ function bindGalleryButtons() {
             uploadArtworkFromDialog
         );
 
-
-    // -----------------------------------------
+    // -----------------------------------------------------
     // UPLOAD CANCEL
-    // -----------------------------------------
+    // -----------------------------------------------------
 
     document
         .getElementById(
@@ -2415,6 +2678,9 @@ function showStatus(
     const status =
         document.getElementById(
             "galleryStatus"
+        ) ||
+        document.getElementById(
+            "folderStatus"
         );
 
     if (!status) {
