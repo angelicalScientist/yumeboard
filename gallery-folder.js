@@ -205,8 +205,6 @@
             folder =
                 loadedFolder;
 
-
-            // The folder itself tells us who owns it.
             isOwner =
                 !!currentUser &&
                 String(currentUser.id) ===
@@ -876,12 +874,7 @@
         // FILE INPUT
         // =========================
 
-        /*
-         * Re-check the file input at submit time.
-         *
-         * This makes the uploader work even if the
-         * HTML uses a different ID.
-         */
+
         const fileInput =
             document.getElementById("galleryImage") ||
             uploadForm?.querySelector(
@@ -1093,15 +1086,7 @@
             // CURRENT FOLDER
             // =========================
 
-            /*
-             * IMPORTANT:
-             *
-             * We do NOT ask the user to select a folder.
-             *
-             * Because this upload happened from
-             * gallery-folder.html, the destination is
-             * automatically the folder we're currently in.
-             */
+
             const {
                 error: relationshipError
             } = await client
@@ -1234,10 +1219,6 @@
                 message;
         }
 
-        /*
-         * Only use alert if neither error element
-         * exists.
-         */
         if (
             !uploadDialogError &&
             !uploadFileError
