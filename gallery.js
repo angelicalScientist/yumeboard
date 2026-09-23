@@ -2235,8 +2235,7 @@ async function uploadArtworkFromDialog(
             error
         );
 
-        // If the DB insert failed after the
-        // Storage upload, remove the uploaded file.
+
         if (storagePath && !artworkId) {
             try {
                 await client
