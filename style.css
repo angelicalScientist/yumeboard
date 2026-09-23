@@ -19,7 +19,7 @@
 @font-face {
     font-family: "Pixelated Times New Roman";
     src: url("fonts/pixelated-times-new-roman.otf") format("opentype");
-    font-size: 18px;
+    font-size: 30px;
     line-height: 1.55;
     font-weight: normal;
     font-style: normal;
@@ -28,7 +28,7 @@
 
 body {
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 18px;
+    font-size: 30px;
     line-height: 1.55;
 }
 
@@ -37,7 +37,7 @@ input,
 textarea,
 select {
     font-family: inherit;
-    font-size: 18px;
+    font-size: 30px;
     line-height: 1.55;
 }
 
@@ -50,7 +50,7 @@ body {
     margin: 0;
     padding: 30px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 18px;
+    font-size: 30px;
     line-height: 1.55;
     background: #fcecff;
     color: var(--text-color);
@@ -64,7 +64,7 @@ button {
     border-radius: 20px;
     background: var(--accent-color);
     color: white;
-    font-size: 18px;
+    font-size: 30px;
     cursor: pointer;
     transition:
         transform 0.2s ease,
@@ -258,7 +258,7 @@ button:disabled {
 }
 
 .settings-arrow {
-    font-size: 18px;
+    font-size: 30px;
     line-height: 1;
     transition: transform 0.2s ease;
 }
@@ -719,7 +719,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 15px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 18px;
+    font-size: 30px;
 }
 
 .guestbook-form textarea {
@@ -762,7 +762,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 12px;
     font-family: "Pixelated Times New Roman", serif;
-        font-size: 18px;
+        font-size: 30px;
         line-height: 1.55;
 }
 
@@ -852,7 +852,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 15px;
     font-family: "Pixelated Times New Roman", serif;
-    font-size: 18px;
+    font-size: 30px;
 }
 
 .editor-card textarea {
@@ -941,7 +941,7 @@ button:disabled {
     border: 2px solid var(--border-color);
     border-radius: 10px;
     font-family: inherit;
-    font-size: 18px;
+    font-size: 30px;
 }
 
 .checkbox-label {
