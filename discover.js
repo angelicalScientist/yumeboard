@@ -1,44 +1,34 @@
-const userList =
-    document.getElementById("userList");
-
-const userSearch =
-    document.getElementById("userSearch");
-
-const searchMessage =
-    document.getElementById("searchMessage");
-
-const loadMoreButton =
-    document.getElementById("loadMoreButton");
-
-const loadMoreContainer =
-    document.getElementById("loadMoreContainer");
-
-const backToProfile =
-    document.getElementById("backToProfile");
-
-
-// ==============================
-// SETTINGS
-// ==============================
+const userList = document.getElementById("userList");
+const userSearch = document.getElementById("userSearch");
+const searchMessage = document.getElementById("searchMessage");
+const loadMoreButton = document.getElementById("loadMoreButton");
+const loadMoreContainer = document.getElementById("loadMoreContainer");
+const backToProfile = document.getElementById("backToProfile");
+const fandomFilter = document.getElementById("fandomFilter");
 
 const USERS_PER_PAGE = 24;
 
 let currentOffset = 0;
 let currentSearch = "";
+let currentFandomId = "";
 let loadingUsers = false;
 let hasMoreUsers = true;
 
 let currentUser = null;
 let currentUserFos = [];
-
 let blockedUserIds = new Set();
 
-// ==============================
-// ESCAPE HTML
-// ==============================
+
+// --------------------------------------------------
+// HELPERS
+// --------------------------------------------------
 
 function escapeHtml(value) {
-    return String(value || "")
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    return String(value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -47,47 +37,36 @@ function escapeHtml(value) {
 }
 
 
-// ==============================
-// GET LOGGED-IN USER
-// ==============================
+// --------------------------------------------------
+// CURRENT USER
+// --------------------------------------------------
 
 async function getCurrentUser() {
-
     const {
-        data,
+        data: { user },
         error
-    } = await supabaseClient
-        .auth
-        .getUser();
+    } = await supabaseClient.auth.getUser();
 
     if (error) {
-        console.error(
-            "Couldn't get current user:",
-            error
-        );
-
+        console.error("Couldn't get current user:", error);
         return null;
     }
 
-    return data.user || null;
+    return user || null;
 }
 
 
-// ==============================
-// LOAD MY F/Os
-// ==============================
+// --------------------------------------------------
+// LOAD CURRENT USER'S F/OS
+// --------------------------------------------------
 
 async function loadCurrentUserFos() {
-
     if (!currentUser) {
         currentUserFos = [];
         return;
     }
 
-    const {
-        data,
-        error
-    } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("fos")
         .select(`
             id,
@@ -104,332 +83,326 @@ async function loadCurrentUserFos() {
                 image_url
             )
         `)
-        .eq(
-            "user_id",
-            currentUser.id
-        );
+        .eq("user_id", currentUser.id);
 
     if (error) {
-        console.error(
-            "Couldn't load your F/Os:",
-            error
-        );
-
+        console.error("Couldn't load your F/Os:", error);
         currentUserFos = [];
         return;
     }
 
-    currentUserFos =
-        data || [];
-
-    console.log(
-        "🌸 My F/Os loaded:",
-        currentUserFos
-    );
+    currentUserFos = data || [];
 }
 
 
-// ==============================
-// CHECK F/O COMPATIBILITY
-// ==============================
+// --------------------------------------------------
+// COMPATIBILITY
+// --------------------------------------------------
 
-function getFoCompatibility(
-    myFo,
-    theirFo
-) {
-
-    // These aren't the same character,
-    // so there is no doubles conflict.
-    if (
-        !myFo ||
-        !theirFo ||
-        myFo.character_id !== theirFo.character_id
-    ) {
-        return "compatible";
+function getFoCompatibility(myFo, theirFo) {
+    if (!myFo || !theirFo) {
+        return null;
     }
 
-    // Someone who welcomes doubles
-    // has no conflict.
-    if (
-        theirFo.doubles_preference ===
-        "welcome"
-    ) {
-        return "compatible";
+    const myCharacterId =
+        myFo.character_id ||
+        myFo.characters?.id ||
+        null;
+
+    const theirCharacterId =
+        theirFo.character_id ||
+        theirFo.characters?.id ||
+        null;
+
+    if (!myCharacterId || !theirCharacterId) {
+        return null;
     }
 
-    // Ask-first isn't a hard conflict.
-    if (
-        theirFo.doubles_preference ===
-        "ask_first"
-    ) {
-        return "ask_first";
+    if (myCharacterId !== theirCharacterId) {
+        return null;
     }
 
-    // "no" means they do not want
-    // another person sharing this character.
-    if (
-        theirFo.doubles_preference ===
-        "no"
-    ) {
-        return "conflict";
-    }
-
-    // Unknown / empty preference.
-    return "compatible";
-}
-
-
-// ==============================
-// CHECK ALL F/O PAIRS
-// ==============================
-
-function getUserCompatibility(theirFos) {
+    const myPreference = myFo.doubles_preference || "okay";
+    const theirPreference = theirFo.doubles_preference || "okay";
 
     if (
-        !currentUser ||
-        currentUserFos.length === 0 ||
-        theirFos.length === 0
+        myPreference === "no" ||
+        theirPreference === "no"
     ) {
         return {
-            status: "compatible",
-            conflicts: [],
-            askFirst: []
+            type: "conflict",
+            text: "♡ F/O overlap preference conflict"
         };
     }
 
-    const conflicts = [];
-    const askFirst = [];
-
-    currentUserFos.forEach(
-        function (myFo) {
-
-            theirFos.forEach(
-                function (theirFo) {
-
-                    // These are different characters,
-                    // so there is no doubles conflict.
-                    if (
-                        !myFo.character_id ||
-                        !theirFo.character_id ||
-                        myFo.character_id !==
-                            theirFo.character_id
-                    ) {
-                        return;
-                    }
-
-
-                    // ==============================
-                    // SHARING PREFERENCES
-                    // ==============================
-
-                    const myPreference =
-                        myFo.doubles_preference ||
-                        "ask_first";
-
-                    const theirPreference =
-                        theirFo.doubles_preference ||
-                        "ask_first";
-
-
-                    // ==============================
-                    // EITHER PERSON SAYS "NO"
-                    // ==============================
-
-                    if (
-                        myPreference === "no" ||
-                        theirPreference === "no"
-                    ) {
-
-                        conflicts.push({
-                            myFo,
-                            theirFo
-                        });
-
-                        return;
-                    }
-
-
-                    // ==============================
-                    // OTHERWISE, CHECK ASK-FIRST
-                    // ==============================
-
-                    if (
-                        myPreference ===
-                            "ask_first" ||
-                        theirPreference ===
-                            "ask_first"
-                    ) {
-
-                        askFirst.push({
-                            myFo,
-                            theirFo
-                        });
-                    }
-                }
-            );
-        }
-    );
-
-
-    // ==============================
-    // FINAL STATUS
-    // ==============================
-
     if (
-        conflicts.length > 0
+        myPreference === "ask" ||
+        theirPreference === "ask"
     ) {
         return {
-            status: "conflict",
-            conflicts,
-            askFirst
+            type: "ask",
+            text: "♡ Ask before interacting with this F/O"
         };
     }
-
-
-    if (
-        askFirst.length > 0
-    ) {
-        return {
-            status: "ask_first",
-            conflicts,
-            askFirst
-        };
-    }
-
 
     return {
-        status: "compatible",
-        conflicts,
-        askFirst
+        type: "compatible",
+        text: "♡ F/O compatibility"
     };
 }
 
-// ==============================
-// GET COMPATIBILITY LABEL
-// ==============================
 
-function getCompatibilityHTML(
-    compatibility
-) {
-
-    if (
-        compatibility.status ===
-        "conflict"
-    ) {
-
-        const names =
-            compatibility.conflicts
-                .map(
-                    function (pair) {
-
-                        return (
-                            pair.theirFo
-                                .characters
-                                ?.canonical_name ||
-                            "this character"
-                        );
-                    }
-                )
-                .filter(
-                    function (
-                        name,
-                        index,
-                        array
-                    ) {
-                        return (
-                            array.indexOf(
-                                name
-                            ) === index
-                        );
-                    }
-                );
-
-        return `
-            <div class="discover-compatibility discover-compatibility-conflict">
-                🔒 <strong>Non-sharing conflict</strong>
-
-                ${
-                    names.length > 0
-                        ? `
-                            <small>
-                                Their F/O:
-                                ${escapeHtml(
-                                    names.join(", ")
-                                )}
-                            </small>
-                        `
-                        : ""
-                }
-            </div>
-        `;
+function getUserCompatibility(theirFos) {
+    if (!currentUserFos.length || !theirFos.length) {
+        return {
+            type: "none",
+            text: ""
+        };
     }
 
-    if (
-        compatibility.status ===
-        "ask_first"
-    ) {
+    let hasAsk = false;
 
-        const names =
-            compatibility.askFirst
-                .map(
-                    function (pair) {
+    for (const myFo of currentUserFos) {
+        for (const theirFo of theirFos) {
+            const compatibility = getFoCompatibility(
+                myFo,
+                theirFo
+            );
 
-                        return (
-                            pair.theirFo
-                                .characters
-                                ?.canonical_name ||
-                            "this character"
-                        );
-                    }
-                )
-                .filter(
-                    function (
-                        name,
-                        index,
-                        array
-                    ) {
-                        return (
-                            array.indexOf(
-                                name
-                            ) === index
-                        );
-                    }
-                );
+            if (!compatibility) {
+                continue;
+            }
 
-        return `
-            <div class="discover-compatibility discover-compatibility-ask">
-                💭 <strong>Ask before interacting</strong>
+            if (compatibility.type === "conflict") {
+                return compatibility;
+            }
 
-                ${
-                    names.length > 0
-                        ? `
-                            <small>
-                                Their F/O:
-                                ${escapeHtml(
-                                    names.join(", ")
-                                )}
-                            </small>
-                        `
-                        : ""
-                }
-            </div>
-        `;
+            if (compatibility.type === "ask") {
+                hasAsk = true;
+            }
+        }
+    }
+
+    if (hasAsk) {
+        return {
+            type: "ask",
+            text: "♡ Ask before interacting with this F/O"
+        };
+    }
+
+    return {
+        type: "compatible",
+        text: "♡ F/O compatibility"
+    };
+}
+
+
+function getCompatibilityHTML(compatibility) {
+    if (!compatibility || compatibility.type === "none") {
+        return "";
+    }
+
+    let className = "compatibility-badge";
+
+    if (compatibility.type === "conflict") {
+        className += " conflict";
+    } else if (compatibility.type === "ask") {
+        className += " ask";
+    } else if (compatibility.type === "compatible") {
+        className += " compatible";
     }
 
     return `
-        <div class="discover-compatibility discover-compatibility-compatible">
-            🌸 <strong>No sharing conflict detected</strong>
-        </div>
+        <p class="${className}">
+            ${escapeHtml(compatibility.text)}
+        </p>
     `;
 }
 
 
-// ==============================
+// --------------------------------------------------
+// LOAD FANDOMS
+// --------------------------------------------------
+
+async function loadFandoms() {
+    if (!fandomFilter) {
+        return;
+    }
+
+    const { data: fandoms, error } = await supabaseClient
+        .from("fandoms")
+        .select(`
+            id,
+            name
+        `)
+        .order("name", {
+            ascending: true
+        });
+
+    if (error) {
+        console.error("Couldn't load fandoms:", error);
+        return;
+    }
+
+    fandomFilter.innerHTML = `
+        <option value="">All fandoms ♡</option>
+    `;
+
+    (fandoms || []).forEach(function (fandom) {
+        const option = document.createElement("option");
+
+        option.value = fandom.id;
+        option.textContent = fandom.name;
+
+        fandomFilter.appendChild(option);
+    });
+
+    fandomFilter.value = currentFandomId;
+}
+
+
+// --------------------------------------------------
+// LOAD BLOCKED USERS
+// --------------------------------------------------
+
+async function loadBlockedUsers() {
+    if (!currentUser) {
+        blockedUserIds = new Set();
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("blocked_users")
+        .select("blocked_id")
+        .eq("blocker_id", currentUser.id);
+
+    if (error) {
+        console.error("Couldn't load blocked users:", error);
+        blockedUserIds = new Set();
+        return;
+    }
+
+    blockedUserIds = new Set(
+        (data || [])
+            .map(function (row) {
+                return row.blocked_id;
+            })
+            .filter(Boolean)
+    );
+}
+
+
+// --------------------------------------------------
+// RENDER USER
+// --------------------------------------------------
+
+function renderUser(user) {
+    const card = document.createElement("article");
+
+    card.className = "user-card";
+
+    const displayName =
+        user.display_name ||
+        user.username ||
+        "Unnamed user";
+
+    const username =
+        user.username ||
+        "";
+
+    const avatarHTML = user.avatar_url
+        ? `
+            <img
+                src="${escapeHtml(user.avatar_url)}"
+                alt=""
+                class="user-card-avatar"
+            >
+        `
+        : `
+            <div class="user-card-avatar placeholder-avatar">
+                ♡
+            </div>
+        `;
+
+    const bioHTML = user.bio
+        ? `
+            <p class="user-card-bio">
+                ${escapeHtml(user.bio)}
+            </p>
+        `
+        : "";
+
+    let mainFoHTML = "";
+
+    if (user.fos && user.fos.length > 0) {
+        const mainFo =
+            user.fos.find(function (fo) {
+                return fo.is_main;
+            }) || user.fos[0];
+
+        const characterName =
+            mainFo.characters?.canonical_name ||
+            "Unknown character";
+
+        mainFoHTML = `
+            <p class="user-card-fo">
+                ♡ Main F/O:
+                <strong>${escapeHtml(characterName)}</strong>
+            </p>
+        `;
+    }
+
+    const compatibilityHTML =
+        getCompatibilityHTML(user.compatibility);
+
+    card.innerHTML = `
+        <div class="user-card-top">
+            ${avatarHTML}
+
+            <div class="user-card-heading">
+                <h3>
+                    ${escapeHtml(displayName)}
+                </h3>
+
+                <p class="user-card-username">
+                    @${escapeHtml(username)}
+                </p>
+            </div>
+        </div>
+
+        ${bioHTML}
+
+        ${mainFoHTML}
+
+        ${compatibilityHTML}
+
+        <button
+            type="button"
+            class="view-profile-button"
+        >
+            View Profile ♡
+        </button>
+    `;
+
+    const profileButton =
+        card.querySelector(".view-profile-button");
+
+    if (profileButton) {
+        profileButton.addEventListener("click", function () {
+            window.location.href =
+                `users-profile.html?id=${encodeURIComponent(user.id)}`;
+        });
+    }
+
+    userList.appendChild(card);
+}
+
+
+// --------------------------------------------------
 // LOAD USERS
-// ==============================
+// --------------------------------------------------
 
 async function loadUsers(reset = false) {
-
     if (loadingUsers) {
         return;
     }
@@ -437,185 +410,128 @@ async function loadUsers(reset = false) {
     if (reset) {
         currentOffset = 0;
         hasMoreUsers = true;
-        userList.innerHTML = "";
+
+        userList.innerHTML = `
+            <p class="search-hint">
+                Loading people... 🌸
+            </p>
+        `;
 
         if (loadMoreContainer) {
             loadMoreContainer.style.display = "none";
         }
     }
 
-    if (!hasMoreUsers) {
-        return;
-    }
-
     loadingUsers = true;
 
     if (searchMessage) {
-        searchMessage.textContent =
-            "Loading users... 🌸";
+        searchMessage.textContent = "Loading users... 🌸";
     }
 
-    // Number of visible users we want
-    // to add during this load.
-    const targetVisibleUsers =
-        USERS_PER_PAGE;
-
     let visibleUsersAdded = 0;
+    const targetVisibleUsers = USERS_PER_PAGE;
 
-    // Keep fetching database pages until
-    // we have enough visible users.
     while (
-        visibleUsersAdded <
-            targetVisibleUsers &&
+        visibleUsersAdded < targetVisibleUsers &&
         hasMoreUsers
     ) {
+        let profileSelect = `
+            id,
+            username,
+            display_name,
+            bio,
+            avatar_url
+        `;
 
-        // ==============================
-        // PROFILE QUERY
-        // ==============================
-
-        let profileQuery =
-            supabaseClient
-                .from("profiles")
-                .select(`
-                    id,
-                    username,
-                    display_name,
-                    bio,
-                    avatar_url
-                `)
-                .order(
-                    "username",
-                    {
-                        ascending: true
-                    }
+       
+        if (currentFandomId) {
+            profileSelect += `,
+                profile_fandoms!inner (
+                    fandom_id
                 )
-                .range(
-                    currentOffset,
-                    currentOffset +
-                        USERS_PER_PAGE -
-                        1
-                );
-
-
-        // ==============================
-        // SEARCH
-        // ==============================
-
-        if (
-            currentSearch !== ""
-        ) {
-
-            const safeSearch =
-                currentSearch
-                    .replaceAll("%", "")
-                    .replaceAll(",", "")
-                    .replaceAll(".", "");
-
-            profileQuery =
-                supabaseClient
-                    .from("profiles")
-                    .select(`
-                        id,
-                        username,
-                        display_name,
-                        bio,
-                        avatar_url
-                    `)
-                    .or(
-                        `username.ilike.%${safeSearch}%,display_name.ilike.%${safeSearch}%`
-                    )
-                    .order(
-                        "username",
-                        {
-                            ascending: true
-                        }
-                    )
-                    .range(
-                        currentOffset,
-                        currentOffset +
-                            USERS_PER_PAGE -
-                            1
-                    );
+            `;
         }
 
+        let profileQuery = supabaseClient
+            .from("profiles")
+            .select(profileSelect)
+            .order("username", {
+                ascending: true
+            })
+            .range(
+                currentOffset,
+                currentOffset + USERS_PER_PAGE - 1
+            );
 
-        // ==============================
-        // GET PROFILES
-        // ==============================
+        if (currentSearch) {
+            const safeSearch = currentSearch
+                .replaceAll("%", "")
+                .replaceAll(",", "")
+                .replaceAll(".", "");
+
+            profileQuery = supabaseClient
+                .from("profiles")
+                .select(profileSelect)
+                .or(
+                    `username.ilike.%${safeSearch}%,display_name.ilike.%${safeSearch}%`
+                )
+                .order("username", {
+                    ascending: true
+                })
+                .range(
+                    currentOffset,
+                    currentOffset + USERS_PER_PAGE - 1
+                );
+        }
+
+        if (currentFandomId) {
+            profileQuery = profileQuery.eq(
+                "profile_fandoms.fandom_id",
+                currentFandomId
+            );
+        }
 
         const {
             data: profiles,
             error: profileError
         } = await profileQuery;
 
-
         if (profileError) {
-
             console.error(
-                "Couldn't load profiles:",
+                "Couldn't load discover profiles:",
                 profileError
             );
 
             if (searchMessage) {
                 searchMessage.textContent =
-                    "Couldn't load users. >_<";
+                    "Couldn't load people right now. Please try again. ♡";
             }
 
-            loadingUsers = false;
-            return;
-        }
-
-
-        const loadedProfiles =
-            profiles || [];
-
-
-        // If this database page is smaller
-        // than the page size, we've reached
-        // the actual end of the profiles.
-        if (
-            loadedProfiles.length <
-            USERS_PER_PAGE
-        ) {
-            hasMoreUsers = false;
-        }
-
-
-        // No profiles left at all.
-        if (
-            loadedProfiles.length === 0
-        ) {
-            hasMoreUsers = false;
             break;
         }
 
+        const loadedProfiles = profiles || [];
 
-        // ==============================
-        // GET USER IDS
-        // ==============================
+        if (loadedProfiles.length < USERS_PER_PAGE) {
+            hasMoreUsers = false;
+        }
 
-        const userIds =
-            loadedProfiles.map(
-                function (profile) {
-                    return profile.id;
-                }
-            );
+        if (loadedProfiles.length === 0) {
+            break;
+        }
 
+        const userIds = loadedProfiles
+            .map(function (profile) {
+                return profile.id;
+            })
+            .filter(Boolean);
 
-        // ==============================
-        // LOAD ALL F/Os
-        // ==============================
+        let foMap = new Map();
 
-        let allFos = [];
-
-        if (
-            userIds.length > 0
-        ) {
-
+        if (userIds.length > 0) {
             const {
-                data: foData,
-                error: foError
+                data: fos,
+                error: fosError
             } = await supabaseClient
                 .from("fos")
                 .select(`
@@ -633,179 +549,123 @@ async function loadUsers(reset = false) {
                         image_url
                     )
                 `)
-                .in(
-                    "user_id",
-                    userIds
-                );
+                .in("user_id", userIds);
 
-            if (foError) {
-
+            if (fosError) {
                 console.error(
                     "Couldn't load F/Os:",
-                    foError
+                    fosError
                 );
-
             } else {
+                (fos || []).forEach(function (fo) {
+                    if (!foMap.has(fo.user_id)) {
+                        foMap.set(fo.user_id, []);
+                    }
 
-                allFos =
-                    foData || [];
+                    foMap.get(fo.user_id).push(fo);
+                });
             }
         }
 
-
-        // ==============================
-        // BUILD F/O MAP
-        // ==============================
-
-        const foMap =
-            new Map();
-
-        allFos.forEach(
-            function (fo) {
-
-                if (
-                    !foMap.has(
-                        fo.user_id
-                    )
-                ) {
-                    foMap.set(
-                        fo.user_id,
-                        []
-                    );
-                }
-
-                foMap
-                    .get(fo.user_id)
-                    .push(fo);
+        for (const profile of loadedProfiles) {
+            // Never show yourself.
+            if (
+                currentUser &&
+                profile.id === currentUser.id
+            ) {
+                continue;
             }
-        );
 
-
-        // ==============================
-        // ATTACH F/Os + CHECK COMPATIBILITY
-        // ==============================
-
-        loadedProfiles.forEach(
-            function (profile) {
-
-                profile.fos =
-                    foMap.get(
-                        profile.id
-                    ) || [];
-
-                profile.compatibility =
-                    getUserCompatibility(
-                        profile.fos
-                    );
+            // Never show blocked users.
+            if (blockedUserIds.has(profile.id)) {
+                continue;
             }
-        );
 
+            const theirFos =
+                foMap.get(profile.id) || [];
 
-        // ==============================
-        // FILTER + RENDER
-        // ==============================
+            profile.fos = theirFos;
 
-        loadedProfiles.forEach(
-            function (user) {
+            profile.compatibility =
+                getUserCompatibility(theirFos);
 
-                // Never show yourself.
-                if (
-                    currentUser &&
-                    user.id === currentUser.id
-                ) {
-                    return;
-                }
-
-                // Never show blocked users.
-                if (
-                    blockedUserIds.has(user.id)
-                ) {
-                    return;
-                }
-
-                // Hide users with a matching
-                // F/O marked as "no doubles".
-                if (
-                    user.compatibility &&
-                    user.compatibility.status ===
-                        "conflict"
-                ) {
-                    return;
-                }
-
-                renderUser(user);
-
-                visibleUsersAdded++;
+            // Hide doubles whose preferences conflict.
+            if (
+                profile.compatibility &&
+                profile.compatibility.type === "conflict"
+            ) {
+                continue;
             }
-        );
 
+            renderUser(profile);
 
-        // ==============================
-        // MOVE TO NEXT DATABASE PAGE
-        // ==============================
+            visibleUsersAdded++;
 
-        currentOffset +=
-            loadedProfiles.length;
+            if (
+                visibleUsersAdded >= targetVisibleUsers
+            ) {
+                break;
+            }
+        }
 
+        currentOffset += loadedProfiles.length;
 
-        // If we already filled the visible
-        // batch, stop fetching.
         if (
-            visibleUsersAdded >=
-            targetVisibleUsers
+            loadedProfiles.length < USERS_PER_PAGE
         ) {
-            break;
+            hasMoreUsers = false;
         }
     }
 
-
-    // ==============================
-    // UPDATE MESSAGE
-    // ==============================
+    // --------------------------------------------------
+    // STATUS MESSAGE
+    // --------------------------------------------------
 
     if (searchMessage) {
-
         if (
-            currentSearch !== ""
+            currentSearch !== "" ||
+            currentFandomId !== ""
         ) {
+            const searchParts = [];
 
-            searchMessage.textContent =
-                `${visibleUsersAdded} compatible result${
-                    visibleUsersAdded === 1
-                        ? ""
-                        : "s"
-                } found ♡`;
+            if (currentSearch !== "") {
+                searchParts.push(
+                    `search for "${escapeHtml(currentSearch)}"`
+                );
+            }
 
+            if (currentFandomId !== "" && fandomFilter) {
+                const selectedOption =
+                    fandomFilter.options[
+                        fandomFilter.selectedIndex
+                    ];
+
+                if (selectedOption) {
+                    searchParts.push(
+                        `fandom "${escapeHtml(selectedOption.textContent)}"`
+                    );
+                }
+            }
+
+            if (searchParts.length > 0) {
+                searchMessage.textContent =
+                    `Showing people matching your ${searchParts.join(" and ")}. ♡`;
+            }
         } else {
-
             searchMessage.textContent =
-                "Discover fellow yume enthusiasts! ♡";
+                "Find other yumeshippers and explore their profiles! 🌸";
         }
     }
 
-
-    // ==============================
-    // LOAD MORE VISIBILITY
-    // ==============================
-
     if (loadMoreContainer) {
-
         loadMoreContainer.style.display =
-            hasMoreUsers
-                ? "block"
-                : "none";
+            hasMoreUsers ? "block" : "none";
     }
-
-
-    // ==============================
-    // NOTHING FOUND
-    // ==============================
 
     if (
         reset &&
         visibleUsersAdded === 0
     ) {
-
         userList.innerHTML = `
             <p class="search-hint">
                 No compatible users found yet! ♡
@@ -813,296 +673,13 @@ async function loadUsers(reset = false) {
         `;
     }
 
-
     loadingUsers = false;
 }
 
-async function loadBlockedUsers() {
 
-    if (!currentUser) {
-        blockedUserIds = new Set();
-        return;
-    }
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("blocked_users")
-        .select("blocked_id")
-        .eq(
-            "blocker_id",
-            currentUser.id
-        );
-
-    if (error) {
-        console.error(
-            "Couldn't load blocked users:",
-            error
-        );
-
-        blockedUserIds = new Set();
-        return;
-    }
-
-    blockedUserIds =
-        new Set(
-            (data || []).map(
-                function (block) {
-                    return block.blocked_id;
-                }
-            )
-        );
-
-    console.log(
-        "🚫 Blocked users:",
-        blockedUserIds
-    );
-}
-
-
-// ==============================
-// RENDER USER
-// ==============================
-
-function renderUser(
-    user
-) {
-
-    const card =
-        document.createElement(
-            "article"
-        );
-
-    card.className =
-        "user-card";
-
-
-    // ==============================
-    // BASIC INFO
-    // ==============================
-
-    const displayName =
-        user.display_name ||
-        user.username ||
-        "Unnamed user";
-
-    const username =
-        user.username ||
-        "unknown";
-
-    const bio =
-        user.bio ||
-        "No bio yet. ♡";
-
-    const avatar =
-        user.avatar_url ||
-        "https://placehold.co/150x150";
-
-
-    // ==============================
-    // F/Os
-    // ==============================
-
-    const fos =
-        user.fos || [];
-
-    const mainFO =
-        fos.find(
-            function (fo) {
-                return (
-                    fo.is_main === true
-                );
-            }
-        ) || fos[0] || null;
-
-
-    // ==============================
-    // MAIN F/O DISPLAY
-    // ==============================
-
-    let foHTML;
-
-    if (mainFO) {
-
-        const characterName =
-            mainFO
-                .characters
-                ?.canonical_name ||
-            "Unknown character";
-
-        foHTML = `
-            <div class="discover-fo">
-
-                <strong>
-                    ♡ Main F/O
-                </strong>
-
-                <p>
-                    ${escapeHtml(
-                        characterName
-                    )}
-                </p>
-
-                ${
-                    mainFO.relationship
-                        ? `
-                            <small>
-                                ${escapeHtml(
-                                    mainFO.relationship
-                                )}
-                            </small>
-                        `
-                        : ""
-                }
-
-            </div>
-        `;
-
-    } else {
-
-        foHTML = `
-            <div class="discover-fo">
-                <small>
-                    ♡ No F/O listed
-                </small>
-            </div>
-        `;
-    }
-
-
-    // ==============================
-    // COMPATIBILITY
-    // ==============================
-
-    const compatibility =
-        user.compatibility ||
-        {
-            status:
-                "compatible",
-            conflicts: [],
-            askFirst: []
-        };
-
-    const compatibilityHTML =
-        getCompatibilityHTML(
-            compatibility
-        );
-
-
-    // ==============================
-    // CARD HTML
-    // ==============================
-
-    card.innerHTML = `
-        <img
-            class="user-card-avatar"
-            src="${escapeHtml(
-                avatar
-            )}"
-            alt=""
-            loading="lazy"
-        >
-
-        <div class="user-card-content">
-
-            <h2>
-                ${escapeHtml(
-                    displayName
-                )}
-            </h2>
-
-            <p class="user-card-username">
-                @${escapeHtml(
-                    username
-                )}
-            </p>
-
-            ${foHTML}
-
-            ${compatibilityHTML}
-
-            <p class="user-card-bio">
-                ${escapeHtml(
-                    bio
-                )}
-            </p>
-
-            <button
-                type="button"
-                class="view-profile-button"
-                data-user-id="${escapeHtml(
-                    user.id
-                )}"
-            >
-                View Profile ♡
-            </button>
-
-        </div>
-    `;
-
-
-    userList.appendChild(
-        card
-    );
-
-
-    // ==============================
-    // PROFILE BUTTON
-    // ==============================
-
-    const viewButton =
-        card.querySelector(
-            ".view-profile-button"
-        );
-
-    if (viewButton) {
-
-        viewButton.addEventListener(
-            "click",
-            function () {
-
-                const userId =
-                    viewButton
-                        .dataset
-                        .userId;
-
-                window.location.href =
-                    `users-profile.html?id=${encodeURIComponent(
-                        userId
-                    )}`;
-            }
-        );
-    }
-
-
-    // ==============================
-    // AVATAR ERROR
-    // ==============================
-
-    const avatarElement =
-        card.querySelector(
-            ".user-card-avatar"
-        );
-
-    if (avatarElement) {
-
-        avatarElement.addEventListener(
-            "error",
-            function () {
-
-                avatarElement.src =
-                    "https://placehold.co/150x150";
-            }
-        );
-    }
-}
-
-
-
-// ==============================
+// --------------------------------------------------
 // SEARCH
-// ==============================
+// --------------------------------------------------
 
 let searchTimer = null;
 
@@ -1113,25 +690,39 @@ if (userSearch) {
             currentSearch =
                 userSearch.value.trim();
 
-            clearTimeout(
-                searchTimer
-            );
+            clearTimeout(searchTimer);
 
-            searchTimer =
-                setTimeout(
-                    function () {
-                        loadUsers(true);
-                    },
-                    300
-                );
+            searchTimer = setTimeout(
+                function () {
+                    loadUsers(true);
+                },
+                300
+            );
         }
     );
 }
 
 
-// ==============================
+// --------------------------------------------------
+// FANDOM FILTER
+// --------------------------------------------------
+
+if (fandomFilter) {
+    fandomFilter.addEventListener(
+        "change",
+        function () {
+            currentFandomId =
+                fandomFilter.value;
+
+            loadUsers(true);
+        }
+    );
+}
+
+
+// --------------------------------------------------
 // LOAD MORE
-// ==============================
+// --------------------------------------------------
 
 if (loadMoreButton) {
     loadMoreButton.addEventListener(
@@ -1142,28 +733,20 @@ if (loadMoreButton) {
     );
 }
 
-// ==============================
+
+// --------------------------------------------------
 // BACK TO PROFILE
-// ==============================
+// --------------------------------------------------
 
 if (backToProfile) {
     backToProfile.addEventListener(
         "click",
         async function () {
-            const {
-                data: {
-                    user
-                }
-            } =
-                await supabaseClient
-                    .auth
-                    .getUser();
+            const user = await getCurrentUser();
 
             if (user) {
                 window.location.href =
-                    `users-profile.html?id=${encodeURIComponent(
-                        user.id
-                    )}`;
+                    `users-profile.html?id=${encodeURIComponent(user.id)}`;
             } else {
                 window.location.href =
                     "indexter.html";
@@ -1172,12 +755,12 @@ if (backToProfile) {
     );
 }
 
-// ==============================
-// START
-// ==============================
+
+// --------------------------------------------------
+// START DISCOVER
+// --------------------------------------------------
 
 async function startDiscover() {
-
     currentUser =
         await getCurrentUser();
 
@@ -1185,9 +768,9 @@ async function startDiscover() {
 
     await loadCurrentUserFos();
 
-    await loadUsers(
-        true
-    );
+    await loadFandoms();
+
+    await loadUsers(true);
 }
 
 startDiscover();
