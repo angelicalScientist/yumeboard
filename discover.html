@@ -74,15 +74,45 @@
             autocomplete="off"
         >
 
-        <div class="discover-fandom-filter">
-            <label for="fandomFilter">
-                Filter by fandom
-            </label>
+    <div class="discover-fandom-filter">
+        <label for="fandomSearch">
+            Search by fandom
+        </label>
 
-            <select id="fandomFilter">
-                <option value="">All fandoms ♡</option>
-            </select>
+        <input
+            type="search"
+            id="fandomSearch"
+            placeholder="Type a fandom name... ♡"
+            autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="fandomSuggestions"
+        >
+
+        <div
+            id="fandomSuggestions"
+            class="fandom-suggestions"
+            role="listbox"
+            hidden
+        ></div>
+
+        <div
+            id="selectedFandom"
+            class="selected-fandom"
+            hidden
+        >
+            <span id="selectedFandomName"></span>
+
+            <button
+                type="button"
+                id="clearFandomFilter"
+                aria-label="Clear fandom filter"
+            >
+                ×
+            </button>
         </div>
+    </div>
 
 
         <p

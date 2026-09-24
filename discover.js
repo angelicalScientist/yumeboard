@@ -1,22 +1,45 @@
+// --------------------------------------------------
+// DOM ELEMENTS
+// --------------------------------------------------
+
 const userList = document.getElementById("userList");
 const userSearch = document.getElementById("userSearch");
 const searchMessage = document.getElementById("searchMessage");
 const loadMoreButton = document.getElementById("loadMoreButton");
 const loadMoreContainer = document.getElementById("loadMoreContainer");
 const backToProfile = document.getElementById("backToProfile");
-const fandomFilter = document.getElementById("fandomFilter");
+
+// Searchable fandom picker
+const fandomSearch = document.getElementById("fandomSearch");
+const fandomSuggestions = document.getElementById("fandomSuggestions");
+const selectedFandom = document.getElementById("selectedFandom");
+const selectedFandomName = document.getElementById("selectedFandomName");
+const clearFandomFilter = document.getElementById("clearFandomFilter");
+
+
+// --------------------------------------------------
+// SETTINGS AND STATE
+// --------------------------------------------------
 
 const USERS_PER_PAGE = 24;
+const MAX_FANDOM_SUGGESTIONS = 10;
 
 let currentOffset = 0;
 let currentSearch = "";
 let currentFandomId = "";
+
 let loadingUsers = false;
 let hasMoreUsers = true;
+let pendingLoad = false;
 
 let currentUser = null;
 let currentUserFos = [];
 let blockedUserIds = new Set();
+
+let allFandoms = [];
+
+let searchTimer = null;
+let fandomSearchTimer = null;
 
 
 // --------------------------------------------------
@@ -122,8 +145,11 @@ function getFoCompatibility(myFo, theirFo) {
         return null;
     }
 
-    const myPreference = myFo.doubles_preference || "okay";
-    const theirPreference = theirFo.doubles_preference || "okay";
+    const myPreference =
+        myFo.doubles_preference || "okay";
+
+    const theirPreference =
+        theirFo.doubles_preference || "okay";
 
     if (
         myPreference === "no" ||
@@ -153,7 +179,10 @@ function getFoCompatibility(myFo, theirFo) {
 
 
 function getUserCompatibility(theirFos) {
-    if (!currentUserFos.length || !theirFos.length) {
+    if (
+        !currentUserFos.length ||
+        !theirFos.length
+    ) {
         return {
             type: "none",
             text: ""
@@ -198,7 +227,10 @@ function getUserCompatibility(theirFos) {
 
 
 function getCompatibilityHTML(compatibility) {
-    if (!compatibility || compatibility.type === "none") {
+    if (
+        !compatibility ||
+        compatibility.type === "none"
+    ) {
         return "";
     }
 
@@ -225,16 +257,13 @@ function getCompatibilityHTML(compatibility) {
 // --------------------------------------------------
 
 async function loadFandoms() {
-    if (!fandomFilter) {
+    if (!fandomSearch) {
         return;
     }
 
-    const { data: fandoms, error } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("fandoms")
-        .select(`
-            id,
-            name
-        `)
+        .select("id, name")
         .order("name", {
             ascending: true
         });
@@ -244,20 +273,141 @@ async function loadFandoms() {
         return;
     }
 
-    fandomFilter.innerHTML = `
-        <option value="">All fandoms ♡</option>
-    `;
+    allFandoms = data || [];
+}
 
-    (fandoms || []).forEach(function (fandom) {
-        const option = document.createElement("option");
 
-        option.value = fandom.id;
+// --------------------------------------------------
+// FANDOM SUGGESTIONS
+// --------------------------------------------------
+
+function showFandomSuggestions() {
+    if (!fandomSearch || !fandomSuggestions) {
+        return;
+    }
+
+    const query = fandomSearch.value
+        .trim()
+        .toLowerCase();
+
+    fandomSuggestions.innerHTML = "";
+
+    if (!query) {
+        fandomSuggestions.hidden = true;
+
+        fandomSearch.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        return;
+    }
+
+    const matches = allFandoms
+        .filter(function (fandom) {
+            return fandom.name
+                .toLowerCase()
+                .includes(query);
+        })
+        .slice(0, MAX_FANDOM_SUGGESTIONS);
+
+    if (matches.length === 0) {
+        const emptyMessage =
+            document.createElement("p");
+
+        emptyMessage.className =
+            "fandom-no-results";
+
+        emptyMessage.textContent =
+            "No matching fandoms found. ♡";
+
+        fandomSuggestions.appendChild(emptyMessage);
+
+        fandomSuggestions.hidden = false;
+
+        fandomSearch.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+        return;
+    }
+
+    matches.forEach(function (fandom) {
+        const option = document.createElement("button");
+
+        option.type = "button";
+        option.className = "fandom-suggestion";
+        option.setAttribute("role", "option");
         option.textContent = fandom.name;
 
-        fandomFilter.appendChild(option);
+        option.addEventListener("click", function () {
+            selectFandom(fandom);
+        });
+
+        fandomSuggestions.appendChild(option);
     });
 
-    fandomFilter.value = currentFandomId;
+    fandomSuggestions.hidden = false;
+
+    fandomSearch.setAttribute(
+        "aria-expanded",
+        "true"
+    );
+}
+
+
+// --------------------------------------------------
+// SELECT A FANDOM
+// --------------------------------------------------
+
+function selectFandom(fandom) {
+    currentFandomId = fandom.id;
+
+    fandomSearch.value = "";
+    fandomSearch.placeholder =
+        "Search another fandom... ♡";
+
+    fandomSuggestions.innerHTML = "";
+    fandomSuggestions.hidden = true;
+
+    fandomSearch.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+    selectedFandomName.textContent =
+        fandom.name;
+
+    selectedFandom.hidden = false;
+
+    loadUsers(true);
+}
+
+
+// --------------------------------------------------
+// CLEAR FANDOM FILTER
+// --------------------------------------------------
+
+function clearFandomSelection() {
+    currentFandomId = "";
+
+    selectedFandom.hidden = true;
+    selectedFandomName.textContent = "";
+
+    fandomSearch.value = "";
+    fandomSearch.placeholder =
+        "Type a fandom name... ♡";
+
+    fandomSuggestions.innerHTML = "";
+    fandomSuggestions.hidden = true;
+
+    fandomSearch.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+    loadUsers(true);
 }
 
 
@@ -307,8 +457,7 @@ function renderUser(user) {
         "Unnamed user";
 
     const username =
-        user.username ||
-        "";
+        user.username || "";
 
     const avatarHTML = user.avatar_url
         ? `
@@ -388,10 +537,13 @@ function renderUser(user) {
         card.querySelector(".view-profile-button");
 
     if (profileButton) {
-        profileButton.addEventListener("click", function () {
-            window.location.href =
-                `users-profile.html?id=${encodeURIComponent(user.id)}`;
-        });
+        profileButton.addEventListener(
+            "click",
+            function () {
+                window.location.href =
+                    `users-profile.html?id=${encodeURIComponent(user.id)}`;
+            }
+        );
     }
 
     userList.appendChild(card);
@@ -403,7 +555,12 @@ function renderUser(user) {
 // --------------------------------------------------
 
 async function loadUsers(reset = false) {
+
     if (loadingUsers) {
+        if (reset) {
+            pendingLoad = true;
+        }
+
         return;
     }
 
@@ -425,56 +582,39 @@ async function loadUsers(reset = false) {
     loadingUsers = true;
 
     if (searchMessage) {
-        searchMessage.textContent = "Loading users... 🌸";
+        searchMessage.textContent =
+            "Loading users... 🌸";
     }
 
     let visibleUsersAdded = 0;
-    const targetVisibleUsers = USERS_PER_PAGE;
 
-    while (
-        visibleUsersAdded < targetVisibleUsers &&
-        hasMoreUsers
-    ) {
-        let profileSelect = `
-            id,
-            username,
-            display_name,
-            bio,
-            avatar_url
-        `;
+    const targetVisibleUsers =
+        USERS_PER_PAGE;
 
-       
-        if (currentFandomId) {
-            profileSelect += `,
-                profile_fandoms!inner (
-                    fandom_id
-                )
+    try {
+        while (
+            visibleUsersAdded < targetVisibleUsers &&
+            hasMoreUsers
+        ) {
+            let profileSelect = `
+                id,
+                username,
+                display_name,
+                bio,
+                avatar_url
             `;
-        }
 
-        let profileQuery = supabaseClient
-            .from("profiles")
-            .select(profileSelect)
-            .order("username", {
-                ascending: true
-            })
-            .range(
-                currentOffset,
-                currentOffset + USERS_PER_PAGE - 1
-            );
+            if (currentFandomId) {
+                profileSelect += `,
+                    profile_fandoms!inner (
+                        fandom_id
+                    )
+                `;
+            }
 
-        if (currentSearch) {
-            const safeSearch = currentSearch
-                .replaceAll("%", "")
-                .replaceAll(",", "")
-                .replaceAll(".", "");
-
-            profileQuery = supabaseClient
+            let profileQuery = supabaseClient
                 .from("profiles")
                 .select(profileSelect)
-                .or(
-                    `username.ilike.%${safeSearch}%,display_name.ilike.%${safeSearch}%`
-                )
                 .order("username", {
                     ascending: true
                 })
@@ -482,206 +622,231 @@ async function loadUsers(reset = false) {
                     currentOffset,
                     currentOffset + USERS_PER_PAGE - 1
                 );
-        }
 
-        if (currentFandomId) {
-            profileQuery = profileQuery.eq(
-                "profile_fandoms.fandom_id",
-                currentFandomId
-            );
-        }
+            if (currentSearch) {
+                const safeSearch = currentSearch
+                    .replaceAll("%", "")
+                    .replaceAll(",", "")
+                    .replaceAll(".", "");
 
-        const {
-            data: profiles,
-            error: profileError
-        } = await profileQuery;
-
-        if (profileError) {
-            console.error(
-                "Couldn't load discover profiles:",
-                profileError
-            );
-
-            if (searchMessage) {
-                searchMessage.textContent =
-                    "Couldn't load people right now. Please try again. ♡";
-            }
-
-            break;
-        }
-
-        const loadedProfiles = profiles || [];
-
-        if (loadedProfiles.length < USERS_PER_PAGE) {
-            hasMoreUsers = false;
-        }
-
-        if (loadedProfiles.length === 0) {
-            break;
-        }
-
-        const userIds = loadedProfiles
-            .map(function (profile) {
-                return profile.id;
-            })
-            .filter(Boolean);
-
-        let foMap = new Map();
-
-        if (userIds.length > 0) {
-            const {
-                data: fos,
-                error: fosError
-            } = await supabaseClient
-                .from("fos")
-                .select(`
-                    id,
-                    user_id,
-                    character_id,
-                    relationship,
-                    description,
-                    image_url,
-                    is_main,
-                    doubles_preference,
-                    characters (
-                        id,
-                        canonical_name,
-                        image_url
+                profileQuery = supabaseClient
+                    .from("profiles")
+                    .select(profileSelect)
+                    .or(
+                        `username.ilike.%${safeSearch}%,display_name.ilike.%${safeSearch}%`
                     )
-                `)
-                .in("user_id", userIds);
+                    .order("username", {
+                        ascending: true
+                    })
+                    .range(
+                        currentOffset,
+                        currentOffset + USERS_PER_PAGE - 1
+                    );
+            }
 
-            if (fosError) {
-                console.error(
-                    "Couldn't load F/Os:",
-                    fosError
+            // Fandom filter.
+            if (currentFandomId) {
+                profileQuery = profileQuery.eq(
+                    "profile_fandoms.fandom_id",
+                    currentFandomId
                 );
-            } else {
-                (fos || []).forEach(function (fo) {
-                    if (!foMap.has(fo.user_id)) {
-                        foMap.set(fo.user_id, []);
-                    }
-
-                    foMap.get(fo.user_id).push(fo);
-                });
-            }
-        }
-
-        for (const profile of loadedProfiles) {
-            // Never show yourself.
-            if (
-                currentUser &&
-                profile.id === currentUser.id
-            ) {
-                continue;
             }
 
-            // Never show blocked users.
-            if (blockedUserIds.has(profile.id)) {
-                continue;
-            }
+            const {
+                data: profiles,
+                error: profileError
+            } = await profileQuery;
 
-            const theirFos =
-                foMap.get(profile.id) || [];
+            if (profileError) {
+                console.error(
+                    "Couldn't load discover profiles:",
+                    profileError
+                );
 
-            profile.fos = theirFos;
+                if (searchMessage) {
+                    searchMessage.textContent =
+                        "Couldn't load people right now. Please try again. ♡";
+                }
 
-            profile.compatibility =
-                getUserCompatibility(theirFos);
-
-            // Hide doubles whose preferences conflict.
-            if (
-                profile.compatibility &&
-                profile.compatibility.type === "conflict"
-            ) {
-                continue;
-            }
-
-            renderUser(profile);
-
-            visibleUsersAdded++;
-
-            if (
-                visibleUsersAdded >= targetVisibleUsers
-            ) {
                 break;
             }
+
+            const loadedProfiles =
+                profiles || [];
+
+            if (
+                loadedProfiles.length < USERS_PER_PAGE
+            ) {
+                hasMoreUsers = false;
+            }
+
+            if (loadedProfiles.length === 0) {
+                break;
+            }
+
+            const userIds = loadedProfiles
+                .map(function (profile) {
+                    return profile.id;
+                })
+                .filter(Boolean);
+
+            const foMap = new Map();
+
+            // Load F/Os belonging to the profiles
+            // in this batch.
+            if (userIds.length > 0) {
+                const {
+                    data: fos,
+                    error: fosError
+                } = await supabaseClient
+                    .from("fos")
+                    .select(`
+                        id,
+                        user_id,
+                        character_id,
+                        relationship,
+                        description,
+                        image_url,
+                        is_main,
+                        doubles_preference,
+                        characters (
+                            id,
+                            canonical_name,
+                            image_url
+                        )
+                    `)
+                    .in("user_id", userIds);
+
+                if (fosError) {
+                    console.error(
+                        "Couldn't load F/Os:",
+                        fosError
+                    );
+                } else {
+                    (fos || []).forEach(function (fo) {
+                        if (!foMap.has(fo.user_id)) {
+                            foMap.set(
+                                fo.user_id,
+                                []
+                            );
+                        }
+
+                        foMap
+                            .get(fo.user_id)
+                            .push(fo);
+                    });
+                }
+            }
+
+            // Filter and render profiles.
+            for (const profile of loadedProfiles) {
+                // Never show yourself.
+                if (
+                    currentUser &&
+                    profile.id === currentUser.id
+                ) {
+                    continue;
+                }
+
+                // Never show users you blocked.
+                if (blockedUserIds.has(profile.id)) {
+                    continue;
+                }
+
+                const theirFos =
+                    foMap.get(profile.id) || [];
+
+                profile.fos = theirFos;
+
+                profile.compatibility =
+                    getUserCompatibility(theirFos);
+
+                // Hide profiles with conflicting
+                // doubles preferences.
+                if (
+                    profile.compatibility &&
+                    profile.compatibility.type === "conflict"
+                ) {
+                    continue;
+                }
+
+                renderUser(profile);
+
+                visibleUsersAdded++;
+
+                if (
+                    visibleUsersAdded >= targetVisibleUsers
+                ) {
+                    break;
+                }
+            }
+
+            currentOffset += loadedProfiles.length;
+
+            if (
+                loadedProfiles.length < USERS_PER_PAGE
+            ) {
+                hasMoreUsers = false;
+            }
         }
 
-        currentOffset += loadedProfiles.length;
+        // --------------------------------------------------
+        // STATUS MESSAGE
+        // --------------------------------------------------
 
-        if (
-            loadedProfiles.length < USERS_PER_PAGE
-        ) {
-            hasMoreUsers = false;
-        }
-    }
-
-    // --------------------------------------------------
-    // STATUS MESSAGE
-    // --------------------------------------------------
-
-    if (searchMessage) {
-        if (
-            currentSearch !== "" ||
-            currentFandomId !== ""
-        ) {
+        if (searchMessage) {
             const searchParts = [];
 
             if (currentSearch !== "") {
                 searchParts.push(
-                    `search for "${escapeHtml(currentSearch)}"`
+                    `search for "${currentSearch}"`
                 );
             }
 
-            if (currentFandomId !== "" && fandomFilter) {
-                const selectedOption =
-                    fandomFilter.options[
-                        fandomFilter.selectedIndex
-                    ];
-
-                if (selectedOption) {
-                    searchParts.push(
-                        `fandom "${escapeHtml(selectedOption.textContent)}"`
-                    );
-                }
+            if (currentFandomId !== "") {
+                searchParts.push(
+                    `fandom "${selectedFandomName.textContent}"`
+                );
             }
 
             if (searchParts.length > 0) {
                 searchMessage.textContent =
                     `Showing people matching your ${searchParts.join(" and ")}. ♡`;
+            } else {
+                searchMessage.textContent =
+                    "Find other yumeshippers and explore their profiles! 🌸";
             }
-        } else {
-            searchMessage.textContent =
-                "Find other yumeshippers and explore their profiles! 🌸";
+        }
+
+        if (loadMoreContainer) {
+            loadMoreContainer.style.display =
+                hasMoreUsers ? "block" : "none";
+        }
+
+        if (
+            reset &&
+            visibleUsersAdded === 0
+        ) {
+            userList.innerHTML = `
+                <p class="search-hint">
+                    No compatible users found yet! ♡
+                </p>
+            `;
+        }
+    } finally {
+        loadingUsers = false;
+
+        if (pendingLoad) {
+            pendingLoad = false;
+            loadUsers(true);
         }
     }
-
-    if (loadMoreContainer) {
-        loadMoreContainer.style.display =
-            hasMoreUsers ? "block" : "none";
-    }
-
-    if (
-        reset &&
-        visibleUsersAdded === 0
-    ) {
-        userList.innerHTML = `
-            <p class="search-hint">
-                No compatible users found yet! ♡
-            </p>
-        `;
-    }
-
-    loadingUsers = false;
 }
 
 
 // --------------------------------------------------
-// SEARCH
+// USER SEARCH
 // --------------------------------------------------
-
-let searchTimer = null;
 
 if (userSearch) {
     userSearch.addEventListener(
@@ -704,17 +869,49 @@ if (userSearch) {
 
 
 // --------------------------------------------------
-// FANDOM FILTER
+// FANDOM SEARCH
 // --------------------------------------------------
 
-if (fandomFilter) {
-    fandomFilter.addEventListener(
-        "change",
+if (fandomSearch) {
+    fandomSearch.addEventListener(
+        "input",
         function () {
-            currentFandomId =
-                fandomFilter.value;
+            clearTimeout(fandomSearchTimer);
 
-            loadUsers(true);
+            fandomSearchTimer = setTimeout(
+                function () {
+                    showFandomSuggestions();
+                },
+                150
+            );
+        }
+    );
+
+    fandomSearch.addEventListener(
+        "keydown",
+        function (event) {
+            if (event.key === "Escape") {
+                fandomSuggestions.hidden = true;
+
+                fandomSearch.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        }
+    );
+}
+
+
+// --------------------------------------------------
+// CLEAR FANDOM FILTER
+// --------------------------------------------------
+
+if (clearFandomFilter) {
+    clearFandomFilter.addEventListener(
+        "click",
+        function () {
+            clearFandomSelection();
         }
     );
 }
@@ -761,8 +958,7 @@ if (backToProfile) {
 // --------------------------------------------------
 
 async function startDiscover() {
-    currentUser =
-        await getCurrentUser();
+    currentUser = await getCurrentUser();
 
     await loadBlockedUsers();
 
