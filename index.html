@@ -2,18 +2,252 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#fceafa">
+
+    <title>♡ Welcome to Yumeboard ♡</title>
     <link rel="icon" href="favicon.png" type="image/png">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-    <meta
-        http-equiv="refresh"
-        content="0; url=dashboard.html"
-    >
-    <title>Loading…</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background: #fff3fc;
+            color: #704d78;
+        }
+
+        .welcome-screen {
+            position: relative;
+            width: min(90%, 480px);
+            padding: 40px 24px;
+            text-align: center;
+            border: 3px solid #d9b5d9;
+            border-radius: 12px;
+            background: #fffaff;
+            box-shadow:
+                inset 0 0 0 5px #f9eafa,
+                5px 5px 0 #e4c8e2;
+        }
+
+        .welcome-logo {
+            display: block;
+            width: min(260px, 85%);
+            height: auto;
+            margin: 0 auto 24px;
+            image-rendering: auto;
+        }
+
+        .welcome-title {
+            margin: 0 0 10px;
+            font-size: clamp(22px, 5vw, 30px);
+        }
+
+        .welcome-message {
+            margin: 0 0 24px;
+            font-size: 16px;
+        }
+
+        .welcome-stars {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            color: #c58bc5;
+            font-size: 22px;
+            animation: twinkle 1.8s ease-in-out infinite alternate;
+        }
+
+        .star:nth-child(1) {
+            top: 12%;
+            left: 10%;
+        }
+
+        .star:nth-child(2) {
+            top: 20%;
+            right: 9%;
+            animation-delay: 0.5s;
+        }
+
+        .star:nth-child(3) {
+            bottom: 15%;
+            left: 13%;
+            animation-delay: 0.9s;
+        }
+
+        .star:nth-child(4) {
+            bottom: 12%;
+            right: 12%;
+            animation-delay: 0.3s;
+        }
+
+        .loading-track {
+            width: 100%;
+            height: 22px;
+            padding: 3px;
+            border: 2px solid #b58ab8;
+            border-radius: 5px;
+            background: #f4e4f4;
+            overflow: hidden;
+        }
+
+        .loading-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 2px;
+            background: repeating-linear-gradient(
+                90deg,
+                #c99acb 0px,
+                #c99acb 12px,
+                #dcb5dd 12px,
+                #dcb5dd 24px
+            );
+            animation: loading 2.2s ease-in-out forwards;
+        }
+
+        .loading-status {
+            margin-top: 14px;
+            font-size: 14px;
+        }
+
+        .skip-link {
+            display: inline-block;
+            margin-top: 14px;
+            font-size: 14px;
+            color: #704d78;
+        }
+
+        @keyframes loading {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        @keyframes twinkle {
+            from {
+                opacity: 0.35;
+                transform: scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .star {
+                animation: none;
+            }
+
+            .loading-fill {
+                animation: none;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <p>Loading…</p>
+    <main class="welcome-screen">
+        <div class="welcome-stars" aria-hidden="true">
+            <span class="star">✧</span>
+            <span class="star">✦</span>
+            <span class="star">✧</span>
+            <span class="star">✦</span>
+        </div>
+
+        <img
+            src="logotype.png"
+            alt="Yumeboard"
+            class="welcome-logo"
+        >
+
+        <h1 class="welcome-title">
+            Welcome to Yumeboard! ♡
+        </h1>
+
+        <p class="welcome-message">
+            Preparing your little corner of the internet...
+        </p>
+
+        <div
+            class="loading-track"
+            role="progressbar"
+            aria-label="Loading Yumeboard"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+        >
+            <div class="loading-fill"></div>
+        </div>
+
+        <p class="loading-status" id="loadingStatus" role="status">
+            Sprinkling some magic... ✧
+        </p>
+
+        <a href="account.html" class="skip-link" id="skipLink">
+            Continue to Yumeboard ♡
+        </a>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase.js"></script>
+
+    <script>
+        const status = document.getElementById("loadingStatus");
+        const skipLink = document.getElementById("skipLink");
+
+        let destination = "account.html";
+        let redirected = false;
+
+        // Always provide a working escape route.
+        function goToDestination() {
+            if (redirected) return;
+
+            redirected = true;
+            window.location.replace(destination);
+        }
+
+        skipLink.addEventListener("click", function (event) {
+            event.preventDefault();
+            goToDestination();
+        });
+
+        async function startWelcome() {
+            try {
+                const { data, error } =
+                    await supabaseClient.auth.getSession();
+
+                if (!error && data.session) {
+                    destination = "dashboard.html";
+                }
+            } catch (error) {
+                console.error("Session check failed:", error);
+            }
+
+            status.textContent =
+                destination === "dashboard.html"
+                    ? "Welcome back! Opening your dashboard... ♡"
+                    : "Opening the community... ♡";
+
+            setTimeout(goToDestination, 2200);
+        }
+
+        startWelcome();
+
+        // Failsafe in case authentication initialization hangs.
+        setTimeout(goToDestination, 5000);
+    </script>
 </body>
 </html>
