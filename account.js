@@ -61,7 +61,7 @@ signupButton.addEventListener(
                 options: {
 
                     emailRedirectTo:
-                     "http://127.0.0.1:5500/dashboard.html",
+                     "https://angelicalscientist.github.io/yumeboard/dashboard.html",
                     data: {
                         username: username,
                         display_name: username
