@@ -1,4 +1,3 @@
-
 // ======================================
 // PUBLIC PROFILE
 // ======================================
@@ -1466,7 +1465,54 @@ async function loadGuestbook(
                 </p>
             `;
 
-            entries.appendChild(entry);
+            // =========================
+            // REPORT BUTTON
+            // =========================
+
+            const actions =
+                document.createElement(
+                    "div"
+                );
+
+            actions.className =
+                "guestbook-entry-actions";
+
+            const reportButton =
+                document.createElement(
+                    "button"
+                );
+
+            reportButton.type =
+                "button";
+
+            reportButton.className =
+                "guestbook-report-button";
+
+            reportButton.textContent =
+                "⚑ Report";
+
+            reportButton.dataset.reportTargetType =
+                "guestbook_entry";
+
+            reportButton.dataset.reportTargetId =
+                guestbookEntry.id;
+
+            reportButton.setAttribute(
+                "aria-label",
+                "Report this guestbook message"
+            );
+
+            actions.appendChild(
+                reportButton
+            );
+
+            entry.appendChild(
+                actions
+            );
+
+            entries.appendChild(
+                entry
+            );
         }
     );
 }
@@ -1832,6 +1878,51 @@ function createPublicGuestbookEntry(
     }
 
     // =========================
+    // REPORT BUTTON
+    // =========================
+
+    const reportButton =
+        document.createElement(
+            "button"
+        );
+
+    reportButton.type =
+        "button";
+
+    reportButton.className =
+        "guestbook-report-button";
+
+    reportButton.textContent =
+        "⚑ Report";
+
+    reportButton.dataset.reportTargetType =
+        "guestbook_entry";
+
+    reportButton.dataset.reportTargetId =
+        entry.id;
+
+    reportButton.setAttribute(
+        "aria-label",
+        "Report this guestbook message"
+    );
+
+    // =========================
+    // ACTIONS
+    // =========================
+
+    const actions =
+        document.createElement(
+            "div"
+        );
+
+    actions.className =
+        "guestbook-entry-actions";
+
+    actions.appendChild(
+        reportButton
+    );
+
+    // =========================
     // ASSEMBLE
     // =========================
 
@@ -1847,8 +1938,401 @@ function createPublicGuestbookEntry(
         date
     );
 
+    container.appendChild(
+        actions
+    );
+
     return container;
 }
+
+
+// ======================================
+// GUESTBOOK REPORTING
+// ======================================
+
+let currentGuestbookReportTarget =
+    null;
+
+const GUESTBOOK_REPORT_REASONS = [
+    "Spam",
+    "Harassment or bullying",
+    "Hate or discriminatory content",
+    "Threats or dangerous content",
+    "Inappropriate content",
+    "Other"
+];
+
+
+// ======================================
+// CREATE REPORT DIALOG
+// ======================================
+
+function ensureGuestbookReportDialog() {
+
+    let dialog =
+        document.getElementById(
+            "guestbookReportDialog"
+        );
+
+    if (dialog) {
+        return dialog;
+    }
+
+    dialog =
+        document.createElement(
+            "dialog"
+        );
+
+    dialog.id =
+        "guestbookReportDialog";
+
+    dialog.className =
+        "report-dialog";
+
+    dialog.innerHTML = `
+        <form
+            method="dialog"
+            class="report-dialog-form"
+            id="guestbookReportForm"
+        >
+            <h2>⚑ Report content</h2>
+
+            <p>
+                Tell us why you're reporting this.
+            </p>
+
+            <label for="guestbookReportReason">
+                Reason
+            </label>
+
+            <select
+                id="guestbookReportReason"
+                required
+            >
+                <option value="">
+                    Choose a reason...
+                </option>
+
+                ${GUESTBOOK_REPORT_REASONS.map(
+                    function (reason) {
+                        return `
+                            <option value="${escapeHtml(reason)}">
+                                ${escapeHtml(reason)}
+                            </option>
+                        `;
+                    }
+                ).join("")}
+            </select>
+
+            <label for="guestbookReportDetails">
+                Additional details
+                <span>(optional)</span>
+            </label>
+
+            <textarea
+                id="guestbookReportDetails"
+                maxlength="2000"
+                rows="5"
+                placeholder="Anything else we should know?"
+            ></textarea>
+
+            <div class="report-dialog-actions">
+
+                <button
+                    type="button"
+                    id="guestbookReportCancelButton"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    id="guestbookReportSubmitButton"
+                >
+                    ⚑ Submit report
+                </button>
+
+            </div>
+        </form>
+    `;
+
+    document.body.appendChild(
+        dialog
+    );
+
+    const form =
+        document.getElementById(
+            "guestbookReportForm"
+        );
+
+    const cancelButton =
+        document.getElementById(
+            "guestbookReportCancelButton"
+        );
+
+    cancelButton.addEventListener(
+        "click",
+        function () {
+            dialog.close();
+        }
+    );
+
+    form.addEventListener(
+        "submit",
+        async function (event) {
+            event.preventDefault();
+
+            await submitGuestbookReport();
+        }
+    );
+
+    return dialog;
+}
+
+
+// ======================================
+// OPEN REPORT DIALOG
+// ======================================
+
+function openGuestbookReportDialog(
+    targetType,
+    targetId
+) {
+    currentGuestbookReportTarget = {
+        targetType:
+            targetType,
+
+        targetId:
+            targetId
+    };
+
+    const dialog =
+        ensureGuestbookReportDialog();
+
+    const reason =
+        document.getElementById(
+            "guestbookReportReason"
+        );
+
+    const details =
+        document.getElementById(
+            "guestbookReportDetails"
+        );
+
+    reason.value = "";
+    details.value = "";
+
+    if (
+        typeof dialog.showModal ===
+        "function"
+    ) {
+        dialog.showModal();
+    } else {
+        alert(
+            "Your browser doesn't support the report dialog."
+        );
+    }
+}
+
+
+// ======================================
+// SUBMIT REPORT
+// ======================================
+
+async function submitGuestbookReport() {
+
+    if (
+        !currentGuestbookReportTarget
+    ) {
+        return;
+    }
+
+    // =========================
+    // CHECK AUTH
+    // =========================
+
+    const {
+        data: { user },
+        error: userError
+    } = await supabaseClient.auth.getUser();
+
+    if (
+        userError ||
+        !user
+    ) {
+        alert(
+            "You must be logged in to submit a report. ♡"
+        );
+
+        return;
+    }
+
+    // =========================
+    // GET FORM VALUES
+    // =========================
+
+    const reason =
+        document.getElementById(
+            "guestbookReportReason"
+        ).value.trim();
+
+    const details =
+        document.getElementById(
+            "guestbookReportDetails"
+        ).value.trim();
+
+    if (!reason) {
+        alert(
+            "Please choose a report reason. ♡"
+        );
+
+        return;
+    }
+
+    const submitButton =
+        document.getElementById(
+            "guestbookReportSubmitButton"
+        );
+
+    if (!submitButton) {
+        return;
+    }
+
+    submitButton.disabled =
+        true;
+
+    submitButton.textContent =
+        "Submitting...";
+
+    try {
+        // =========================
+        // CREATE REPORT
+        // =========================
+
+        const {
+            error
+        } = await supabaseClient.rpc(
+            "create_report",
+            {
+                p_target_type:
+                    currentGuestbookReportTarget
+                        .targetType,
+
+                p_target_id:
+                    currentGuestbookReportTarget
+                        .targetId,
+
+                p_reason:
+                    reason,
+
+                p_details:
+                    details || null
+            }
+        );
+
+        if (error) {
+            console.error(
+                "❌ Guestbook report error:",
+                error
+            );
+
+            alert(
+                `Couldn't submit the report. ${error.message}`
+            );
+
+            return;
+        }
+
+        const dialog =
+            document.getElementById(
+                "guestbookReportDialog"
+            );
+
+        if (dialog) {
+            dialog.close();
+        }
+
+        currentGuestbookReportTarget =
+            null;
+
+        alert(
+            "Thanks! Your report has been submitted. ♡"
+        );
+
+    } catch (error) {
+        console.error(
+            "💥 Unexpected guestbook report error:",
+            error
+        );
+
+        alert(
+            "Something went wrong while submitting the report. :("
+        );
+
+    } finally {
+        submitButton.disabled =
+            false;
+
+        submitButton.textContent =
+            "⚑ Submit report";
+    }
+}
+
+
+// ======================================
+// REPORT BUTTON HANDLER
+// ======================================
+
+function setupGuestbookReportButtons() {
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const button =
+                event.target.closest(
+                    "[data-report-target-type][data-report-target-id]"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            const targetType =
+                button.dataset
+                    .reportTargetType;
+
+            const targetId =
+                button.dataset
+                    .reportTargetId;
+
+            if (
+                targetType !==
+                    "guestbook_entry" &&
+                targetType !==
+                    "guestbook_reply"
+            ) {
+                return;
+            }
+
+            if (!targetId) {
+                return;
+            }
+
+            openGuestbookReportDialog(
+                targetType,
+                targetId
+            );
+        }
+    );
+}
+
+
+// ======================================
+// INITIALIZE GUESTBOOK REPORTING
+// ======================================
+
+setupGuestbookReportButtons();
 
 
 // ======================================
@@ -1889,4 +2373,3 @@ if (publicProfileId) {
         "🌸 No public profile ID found. Skipping public-profile loader."
     );
 }
-

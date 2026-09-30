@@ -820,6 +820,54 @@ button:focus-visible {
     font-size: 13px;
 }
 
+/* =========================================================
+   GUESTBOOK REPORT UI
+   ========================================================= */
+
+.guestbook-entry-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.guestbook-report-button {
+    appearance: none;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    opacity: 0.75;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.guestbook-report-button:hover {
+    background: var(--soft-background);
+    border-color: var(--accent-color);
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.guestbook-report-button:active {
+    transform: translateY(0);
+}
+
+.guestbook-report-button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.guestbook-reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
 
 /* =========================================================
    14. ACCOUNT PAGE
@@ -2234,6 +2282,192 @@ button:focus-visible {
     background: var(--box-background);
 }
 
+
+/* =========================================================
+   IMAGEBOARD REPORT UI
+   ========================================================= */
+
+.thread-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.thread-report-button,
+.thread-post-report-button {
+    appearance: none;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.thread-report-button {
+    padding: 7px 11px;
+    font-size: 0.85rem;
+}
+
+.thread-post-report-button {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    opacity: 0.75;
+}
+
+.thread-report-button:hover,
+.thread-post-report-button:hover {
+    background: var(--soft-background);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.thread-report-button:active,
+.thread-post-report-button:active {
+    transform: translateY(0);
+}
+
+.thread-report-button:focus-visible,
+.thread-post-report-button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REPORT DIALOG
+   ========================================================= */
+
+.report-dialog {
+    width: min(100% - 30px, 520px);
+    max-width: 520px;
+    box-sizing: border-box;
+    padding: 22px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--box-background);
+    color: var(--text-color);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+.report-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.report-dialog h2 {
+    margin: 0 0 8px;
+}
+
+.report-dialog-intro {
+    margin: 0 0 18px;
+    line-height: 1.5;
+    opacity: 0.8;
+}
+
+.report-dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.report-dialog-form label {
+    font-weight: 700;
+}
+
+.report-dialog-form select,
+.report-dialog-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--soft-background);
+    color: var(--text-color);
+    font: inherit;
+}
+
+.report-dialog-form select {
+    min-height: 40px;
+    padding: 8px 10px;
+}
+
+.report-dialog-form textarea {
+    min-height: 120px;
+    padding: 10px;
+    resize: vertical;
+}
+
+.report-dialog-form select:focus,
+.report-dialog-form textarea:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+}
+
+.report-dialog-help {
+    margin: -3px 0 4px;
+    font-size: 0.82rem;
+    opacity: 0.65;
+}
+
+.report-dialog-message {
+    min-height: 1.3em;
+    margin: 2px 0 0;
+    font-size: 0.9rem;
+}
+
+.report-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.report-dialog-actions button {
+    min-width: 90px;
+}
+
+.report-dialog-cancel {
+    background: transparent;
+    color: inherit;
+}
+
+
+/* =========================================================
+   REPORT BUTTON MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+    .thread-header-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .thread-report-button {
+        width: 100%;
+    }
+
+    .thread-post-report-button {
+        margin-left: auto;
+    }
+
+    .report-dialog {
+        padding: 17px;
+        border-radius: 12px;
+    }
+
+    .report-dialog-actions {
+        flex-direction: column-reverse;
+    }
+
+    .report-dialog-actions button {
+        width: 100%;
+    }
+}
 
 /* =========================================================
    33. IMAGEBOARD REPLY FORM

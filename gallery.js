@@ -19,6 +19,17 @@ let editingFolder = null;
 let deletingFolder = null;
 let uploading = false;
 
+let currentGalleryReportTarget = null;
+
+const GALLERY_REPORT_REASONS = [
+    "Spam",
+    "Harassment or bullying",
+    "Hate or discriminatory content",
+    "Threats or dangerous content",
+    "Inappropriate content",
+    "Other"
+];
+
 
 // =========================================================
 // INITIALIZATION
@@ -26,6 +37,8 @@ let uploading = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
     bindGalleryButtons();
+    setupGalleryReportButtons();
+
     await loadGallery();
 });
 
@@ -47,7 +60,10 @@ async function loadGallery() {
 
         currentUser = user || null;
 
-        const params = new URLSearchParams(window.location.search);
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
 
         const requestedUserId =
             params.get("user") ||
@@ -63,6 +79,7 @@ async function loadGallery() {
                 "Please sign in to view a gallery.",
                 true
             );
+
             return;
         }
 
@@ -93,7 +110,8 @@ async function loadGallery() {
 
         showStatus(
             `Couldn't load the gallery: ${
-                error?.message || "Unknown error"
+                error?.message ||
+                "Unknown error"
             }`,
             true
         );
@@ -123,6 +141,7 @@ async function loadModeratorState() {
                 )
             );
         }
+
     } catch (error) {
         console.error(
             "GALLERY: moderator check error:",
@@ -143,7 +162,8 @@ function updateOwnerInterface() {
         );
 
     ownerControls.forEach(element => {
-        element.hidden = !isGalleryOwner;
+        element.hidden =
+            !isGalleryOwner;
 
         if (isGalleryOwner) {
             element.style.removeProperty(
@@ -171,7 +191,8 @@ function updateModeratorInterface() {
         );
 
     moderatorControls.forEach(element => {
-        element.hidden = !isModerator;
+        element.hidden =
+            !isModerator;
 
         if (isModerator) {
             element.style.removeProperty(
@@ -207,7 +228,9 @@ async function loadFolders() {
         )
         .order(
             "created_at",
-            { ascending: true }
+            {
+                ascending: true
+            }
         );
 
     if (error) {
@@ -245,7 +268,9 @@ async function loadArtwork() {
         )
         .order(
             "created_at",
-            { ascending: false }
+            {
+                ascending: false
+            }
         );
 
     if (!isModerator) {
@@ -281,7 +306,8 @@ async function loadArtworkFolderRelations() {
 
     const artworkIds =
         artworks.map(
-            artwork => artwork.id
+            artwork =>
+                artwork.id
         );
 
     const {
@@ -301,22 +327,28 @@ async function loadArtworkFolderRelations() {
         throw error;
     }
 
-    (data || []).forEach(relation => {
-        if (
-            !artworkFolderMap.has(
-                relation.gallery_item_id
-            )
-        ) {
-            artworkFolderMap.set(
-                relation.gallery_item_id,
-                []
-            );
-        }
+    (data || []).forEach(
+        relation => {
+            if (
+                !artworkFolderMap.has(
+                    relation.gallery_item_id
+                )
+            ) {
+                artworkFolderMap.set(
+                    relation.gallery_item_id,
+                    []
+                );
+            }
 
-        artworkFolderMap
-            .get(relation.gallery_item_id)
-            .push(relation.folder_id);
-    });
+            artworkFolderMap
+                .get(
+                    relation.gallery_item_id
+                )
+                .push(
+                    relation.folder_id
+                );
+        }
+    );
 }
 
 
@@ -356,16 +388,22 @@ function renderFolders() {
         empty.textContent =
             "You don't have any folders yet. ♡";
 
-        container.appendChild(empty);
+        container.appendChild(
+            empty
+        );
 
         return;
     }
 
-    folders.forEach(folder => {
-        container.appendChild(
-            createFolderElement(folder)
-        );
-    });
+    folders.forEach(
+        folder => {
+            container.appendChild(
+                createFolderElement(
+                    folder
+                )
+            );
+        }
+    );
 }
 
 
@@ -375,13 +413,17 @@ function renderFolders() {
 
 function createFolderElement(folder) {
     const wrapper =
-        document.createElement("article");
+        document.createElement(
+            "article"
+        );
 
     wrapper.className =
         "gallery-folder";
 
     const header =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     header.className =
         "gallery-folder-header";
@@ -398,21 +440,32 @@ function createFolderElement(folder) {
         "gallery-folder-link";
 
     link.textContent =
-        `📁 ${folder.name || "Untitled Folder"}`;
+        `📁 ${
+            folder.name ||
+            "Untitled Folder"
+        }`;
 
-    header.appendChild(link);
+    header.appendChild(
+        link
+    );
 
     if (isGalleryOwner) {
         const actions =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         actions.className =
             "gallery-folder-actions";
 
         const renameButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
-        renameButton.type = "button";
+        renameButton.type =
+            "button";
+
         renameButton.textContent =
             "✏️ Rename";
 
@@ -421,14 +474,21 @@ function createFolderElement(folder) {
             event => {
                 event.preventDefault();
                 event.stopPropagation();
-                openRenameFolder(folder);
+
+                openRenameFolder(
+                    folder
+                );
             }
         );
 
         const deleteButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
-        deleteButton.type = "button";
+        deleteButton.type =
+            "button";
+
         deleteButton.textContent =
             "🗑️ Delete";
 
@@ -437,34 +497,56 @@ function createFolderElement(folder) {
             event => {
                 event.preventDefault();
                 event.stopPropagation();
-                openDeleteFolder(folder);
+
+                openDeleteFolder(
+                    folder
+                );
             }
         );
 
-        actions.appendChild(renameButton);
-        actions.appendChild(deleteButton);
+        actions.appendChild(
+            renameButton
+        );
 
-        header.appendChild(actions);
+        actions.appendChild(
+            deleteButton
+        );
+
+        header.appendChild(
+            actions
+        );
     }
 
-    wrapper.appendChild(header);
+    wrapper.appendChild(
+        header
+    );
 
     const folderArtwork =
-        getFolderArtwork(folder.id);
+        getFolderArtwork(
+            folder.id
+        );
 
     const artworkGrid =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     artworkGrid.className =
         "artwork-grid";
 
-    folderArtwork.forEach(artwork => {
-        artworkGrid.appendChild(
-            createArtworkCard(artwork)
-        );
-    });
+    folderArtwork.forEach(
+        artwork => {
+            artworkGrid.appendChild(
+                createArtworkCard(
+                    artwork
+                )
+            );
+        }
+    );
 
-    wrapper.appendChild(artworkGrid);
+    wrapper.appendChild(
+        artworkGrid
+    );
 
     return wrapper;
 }
@@ -475,18 +557,20 @@ function createFolderElement(folder) {
 // =========================================================
 
 function getFolderArtwork(folderId) {
-    return artworks.filter(artwork => {
-        const folderIds =
-            artworkFolderMap.get(
-                artwork.id
-            ) || [];
+    return artworks.filter(
+        artwork => {
+            const folderIds =
+                artworkFolderMap.get(
+                    artwork.id
+                ) || [];
 
-        return folderIds.some(
-            id =>
-                String(id) ===
-                String(folderId)
-        );
-    });
+            return folderIds.some(
+                id =>
+                    String(id) ===
+                    String(folderId)
+            );
+        }
+    );
 }
 
 
@@ -510,18 +594,25 @@ function renderOrphanArtwork() {
     container.innerHTML = "";
 
     const orphanArtwork =
-        artworks.filter(artwork => {
-            const folderIds =
-                artworkFolderMap.get(
-                    artwork.id
-                ) || [];
+        artworks.filter(
+            artwork => {
+                const folderIds =
+                    artworkFolderMap.get(
+                        artwork.id
+                    ) || [];
 
-            return folderIds.length === 0;
-        });
+                return (
+                    folderIds.length ===
+                    0
+                );
+            }
+        );
 
     if (!orphanArtwork.length) {
         const empty =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
 
         empty.className =
             "gallery-empty";
@@ -529,16 +620,22 @@ function renderOrphanArtwork() {
         empty.textContent =
             "No unsorted artwork. ♡";
 
-        container.appendChild(empty);
+        container.appendChild(
+            empty
+        );
 
         return;
     }
 
-    orphanArtwork.forEach(artwork => {
-        container.appendChild(
-            createArtworkCard(artwork)
-        );
-    });
+    orphanArtwork.forEach(
+        artwork => {
+            container.appendChild(
+                createArtworkCard(
+                    artwork
+                )
+            );
+        }
+    );
 }
 
 
@@ -548,7 +645,9 @@ function renderOrphanArtwork() {
 
 function createArtworkCard(artwork) {
     const card =
-        document.createElement("article");
+        document.createElement(
+            "article"
+        );
 
     card.className =
         "artwork-card";
@@ -560,7 +659,9 @@ function createArtworkCard(artwork) {
     }
 
     const image =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
 
     image.className =
         "artwork-card-image";
@@ -572,24 +673,35 @@ function createArtworkCard(artwork) {
         artwork.title ||
         "Artwork";
 
-    image.loading = "lazy";
+    image.loading =
+        "lazy";
 
     image.addEventListener(
         "click",
-        () => openArtworkViewer(artwork)
+        () => {
+            openArtworkViewer(
+                artwork
+            );
+        }
     );
 
-    card.appendChild(image);
+    card.appendChild(
+        image
+    );
 
     const content =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     content.className =
         "artwork-card-content";
 
     if (artwork.title) {
         const title =
-            document.createElement("h3");
+            document.createElement(
+                "h3"
+            );
 
         title.className =
             "artwork-card-title";
@@ -597,12 +709,16 @@ function createArtworkCard(artwork) {
         title.textContent =
             artwork.title;
 
-        content.appendChild(title);
+        content.appendChild(
+            title
+        );
     }
 
     if (artwork.description) {
         const description =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
 
         description.className =
             "artwork-card-description";
@@ -616,16 +732,26 @@ function createArtworkCard(artwork) {
     }
 
     const actions =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     actions.className =
         "artwork-card-actions";
 
+    // -----------------------------------------------------
+    // OWNER CONTROLS
+    // -----------------------------------------------------
+
     if (isGalleryOwner) {
         const editButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
-        editButton.type = "button";
+        editButton.type =
+            "button";
+
         editButton.textContent =
             "✏️ Edit";
 
@@ -633,14 +759,21 @@ function createArtworkCard(artwork) {
             "click",
             event => {
                 event.stopPropagation();
-                editArtwork(artwork);
+
+                editArtwork(
+                    artwork
+                );
             }
         );
 
         const folderButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
-        folderButton.type = "button";
+        folderButton.type =
+            "button";
+
         folderButton.textContent =
             "📁 Folders";
 
@@ -655,15 +788,27 @@ function createArtworkCard(artwork) {
             }
         );
 
-        actions.appendChild(editButton);
-        actions.appendChild(folderButton);
+        actions.appendChild(
+            editButton
+        );
+
+        actions.appendChild(
+            folderButton
+        );
     }
+
+    // -----------------------------------------------------
+    // MODERATOR CONTROL
+    // -----------------------------------------------------
 
     if (isModerator) {
         const moderationButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
-        moderationButton.type = "button";
+        moderationButton.type =
+            "button";
 
         moderationButton.textContent =
             artwork.is_hidden
@@ -686,13 +831,530 @@ function createArtworkCard(artwork) {
         );
     }
 
+    // -----------------------------------------------------
+    // REPORT
+    //
+    // This is intentionally available regardless of
+    // ownership or moderator status so people can report
+    // any gallery artwork, including folderless artwork.
+    // -----------------------------------------------------
+
+    const reportButton =
+        document.createElement(
+            "button"
+        );
+
+    reportButton.type =
+        "button";
+
+    reportButton.className =
+        "gallery-report-button";
+
+    reportButton.textContent =
+        "⚑ Report";
+
+    reportButton.dataset.reportTargetType =
+        "gallery_item";
+
+    reportButton.dataset.reportTargetId =
+        String(artwork.id);
+
+    reportButton.setAttribute(
+        "aria-label",
+        "Report this artwork"
+    );
+
+    reportButton.addEventListener(
+        "click",
+        event => {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    );
+
+    actions.appendChild(
+        reportButton
+    );
+
     if (actions.children.length) {
-        content.appendChild(actions);
+        content.appendChild(
+            actions
+        );
     }
 
-    card.appendChild(content);
+    card.appendChild(
+        content
+    );
 
     return card;
+}
+
+
+// =========================================================
+// GALLERY REPORT DIALOG
+// =========================================================
+
+function ensureGalleryReportDialog() {
+    let dialog =
+        document.getElementById(
+            "galleryReportDialog"
+        );
+
+    if (dialog) {
+        return dialog;
+    }
+
+    dialog =
+        document.createElement(
+            "dialog"
+        );
+
+    dialog.id =
+        "galleryReportDialog";
+
+    dialog.className =
+        "report-dialog";
+
+    dialog.innerHTML = `
+        <form
+            method="dialog"
+            class="report-dialog-form"
+            id="galleryReportForm"
+        >
+            <h2>⚑ Report artwork</h2>
+
+            <p>
+                Tell us what is wrong with this artwork.
+                Your report will be sent to the moderation team. ♡
+            </p>
+
+            <label>
+                <span>Reason</span>
+
+                <select
+                    id="galleryReportReason"
+                    name="reason"
+                    required
+                >
+                    <option value="">
+                        Select a reason...
+                    </option>
+                </select>
+            </label>
+
+            <label>
+                <span>
+                    Additional details
+                    <small>(optional)</small>
+                </span>
+
+                <textarea
+                    id="galleryReportDetails"
+                    name="details"
+                    rows="5"
+                    maxlength="2000"
+                    placeholder="Add any useful context..."
+                ></textarea>
+            </label>
+
+            <p
+                id="galleryReportStatus"
+                class="report-dialog-status"
+                aria-live="polite"
+            ></p>
+
+            <div class="report-dialog-actions">
+                <button
+                    type="button"
+                    id="galleryReportCancel"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    id="galleryReportSubmit"
+                >
+                    Submit report
+                </button>
+            </div>
+        </form>
+    `;
+
+    document.body.appendChild(
+        dialog
+    );
+
+    const reasonSelect =
+        dialog.querySelector(
+            "#galleryReportReason"
+        );
+
+    GALLERY_REPORT_REASONS.forEach(
+        reason => {
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                reason;
+
+            option.textContent =
+                reason;
+
+            reasonSelect.appendChild(
+                option
+            );
+        }
+    );
+
+    const form =
+        dialog.querySelector(
+            "#galleryReportForm"
+        );
+
+    const cancelButton =
+        dialog.querySelector(
+            "#galleryReportCancel"
+        );
+
+    if (cancelButton) {
+        cancelButton.addEventListener(
+            "click",
+            () => {
+                dialog.close();
+            }
+        );
+    }
+
+    if (form) {
+        form.addEventListener(
+            "submit",
+            async event => {
+                event.preventDefault();
+
+                await submitGalleryReport();
+            }
+        );
+    }
+
+    dialog.addEventListener(
+        "close",
+        () => {
+            currentGalleryReportTarget =
+                null;
+
+            if (form) {
+                form.reset();
+            }
+
+            const status =
+                dialog.querySelector(
+                    "#galleryReportStatus"
+                );
+
+            if (status) {
+                status.textContent =
+                    "";
+            }
+
+            const submitButton =
+                dialog.querySelector(
+                    "#galleryReportSubmit"
+                );
+
+            if (submitButton) {
+                submitButton.disabled =
+                    false;
+
+                submitButton.textContent =
+                    "Submit report";
+            }
+        }
+    );
+
+    return dialog;
+}
+
+
+// =========================================================
+// OPEN GALLERY REPORT DIALOG
+// =========================================================
+
+function openGalleryReportDialog(
+    targetType,
+    targetId
+) {
+    if (
+        targetType !==
+            "gallery_item" ||
+        !targetId
+    ) {
+        return;
+    }
+
+    currentGalleryReportTarget = {
+        targetType,
+        targetId
+    };
+
+    const dialog =
+        ensureGalleryReportDialog();
+
+    const reasonSelect =
+        dialog.querySelector(
+            "#galleryReportReason"
+        );
+
+    const details =
+        dialog.querySelector(
+            "#galleryReportDetails"
+        );
+
+    const status =
+        dialog.querySelector(
+            "#galleryReportStatus"
+        );
+
+    if (reasonSelect) {
+        reasonSelect.value =
+            "";
+    }
+
+    if (details) {
+        details.value =
+            "";
+    }
+
+    if (status) {
+        status.textContent =
+            "";
+    }
+
+    if (!dialog.open) {
+        dialog.showModal();
+    }
+
+    reasonSelect?.focus();
+}
+
+
+// =========================================================
+// SUBMIT GALLERY REPORT
+// =========================================================
+
+async function submitGalleryReport() {
+    if (
+        !currentGalleryReportTarget
+    ) {
+        return;
+    }
+
+    const dialog =
+        document.getElementById(
+            "galleryReportDialog"
+        );
+
+    const reasonSelect =
+        document.getElementById(
+            "galleryReportReason"
+        );
+
+    const detailsInput =
+        document.getElementById(
+            "galleryReportDetails"
+        );
+
+    const status =
+        document.getElementById(
+            "galleryReportStatus"
+        );
+
+    const submitButton =
+        document.getElementById(
+            "galleryReportSubmit"
+        );
+
+    const reason =
+        reasonSelect?.value.trim() ||
+        "";
+
+    const details =
+        detailsInput?.value.trim() ||
+        "";
+
+    if (!reason) {
+        if (status) {
+            status.textContent =
+                "Please choose a reason for the report.";
+        }
+
+        reasonSelect?.focus();
+
+        return;
+    }
+
+    if (details.length > 2000) {
+        if (status) {
+            status.textContent =
+                "Additional details must be 2000 characters or fewer.";
+        }
+
+        detailsInput?.focus();
+
+        return;
+    }
+
+    if (submitButton) {
+        submitButton.disabled =
+            true;
+
+        submitButton.textContent =
+            "Submitting... 🌸";
+    }
+
+    if (status) {
+        status.textContent =
+            "Sending your report... 🌸";
+    }
+
+    try {
+        const {
+            data: { user },
+            error: authError
+        } = await client.auth.getUser();
+
+        if (authError) {
+            throw authError;
+        }
+
+        if (!user) {
+            if (status) {
+                status.textContent =
+                    "You must be logged in to submit a report. ♡";
+            }
+
+            if (submitButton) {
+                submitButton.disabled =
+                    false;
+
+                submitButton.textContent =
+                    "Submit report";
+            }
+
+            return;
+        }
+
+        const {
+            error
+        } = await client.rpc(
+            "create_report",
+            {
+                p_target_type:
+                    currentGalleryReportTarget.targetType,
+
+                p_target_id:
+                    currentGalleryReportTarget.targetId,
+
+                p_reason:
+                    reason,
+
+                p_details:
+                    details ||
+                    null
+            }
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        if (status) {
+            status.textContent =
+                "Report submitted. Thank you for helping keep Yumeboard safe. ♡";
+        }
+
+        if (submitButton) {
+            submitButton.textContent =
+                "Report submitted ♡";
+        }
+
+        window.setTimeout(
+            () => {
+                if (dialog?.open) {
+                    dialog.close();
+                }
+            },
+            1200
+        );
+
+    } catch (error) {
+        console.error(
+            "GALLERY: report error:",
+            error
+        );
+
+        if (status) {
+            status.textContent =
+                `Couldn't submit the report: ${
+                    error?.message ||
+                    "Unknown error"
+                }`;
+        }
+
+        if (submitButton) {
+            submitButton.disabled =
+                false;
+
+            submitButton.textContent =
+                "Submit report";
+        }
+    }
+}
+
+
+// =========================================================
+// REPORT BUTTON EVENTS
+// =========================================================
+
+function setupGalleryReportButtons() {
+    document.addEventListener(
+        "click",
+        event => {
+            const button =
+                event.target.closest(
+                    "[data-report-target-type][data-report-target-id]"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            const targetType =
+                button.dataset
+                    .reportTargetType;
+
+            const targetId =
+                button.dataset
+                    .reportTargetId;
+
+            if (
+                targetType !==
+                "gallery_item"
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            openGalleryReportDialog(
+                targetType,
+                targetId
+            );
+        }
+    );
 }
 
 
@@ -702,19 +1364,26 @@ function createArtworkCard(artwork) {
 
 function openArtworkViewer(artwork) {
     const dialog =
-        document.createElement("dialog");
+        document.createElement(
+            "dialog"
+        );
 
     dialog.className =
         "artwork-viewer-dialog";
 
     const closeButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    closeButton.type = "button";
+    closeButton.type =
+        "button";
+
     closeButton.className =
         "artwork-viewer-close";
 
-    closeButton.textContent = "×";
+    closeButton.textContent =
+        "×";
 
     closeButton.addEventListener(
         "click",
@@ -722,7 +1391,9 @@ function openArtworkViewer(artwork) {
     );
 
     const image =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
 
     image.className =
         "artwork-viewer-image";
@@ -735,19 +1406,31 @@ function openArtworkViewer(artwork) {
         "Artwork";
 
     const title =
-        document.createElement("h2");
+        document.createElement(
+            "h2"
+        );
 
     title.textContent =
         artwork.title ||
         "♡ Artwork";
 
-    dialog.appendChild(closeButton);
-    dialog.appendChild(image);
-    dialog.appendChild(title);
+    dialog.appendChild(
+        closeButton
+    );
+
+    dialog.appendChild(
+        image
+    );
+
+    dialog.appendChild(
+        title
+    );
 
     if (artwork.description) {
         const description =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
 
         description.textContent =
             artwork.description;
@@ -757,7 +1440,9 @@ function openArtworkViewer(artwork) {
         );
     }
 
-    document.body.appendChild(dialog);
+    document.body.appendChild(
+        dialog
+    );
 
     dialog.addEventListener(
         "close",
@@ -783,21 +1468,29 @@ function editArtwork(artwork) {
     }
 
     const dialog =
-        document.createElement("dialog");
+        document.createElement(
+            "dialog"
+        );
 
     dialog.className =
         "artwork-edit-dialog";
 
     const heading =
-        document.createElement("h2");
+        document.createElement(
+            "h2"
+        );
 
     heading.textContent =
         "✏️ Edit artwork";
 
-    dialog.appendChild(heading);
+    dialog.appendChild(
+        heading
+    );
 
     const preview =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
 
     preview.className =
         "artwork-edit-preview";
@@ -809,72 +1502,105 @@ function editArtwork(artwork) {
         artwork.title ||
         "Artwork";
 
-    dialog.appendChild(preview);
+    dialog.appendChild(
+        preview
+    );
 
     const form =
-        document.createElement("form");
+        document.createElement(
+            "form"
+        );
 
-    form.method = "dialog";
+    form.method =
+        "dialog";
+
     form.className =
         "artwork-edit-form";
 
     const titleLabel =
-        document.createElement("label");
+        document.createElement(
+            "label"
+        );
 
     titleLabel.textContent =
         "Title";
 
     const titleInput =
-        document.createElement("input");
+        document.createElement(
+            "input"
+        );
 
-    titleInput.type = "text";
-    titleInput.name = "title";
-    titleInput.maxLength = 200;
+    titleInput.type =
+        "text";
+
+    titleInput.name =
+        "title";
+
+    titleInput.maxLength =
+        200;
+
     titleInput.value =
-        artwork.title || "";
+        artwork.title ||
+        "";
 
     titleLabel.appendChild(
         titleInput
     );
 
     const descriptionLabel =
-        document.createElement("label");
+        document.createElement(
+            "label"
+        );
 
     descriptionLabel.textContent =
         "Description";
 
     const descriptionInput =
-        document.createElement("textarea");
+        document.createElement(
+            "textarea"
+        );
 
     descriptionInput.name =
         "description";
 
-    descriptionInput.rows = 5;
-    descriptionInput.maxLength = 2000;
+    descriptionInput.rows =
+        5;
+
+    descriptionInput.maxLength =
+        2000;
 
     descriptionInput.value =
-        artwork.description || "";
+        artwork.description ||
+        "";
 
     descriptionLabel.appendChild(
         descriptionInput
     );
 
     const status =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
 
     status.className =
         "artwork-edit-status";
 
     const buttons =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     buttons.className =
         "artwork-edit-actions";
 
     const cancelButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    cancelButton.type = "button";
+    cancelButton.type =
+        "button";
+
     cancelButton.textContent =
         "Cancel";
 
@@ -884,9 +1610,13 @@ function editArtwork(artwork) {
     );
 
     const deleteButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    deleteButton.type = "button";
+    deleteButton.type =
+        "button";
+
     deleteButton.textContent =
         "🗑️ Delete artwork";
 
@@ -906,9 +1636,14 @@ function editArtwork(artwork) {
                 return;
             }
 
-            deleteButton.disabled = true;
-            cancelButton.disabled = true;
-            saveButton.disabled = true;
+            deleteButton.disabled =
+                true;
+
+            cancelButton.disabled =
+                true;
+
+            saveButton.disabled =
+                true;
 
             status.textContent =
                 "Deleting artwork... 🌸";
@@ -951,9 +1686,13 @@ function editArtwork(artwork) {
     );
 
     const saveButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    saveButton.type = "submit";
+    saveButton.type =
+        "submit";
+
     saveButton.textContent =
         "Save changes ♡";
 
@@ -1064,9 +1803,13 @@ function editArtwork(artwork) {
         buttons
     );
 
-    dialog.appendChild(form);
+    dialog.appendChild(
+        form
+    );
 
-    document.body.appendChild(dialog);
+    document.body.appendChild(
+        dialog
+    );
 
     dialog.addEventListener(
         "close",
@@ -1245,21 +1988,29 @@ function openArtworkFolderManager(
     }
 
     const dialog =
-        document.createElement("dialog");
+        document.createElement(
+            "dialog"
+        );
 
     dialog.className =
         "folder-dialog";
 
     const title =
-        document.createElement("h2");
+        document.createElement(
+            "h2"
+        );
 
     title.textContent =
         "📁 Artwork folders";
 
-    dialog.appendChild(title);
+    dialog.appendChild(
+        title
+    );
 
     const description =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
 
     description.textContent =
         "Choose which folders this artwork belongs to. ♡";
@@ -1269,7 +2020,9 @@ function openArtworkFolderManager(
     );
 
     const list =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     list.className =
         "upload-folder-list";
@@ -1281,70 +2034,90 @@ function openArtworkFolderManager(
 
     if (!folders.length) {
         const empty =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
 
         empty.textContent =
             "You don't have any folders yet. ♡";
 
-        list.appendChild(empty);
+        list.appendChild(
+            empty
+        );
 
     } else {
-        folders.forEach(folder => {
-            const label =
-                document.createElement("label");
+        folders.forEach(
+            folder => {
+                const label =
+                    document.createElement(
+                        "label"
+                    );
 
-            label.className =
-                "upload-folder-option";
+                label.className =
+                    "upload-folder-option";
 
-            const checkbox =
-                document.createElement("input");
+                const checkbox =
+                    document.createElement(
+                        "input"
+                    );
 
-            checkbox.type =
-                "checkbox";
+                checkbox.type =
+                    "checkbox";
 
-            checkbox.value =
-                String(folder.id);
+                checkbox.value =
+                    String(folder.id);
 
-            checkbox.checked =
-                currentFolderIds.some(
-                    id =>
-                        String(id) ===
-                        String(folder.id)
+                checkbox.checked =
+                    currentFolderIds.some(
+                        id =>
+                            String(id) ===
+                            String(folder.id)
+                    );
+
+                const text =
+                    document.createElement(
+                        "span"
+                    );
+
+                text.textContent =
+                    folder.name ||
+                    "Untitled Folder";
+
+                label.appendChild(
+                    checkbox
                 );
 
-            const text =
-                document.createElement("span");
+                label.appendChild(
+                    text
+                );
 
-            text.textContent =
-                folder.name ||
-                "Untitled Folder";
-
-            label.appendChild(
-                checkbox
-            );
-
-            label.appendChild(
-                text
-            );
-
-            list.appendChild(
-                label
-            );
-        });
+                list.appendChild(
+                    label
+                );
+            }
+        );
     }
 
-    dialog.appendChild(list);
+    dialog.appendChild(
+        list
+    );
 
     const buttons =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     buttons.className =
         "folder-dialog-buttons";
 
     const cancelButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    cancelButton.type = "button";
+    cancelButton.type =
+        "button";
+
     cancelButton.textContent =
         "Cancel";
 
@@ -1354,9 +2127,13 @@ function openArtworkFolderManager(
     );
 
     const saveButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
-    saveButton.type = "button";
+    saveButton.type =
+        "button";
+
     saveButton.textContent =
         "Save ♡";
 
@@ -1424,9 +2201,13 @@ function openArtworkFolderManager(
         saveButton
     );
 
-    dialog.appendChild(buttons);
+    dialog.appendChild(
+        buttons
+    );
 
-    document.body.appendChild(dialog);
+    document.body.appendChild(
+        dialog
+    );
 
     dialog.addEventListener(
         "close",
@@ -1574,7 +2355,8 @@ function openRenameFolder(folder) {
         return;
     }
 
-    editingFolder = folder;
+    editingFolder =
+        folder;
 
     const dialog =
         document.getElementById(
@@ -1685,11 +2467,15 @@ function openDeleteFolder(folder) {
         );
 
     if (!confirmed) {
-        deletingFolder = null;
+        deletingFolder =
+            null;
+
         return;
     }
 
-    handleDeleteFolder(folder);
+    handleDeleteFolder(
+        folder
+    );
 }
 
 
@@ -1757,7 +2543,8 @@ async function handleDeleteFolder(
         );
 
     } finally {
-        deletingFolder = null;
+        deletingFolder =
+            null;
     }
 }
 
@@ -1823,6 +2610,7 @@ async function toggleArtworkVisibility(
 
     await loadGallery();
 }
+
 
 // =========================================================
 // FOLDER FORM

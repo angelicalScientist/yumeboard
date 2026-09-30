@@ -856,6 +856,83 @@
     color: var(--text-color);
 }
 
+/* =========================================================
+   🌙 IMAGEBOARD REPORT UI
+   ========================================================= */
+
+.dark-mode .thread-report-button,
+.dark-mode .thread-post-report-button {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .thread-report-button:hover,
+.dark-mode .thread-post-report-button:hover {
+    background: var(--soft-background);
+    border-color: var(--accent-color);
+}
+
+.dark-mode .thread-report-button:focus-visible,
+.dark-mode .thread-post-report-button:focus-visible {
+    outline-color: var(--accent-color);
+}
+
+.dark-mode .report-dialog {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.dark-mode .report-dialog::backdrop {
+    background: rgba(10, 5, 15, 0.75);
+}
+
+.dark-mode .report-dialog-form select,
+.dark-mode .report-dialog-form textarea {
+    background: #403148;
+    border-color: var(--border-color);
+    color: #fff;
+}
+
+.dark-mode .report-dialog-form select:focus,
+.dark-mode .report-dialog-form textarea:focus {
+    outline-color: var(--accent-color);
+}
+
+.dark-mode .report-dialog-form select option {
+    background: #403148;
+    color: #fff;
+}
+
+.dark-mode .report-dialog-help {
+    color: var(--text-color);
+}
+
+.dark-mode .report-dialog-message {
+    color: var(--text-color);
+}
+
+.dark-mode .report-dialog-cancel {
+    background: transparent;
+    color: var(--text-color);
+}
+
+/* =========================================================
+   🌙 GUESTBOOK REPORT UI
+   ========================================================= */
+
+.dark-mode .guestbook-report-button {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .guestbook-report-button:hover {
+    background: var(--soft-background);
+    border-color: var(--accent-color);
+}
 
 /* =========================================================
    33. IMAGEBOARD REPLY FORM
