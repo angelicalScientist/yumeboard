@@ -1,5 +1,13 @@
 /* =========================================================
-   1. INDEXTER DARK MODE
+   🌙 YUME SITE — DARK THEME
+   Part 1: Global, profile, navigation, cards, gallery,
+   guestbook, account, editor, dashboard, F/O manager,
+   character search, suggestions
+   ========================================================= */
+
+
+/* =========================================================
+   1. DARK THEME VARIABLES / GLOBAL
    ========================================================= */
 
 .dark-mode {
@@ -9,40 +17,17 @@
     --soft-background: #403148;
     --muted-background: #4b3853;
     --text-color: #f5eaf7;
+}
 
+.dark-mode body {
     background: #211b29;
     color: var(--text-color);
 }
 
-.dark-mode .profile-header,
-.dark-mode .intro,
-.dark-mode .card,
-.dark-mode .settings,
-.dark-mode .settings-nav,
-.dark-mode .discover {
-    background: #33283b;
-    border-color: var(--border-color);
-}
 
-.dark-mode .settings-group-options {
-    background: #33283b;
-    border-color: var(--border-color);
-}
-
-.dark-mode .settings-group-button:hover,
-.dark-mode .settings-group-options a:hover,
-.dark-mode .settings-group-options button:hover {
-    background: #403148;
-}
-
-.dark-mode .user-card {
-    background: #403148;
-    border-color: var(--border-color);
-}
-
-.dark-mode .status {
-    background: var(--muted-background);
-}
+/* =========================================================
+   2. BUTTONS
+   ========================================================= */
 
 .dark-mode button {
     background: linear-gradient(
@@ -51,7 +36,6 @@
         #72577d 48%,
         #604b68 100%
     );
-
     border-color: #a487ad;
     color: #fff;
 }
@@ -65,14 +49,123 @@
     );
 }
 
+.dark-mode button:active {
+    box-shadow:
+        inset 2px 2px 2px rgba(20, 10, 25, 0.35),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.dark-mode button:disabled {
+    opacity: 0.55;
+}
+
+.dark-mode button:focus-visible {
+    outline-color: var(--accent-color);
+}
+
+
+/* =========================================================
+   3. PROFILE HEADER
+   ========================================================= */
+
+.dark-mode .profile-header {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+
+/* =========================================================
+   4. PROFILE INTRO / AVATAR
+   ========================================================= */
+
+.dark-mode .intro {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .status {
+    background: var(--muted-background);
+}
+
+
+/* =========================================================
+   5. GENERAL CARDS
+   ========================================================= */
+
+.dark-mode .card {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+
+/* =========================================================
+   6. SETTINGS / NAVIGATION
+   ========================================================= */
+
+.dark-mode .settings-nav {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .settings-group-button {
+    color: var(--text-color);
+}
+
+.dark-mode .settings-group-button:hover {
+    background: #403148;
+    border-color: var(--border-color);
+}
+
+.dark-mode .settings-group-options {
+    background: #33283b;
+    border-color: var(--border-color);
+    box-shadow: 0 6px 18px rgba(10, 5, 15, 0.35);
+}
+
+.dark-mode .settings-group-options a,
+.dark-mode .settings-group-options button {
+    color: var(--text-color);
+}
+
+.dark-mode .settings-group-options a:hover,
+.dark-mode .settings-group-options button:hover {
+    background: #403148;
+}
+
+
+/* =========================================================
+   7. COLLAPSIBLE SECTIONS
+   ========================================================= */
+
 .dark-mode .section-title:hover {
     color: #f6dff7;
 }
 
-.dark-mode .profile-viewer {
+
+/* =========================================================
+   8. DISCOVER SIDEBAR
+   ========================================================= */
+
+.dark-mode .discover {
     background: #33283b;
     border-color: var(--border-color);
 }
+
+
+/* =========================================================
+   9. USER CARDS
+   ========================================================= */
+
+.dark-mode .user-card {
+    background: #403148;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   10. F/O DISPLAY
+   ========================================================= */
 
 .dark-mode .fo-quote {
     background: var(--muted-background);
@@ -84,8 +177,19 @@
     border-color: var(--border-color);
 }
 
+
+/* =========================================================
+   11. ART GALLERY
+   ========================================================= */
+
 .dark-mode .art-display {
     background: var(--muted-background);
+    border-color: var(--border-color);
+}
+
+.dark-mode .upload-art {
+    background: var(--accent-color);
+    color: #fff;
 }
 
 .dark-mode .caption-editor input {
@@ -98,6 +202,34 @@
     color: #d8c8dc;
 }
 
+
+/* =========================================================
+   12. PROFILE BANNER
+   ========================================================= */
+
+.dark-mode .profile-banner {
+    background: linear-gradient(
+        135deg,
+        #403148,
+        #33283b
+    );
+    border-color: var(--border-color);
+}
+
+.dark-mode .banner-placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode .banner-upload {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+
+/* =========================================================
+   13. GUESTBOOK
+   ========================================================= */
+
 .dark-mode .guestbook-entries {
     background: #33283b;
     border-color: var(--border-color);
@@ -108,16 +240,12 @@
     border-color: var(--border-color);
 }
 
-.dark-mode .reply {
-    background: var(--muted-background);
-}
-
 .dark-mode .guestbook-form input,
 .dark-mode .guestbook-form textarea,
 .dark-mode .reply-form input,
 .dark-mode .reply-form textarea {
     background: #403148;
-    color: white;
+    color: #fff;
     border-color: var(--border-color);
 }
 
@@ -128,9 +256,22 @@
     color: #d8c8dc;
 }
 
+.dark-mode .reply {
+    background: var(--muted-background);
+}
+
+
+/* =========================================================
+   14. ACCOUNT PAGE
+   ========================================================= */
+
+.dark-mode .account-card {
+    color: var(--text-color);
+}
+
 .dark-mode .account-card input {
     background: #403148;
-    color: white;
+    color: #fff;
     border-color: var(--border-color);
 }
 
@@ -138,10 +279,15 @@
     color: #d8c8dc;
 }
 
+
+/* =========================================================
+   15. PROFILE EDITOR
+   ========================================================= */
+
 .dark-mode .editor-card input,
 .dark-mode .editor-card textarea {
     background: #403148;
-    color: white;
+    color: #fff;
     border-color: var(--border-color);
 }
 
@@ -149,6 +295,47 @@
 .dark-mode .editor-card textarea::placeholder {
     color: #d8c8dc;
 }
+
+
+/* =========================================================
+   16. DASHBOARD
+   ========================================================= */
+
+.dark-mode .dashboard-card {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   17. F/O MANAGER
+   ========================================================= */
+
+.dark-mode .fo-editor,
+.dark-mode .managed-fo {
+    background: var(--soft-background);
+    border-color: var(--border-color);
+}
+
+.dark-mode .fo-editor input,
+.dark-mode .fo-editor textarea,
+.dark-mode .fo-editor select {
+    background: #403148;
+    color: #fff;
+    border-color: var(--border-color);
+}
+
+.dark-mode .main-badge {
+    background: var(--muted-background);
+}
+
+.dark-mode .managed-fo-no-image {
+    background: var(--muted-background);
+}
+
+
+/* =========================================================
+   18. CHARACTER SEARCH
+   ========================================================= */
 
 .dark-mode .character-results {
     background: #33283b;
@@ -164,25 +351,907 @@
     background: var(--muted-background);
 }
 
-.dark-mode .fo-editor,
-.dark-mode .managed-fo {
+
+/* =========================================================
+   19. SUGGESTIONS / MODERATION
+   ========================================================= */
+
+.dark-mode .suggestion-card {
     background: var(--soft-background);
     border-color: var(--border-color);
 }
 
-.dark-mode .suggestion-card {
-    background: #403148;
-    border-color: var(--border-color);
+.dark-mode .suggestion-result {
+    color: var(--text-color);
 }
 
-.dark-mode .profile-banner {
+.dark-mode .approve-button {
     background: linear-gradient(
-        135deg,
-        #403148,
-        #33283b
+        to bottom,
+        #526b52 0%,
+        #455d45 45%,
+        #384d38 100%
+    );
+    border-color: #7f9b7f;
+    color: #f2fff2;
+}
+
+.dark-mode .approve-button:hover {
+    background: linear-gradient(
+        to bottom,
+        #607a60 0%,
+        #506b50 45%,
+        #425a42 100%
     );
 }
 
-.dark-mode .banner-placeholder {
+.dark-mode .reject-button {
+    background: linear-gradient(
+        to bottom,
+        #6e5050 0%,
+        #5e4444 45%,
+        #503939 100%
+    );
+    border-color: #9a7777;
+    color: #fff0f0;
+}
+
+.dark-mode .reject-button:hover {
+    background: linear-gradient(
+        to bottom,
+        #7d5b5b 0%,
+        #6b4d4d 45%,
+        #5b4141 100%
+    );
+}
+
+
+/* =========================================================
+   🌙 YUME SITE — DARK THEME
+   Part 2: Art Archive, Folders, Artwork Cards,
+   Uploads, Dialogs, Responsive Gallery
+   ========================================================= */
+
+
+/* =========================================================
+   20. ART ARCHIVE
+   ========================================================= */
+
+.dark-mode .gallery-header {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-header p {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-status {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-status.error {
+    color: #f3b6b6;
+}
+
+
+/* =========================================================
+   21. FOLDER
+   ========================================================= */
+
+.dark-mode .gallery-folder {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-folder-header {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-folder-name {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-empty {
+    background: var(--box-background);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-footer {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   22. FOLDER DIALOGS
+   ========================================================= */
+
+.dark-mode .folder-dialog {
+    background: #33283b;
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+}
+
+.dark-mode .folder-dialog::backdrop {
+    background: rgba(10, 5, 15, 0.7);
+}
+
+.dark-mode .folder-dialog input {
+    background: #403148;
+    color: #fff;
+    border-color: var(--border-color);
+}
+
+.dark-mode .folder-dialog input::placeholder {
     color: #d8c8dc;
+}
+
+.dark-mode .gallery-error {
+    color: #f3b6b6;
+}
+
+
+/* =========================================================
+   23. ARTWORK GRID
+   ========================================================= */
+
+.dark-mode .artwork-grid,
+.dark-mode .gallery-folder-artwork {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   24. ARTWORK CARD
+   ========================================================= */
+
+.dark-mode .artwork-card,
+.dark-mode .gallery-artwork {
+    color: var(--text-color);
+}
+
+.dark-mode .artwork-card-button {
+    background: transparent;
+    color: var(--text-color);
+}
+
+.dark-mode .artwork-card-button:hover {
+    background: transparent;
+}
+
+.dark-mode .artwork-card-title,
+.dark-mode .artwork-card-button h3,
+.dark-mode .gallery-artwork-info h3,
+.dark-mode .artwork-card-content h3 {
+    color: var(--text-color);
+}
+
+.dark-mode .artwork-card-description,
+.dark-mode .gallery-artwork-info p,
+.dark-mode .artwork-card-content p {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-artwork-info {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   25. ARTWORK ACTION BUTTONS
+   ========================================================= */
+
+.dark-mode .artwork-card-action,
+.dark-mode .artwork-card-actions button,
+.dark-mode .artwork-card-moderation-actions button {
+    color: #fff;
+    border-color: #a487ad;
+}
+
+.dark-mode .artwork-card-folder {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   HIDDEN MODERATOR ARTWORK
+   ========================================================= */
+
+.dark-mode .artwork-card-hidden {
+    opacity: 0.65;
+}
+
+.dark-mode .artwork-card-hidden-badge {
+    color: #f0c6c6;
+}
+
+
+/* =========================================================
+   26. UPLOAD PREVIEW
+   ========================================================= */
+
+.dark-mode .upload-preview {
+    color: var(--text-color);
+}
+
+.dark-mode .upload-preview img {
+    background: var(--muted-background);
+}
+
+
+/* =========================================================
+   27. FOLDER CHECKBOXES
+   ========================================================= */
+
+.dark-mode .upload-folder-list {
+    background: #33283b;
+    border-color: var(--border-color);
+}
+
+.dark-mode .upload-folder-option {
+    color: var(--text-color);
+}
+
+.dark-mode .upload-folder-option:hover {
+    background: #403148;
+}
+
+.dark-mode .upload-folder-option input {
+    accent-color: var(--accent-color);
+}
+
+
+/* =========================================================
+   28. ARTWORK DIALOG
+   ========================================================= */
+
+.dark-mode .artwork-dialog {
+    background: #33283b;
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+}
+
+.dark-mode .artwork-dialog::backdrop {
+    background: rgba(10, 5, 15, 0.75);
+}
+
+.dark-mode .artwork-dialog img {
+    background: var(--muted-background);
+}
+
+.dark-mode #artworkCloseButton {
+    color: var(--text-color);
+}
+
+.dark-mode #artworkCloseButton:hover {
+    background: transparent;
+    color: #f6dff7;
+}
+
+/* =========================================================
+   🌙 YUME SITE — DARK THEME
+   Part 3: Imageboard
+   ========================================================= */
+
+
+/* =========================================================
+   29. IMAGEBOARD
+   ========================================================= */
+
+.dark-mode .imageboard-page {
+    color: var(--text-color);
+}
+
+.dark-mode .imageboard-intro {
+    color: var(--text-color);
+}
+
+.dark-mode .imageboard-intro p {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   BOARD DIRECTORY
+   ========================================================= */
+
+.dark-mode .board-card {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: 0 3px 10px rgba(10, 5, 15, 0.25);
+}
+
+.dark-mode .board-card:hover,
+.dark-mode .board-card:focus-visible {
+    border-color: var(--accent-color);
+    box-shadow: 0 6px 16px rgba(10, 5, 15, 0.35);
+}
+
+.dark-mode .board-card-slug {
+    color: var(--text-color);
+}
+
+.dark-mode .board-card p:not(.board-card-slug) {
+    color: var(--text-color);
+}
+
+.dark-mode .board-card span {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   BOARD PAGE HEADER
+   ========================================================= */
+
+.dark-mode .board-header {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: 0 3px 10px rgba(10, 5, 15, 0.25);
+}
+
+.dark-mode .board-slug {
+    color: var(--text-color);
+}
+
+.dark-mode .board-header > p:not(.board-slug) {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   THREAD LIST
+   ========================================================= */
+
+.dark-mode .board-thread-list-header {
+    color: var(--text-color);
+}
+
+.dark-mode .board-thread-list-header span {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-preview {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .thread-preview-meta,
+.dark-mode .thread-preview-bump {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-preview-board {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-status {
+    background: rgba(215, 155, 220, 0.14);
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   30. NEW THREAD
+   ========================================================= */
+
+.dark-mode .new-thread-box {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: 0 3px 10px rgba(10, 5, 15, 0.25);
+}
+
+.dark-mode .new-thread-board {
+    border-bottom-color: var(--border-color);
+}
+
+.dark-mode .new-thread-board p {
+    color: var(--text-color);
+}
+
+.dark-mode #newThreadForm label {
+    color: var(--text-color);
+}
+
+.dark-mode #newThreadForm input,
+.dark-mode #newThreadForm textarea {
+    background: #403148;
+    border-color: var(--border-color);
+    color: #fff;
+}
+
+.dark-mode #newThreadForm input::placeholder,
+.dark-mode #newThreadForm textarea::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode #newThreadForm input:focus,
+.dark-mode #newThreadForm textarea:focus {
+    outline-color: var(--accent-color);
+}
+
+
+/* =========================================================
+   31. NEW THREAD IMAGE UPLOAD
+   ========================================================= */
+
+.dark-mode .upload-help {
+    color: var(--text-color);
+}
+
+.dark-mode .optional-label {
+    color: var(--text-color);
+}
+
+.dark-mode .image-preview {
+    background: var(--soft-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .image-preview p {
+    color: var(--text-color);
+}
+
+.dark-mode #threadImage {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   32. IMAGEBOARD THREAD
+   ========================================================= */
+
+.dark-mode .thread-header {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: 0 3px 10px rgba(10, 5, 15, 0.25);
+}
+
+.dark-mode .thread-header-meta {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-statuses {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-post {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .thread-post-header time,
+.dark-mode .thread-post-username {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-post-label {
+    background: rgba(215, 155, 220, 0.14);
+    color: var(--text-color);
+}
+
+.dark-mode .thread-post-body,
+.dark-mode .thread-post-content {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-post-image img {
+    border-color: var(--border-color);
+}
+
+.dark-mode .thread-empty {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-error {
+    background: var(--box-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   33. IMAGEBOARD REPLY FORM
+   ========================================================= */
+
+.dark-mode #replyForm {
+    color: var(--text-color);
+}
+
+.dark-mode #replyForm > label {
+    color: var(--text-color);
+}
+
+.dark-mode #replyForm > textarea {
+    background: #403148;
+    border-color: var(--border-color);
+    color: #fff;
+}
+
+.dark-mode #replyForm > textarea::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode #replyForm > input[type="file"] {
+    color: var(--text-color);
+}
+
+.dark-mode #replyForm .optional-label {
+    color: var(--text-color);
+}
+
+.dark-mode #replyForm .upload-help {
+    color: var(--text-color);
+}
+
+.dark-mode #replyForm .image-preview {
+    background: var(--soft-background);
+    border-color: var(--border-color);
+}
+
+.dark-mode #replyForm .image-preview img {
+    border-color: var(--border-color);
+}
+
+.dark-mode #replyForm .image-preview p {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   IMAGEBOARD POST FORMATTING
+   ========================================================= */
+
+.dark-mode .thread-post-number {
+    color: var(--text-color);
+}
+
+.dark-mode .thread-post-number:hover {
+    color: #f6dff7;
+}
+
+.dark-mode .thread-post-reference {
+    color: #d78bc2;
+}
+
+.dark-mode .thread-post-reference:hover {
+    color: #f0b9df;
+}
+
+.dark-mode .thread-quotetext {
+    color: #d78bc2;
+}
+
+
+/* =========================================================
+   POST REFERENCE HIGHLIGHT
+   ========================================================= */
+
+.dark-mode .thread-post-reference-highlight {
+    border-color: #b86aa2 !important;
+    background-color: #493247 !important;
+    box-shadow:
+        0 0 0 3px rgba(215, 139, 194, 0.18),
+        0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+
+/* =========================================================
+   IMAGEBOARD IMAGE THUMBNAILS
+   ========================================================= */
+
+.dark-mode .thread-post-image-link {
+    border-color: var(--border-color);
+    background: var(--soft-background);
+}
+
+.dark-mode .thread-post-image-link:hover {
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
+}
+
+
+/* =========================================================
+   BOARD THREAD IMAGE PREVIEWS
+   ========================================================= */
+
+.dark-mode .thread-preview-thumbnail-link {
+    border-color: var(--border-color);
+    background: var(--soft-background);
+}
+
+.dark-mode .thread-preview-thumbnail-link:hover {
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .thread-preview-no-image {
+    color: var(--accent-color);
+}
+
+.dark-mode .thread-preview-content {
+    color: var(--text-color);
+}
+
+/* =========================================================
+   🌙 YUME SITE — DARK THEME
+   Part 4 / Final: Reports, Moderation, Artwork Controls,
+   Folder Manager, Mobile Theme Support, Site Logo
+   ========================================================= */
+
+
+/* =========================================================
+   33. REPORTS / MODERATION
+   ========================================================= */
+
+.dark-mode .report-card {
+    color: var(--text-color);
+}
+
+.dark-mode .report-header {
+    color: var(--text-color);
+}
+
+.dark-mode .report-status {
+    background: rgba(215, 155, 220, 0.14);
+    color: var(--text-color);
+}
+
+.dark-mode .report-reason,
+.dark-mode .reported-content {
+    background: rgba(75, 56, 83, 0.75);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .report-actions {
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-button {
+    color: #fff;
+}
+
+.dark-mode .moderation-button.danger {
+    border-color: #9a7777;
+    background: linear-gradient(
+        to bottom,
+        #704f54 0%,
+        #5f4448 45%,
+        #50393d 100%
+    );
+    color: #fff0f0;
+}
+
+.dark-mode .moderation-button.danger:hover {
+    background: linear-gradient(
+        to bottom,
+        #805b60 0%,
+        #6d4d52 45%,
+        #5c4145 100%
+    );
+}
+
+.dark-mode .moderation-button.secondary {
+    opacity: 0.85;
+}
+
+.dark-mode .reported-content-image {
+    border-color: var(--border-color);
+}
+
+.dark-mode .reported-post-images {
+    color: var(--text-color);
+}
+
+.dark-mode .reported-image {
+    color: var(--text-color);
+}
+
+.dark-mode .reported-post-content {
+    background: rgba(75, 56, 83, 0.75);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .small-text {
+    color: var(--text-color);
+}
+
+
+/* =========================================================
+   MODERATION SEARCH
+   ========================================================= */
+
+.dark-mode #moderationSearchForm {
+    color: var(--text-color);
+}
+
+.dark-mode #moderationSearchForm input,
+.dark-mode #moderationSearchForm select {
+    background: #403148;
+    border-color: var(--border-color);
+    color: #fff;
+}
+
+.dark-mode #moderationSearchForm input::placeholder {
+    color: #d8c8dc;
+}
+
+.dark-mode .moderation-checkbox-label {
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-checkbox-label input {
+    accent-color: var(--accent-color);
+}
+
+
+/* =========================================================
+   MODERATION RESULT CARDS
+   ========================================================= */
+
+.dark-mode .moderation-result-card {
+    background: rgba(75, 56, 83, 0.75);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-result-header {
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-hidden-badge {
+    background: rgba(215, 155, 220, 0.16);
+    color: #f0c9f1;
+}
+
+.dark-mode .moderation-content {
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-message {
+    background: rgba(75, 56, 83, 0.75);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-images {
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-image {
+    border-color: var(--border-color);
+}
+
+.dark-mode .moderation-result-actions {
+    color: var(--text-color);
+}
+
+.dark-mode .moderation-result-actions .danger {
+    border-color: #9a7777;
+    background: linear-gradient(
+        to bottom,
+        #704f54 0%,
+        #5f4448 45%,
+        #50393d 100%
+    );
+    color: #fff0f0;
+}
+
+.dark-mode .moderation-result-actions .danger:hover {
+    background: linear-gradient(
+        to bottom,
+        #805b60 0%,
+        #6d4d52 45%,
+        #5c4145 100%
+    );
+}
+
+
+/* =========================================================
+   MODERATOR HIDDEN GALLERY ARTWORK
+   ========================================================= */
+
+.dark-mode .artwork-card-hidden {
+    opacity: 0.65;
+}
+
+.dark-mode .artwork-card-hidden-badge {
+    color: #f0c6c6;
+}
+
+.dark-mode .artwork-card-moderation-actions {
+    color: var(--text-color);
+}
+
+.dark-mode .artwork-card-moderation-action {
+    color: #fff;
+}
+
+
+/* =========================================================
+   ARTWORK ACTION BUTTONS
+   ========================================================= */
+
+.dark-mode .artwork-card-controls {
+    color: var(--text-color);
+}
+
+.dark-mode .artwork-action-button {
+    background: linear-gradient(
+        to bottom,
+        #85698f 0%,
+        #72577d 48%,
+        #604b68 100%
+    );
+    border-color: #a487ad;
+    color: #fff;
+}
+
+.dark-mode .artwork-action-button:hover {
+    background: linear-gradient(
+        to bottom,
+        #967aa0 0%,
+        #806389 48%,
+        #6c5575 100%
+    );
+}
+
+
+/* =========================================================
+   FOLDER SELECTION DIALOG
+   ========================================================= */
+
+.dark-mode .gallery-folder-manager-dialog {
+    background: #33283b;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-folder-manager-dialog::backdrop {
+    background: rgba(10, 5, 15, 0.75);
+}
+
+.dark-mode .gallery-folder-manager-list {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-folder-manager-option {
+    color: var(--text-color);
+}
+
+.dark-mode .gallery-folder-manager-option:hover {
+    background: #403148;
+}
+
+.dark-mode .gallery-folder-manager-option input {
+    accent-color: var(--accent-color);
+}
+
+
+/* =========================================================
+   GLOBAL DARK COLOR SCHEME
+   ========================================================= */
+
+.dark-mode {
+    color-scheme: dark;
+}
+
+
+/* =========================================================
+   SITE LOGO
+   ========================================================= */
+
+.dark-mode .site-logo {
+    opacity: 0.96;
+}
+
+.dark-mode .site-logo-link:hover .site-logo {
+    opacity: 0.9;
 }
