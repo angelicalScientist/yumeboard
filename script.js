@@ -2,7 +2,7 @@
 // SCRIPT.JS
 // ======================================
 
-(() => {
+(async () => {
     "use strict";
 
     const client = window.supabaseClient;
@@ -12,6 +12,17 @@
         return;
     }
 
+    // REQUIRE LOGIN
+    const {
+        data: { user },
+        error: authError
+    } = await client.auth.getUser();
+
+    if (authError) {
+        console.error("Authentication check failed:", authError);
+        window.location.href = "account.html";
+        return;
+    }
     // ======================================
     // SETTINGS DROPDOWN NAVIGATION
     // ======================================

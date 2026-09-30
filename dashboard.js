@@ -124,7 +124,7 @@ homeButton.addEventListener(
     function () {
 
         window.location.href =
-            "indexter.html";
+            "imageboard.html";
 
     }
 );
