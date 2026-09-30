@@ -45,7 +45,11 @@ async function checkModerator() {
     } = await client.rpc("is_moderator");
 
     if (moderatorError) {
-        console.error("Moderator check failed:", moderatorError);
+        console.error(
+            "Moderator check failed:",
+            moderatorError
+        );
+
         window.location.href = "index.html";
         return false;
     }
@@ -93,7 +97,8 @@ function formatDate(value) {
 
 
 function getVisibilityFilter() {
-    const visibility = moderationVisibility.value;
+    const visibility =
+        moderationVisibility.value;
 
     if (visibility === "visible") {
         return false;
@@ -108,13 +113,17 @@ function getVisibilityFilter() {
 
 
 function applyVisibilityFilter(query) {
-    const visibility = getVisibilityFilter();
+    const visibility =
+        getVisibilityFilter();
 
     if (visibility === null) {
         return query;
     }
 
-    return query.eq("is_hidden", visibility);
+    return query.eq(
+        "is_hidden",
+        visibility
+    );
 }
 
 
@@ -123,7 +132,8 @@ function mergeUniqueResults(...groups) {
 
     for (const group of groups) {
         for (const item of group) {
-            const key = `${item.targetType}:${item.id}`;
+            const key =
+                `${item.targetType}:${item.id}`;
 
             if (!map.has(key)) {
                 map.set(key, item);
@@ -139,14 +149,20 @@ function createUsernameMap(users) {
     const map = new Map();
 
     for (const user of users) {
-        map.set(user.id, user.username || "Unknown user");
+        map.set(
+            user.id,
+            user.username || "Unknown user"
+        );
     }
 
     return map;
 }
 
 
-function getDisplayedUsername(item, usernameMap) {
+function getDisplayedUsername(
+    item,
+    usernameMap
+) {
     if (item.is_anonymous) {
         return "Anonymous";
     }
@@ -155,17 +171,48 @@ function getDisplayedUsername(item, usernameMap) {
         return item.author_name;
     }
 
-    return usernameMap.get(item.user_id) || "Unknown user";
+    return (
+        usernameMap.get(item.user_id) ||
+        "Unknown user"
+    );
 }
 
 
 // ============================================================
-// USERNAME SEARCH
+// UUID SEARCH
+// ============================================================
+
+function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value
+    );
+}
+
+
+// ============================================================
+// USERNAME / USER UUID SEARCH
 // ============================================================
 
 async function findMatchingUsers(searchTerm) {
     if (!searchTerm) {
         return [];
+    }
+
+    if (isUuid(searchTerm)) {
+        const {
+            data,
+            error
+        } = await client
+            .from("profiles")
+            .select("id, username")
+            .eq("id", searchTerm)
+            .limit(100);
+
+        if (error) {
+            throw error;
+        }
+
+        return data || [];
     }
 
     const {
@@ -174,7 +221,10 @@ async function findMatchingUsers(searchTerm) {
     } = await client
         .from("profiles")
         .select("id, username")
-        .ilike("username", `%${searchTerm}%`)
+        .ilike(
+            "username",
+            `%${searchTerm}%`
+        )
         .limit(100);
 
     if (error) {
@@ -189,7 +239,9 @@ async function findMatchingUsers(searchTerm) {
 // IMAGEBOARD THREAD SEARCH
 // ============================================================
 
-async function searchThreadsByTitle(searchTerm) {
+async function searchThreadsByTitle(
+    searchTerm
+) {
     if (!searchTerm) {
         return [];
     }
@@ -211,8 +263,14 @@ async function searchThreadsByTitle(searchTerm) {
                 slug
             )
         `)
-        .ilike("title", `%${searchTerm}%`)
-        .order("last_post_at", { ascending: false })
+        .ilike(
+            "title",
+            `%${searchTerm}%`
+        )
+        .order(
+            "last_post_at",
+            { ascending: false }
+        )
         .limit(100);
 
     query = applyVisibilityFilter(query);
@@ -233,7 +291,53 @@ async function searchThreadsByTitle(searchTerm) {
 }
 
 
-async function searchThreadsByUserIds(userIds) {
+async function searchThreadsById(
+    searchTerm
+) {
+    if (!isUuid(searchTerm)) {
+        return [];
+    }
+
+    let query = client
+        .from("threads")
+        .select(`
+            id,
+            board_id,
+            user_id,
+            title,
+            created_at,
+            last_post_at,
+            is_locked,
+            is_archived,
+            is_hidden,
+            boards (
+                name,
+                slug
+            )
+        `)
+        .eq("id", searchTerm);
+
+    query = applyVisibilityFilter(query);
+
+    const {
+        data,
+        error
+    } = await query;
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(thread => ({
+        ...thread,
+        targetType: "imageboard_thread"
+    }));
+}
+
+
+async function searchThreadsByUserIds(
+    userIds
+) {
     if (!userIds.length) {
         return [];
     }
@@ -256,7 +360,10 @@ async function searchThreadsByUserIds(userIds) {
             )
         `)
         .in("user_id", userIds)
-        .order("last_post_at", { ascending: false })
+        .order(
+            "last_post_at",
+            { ascending: false }
+        )
         .limit(100);
 
     query = applyVisibilityFilter(query);
@@ -281,7 +388,9 @@ async function searchThreadsByUserIds(userIds) {
 // IMAGEBOARD POST SEARCH
 // ============================================================
 
-async function searchPostsByContent(searchTerm) {
+async function searchPostsByContent(
+    searchTerm
+) {
     if (!searchTerm) {
         return [];
     }
@@ -302,8 +411,14 @@ async function searchPostsByContent(searchTerm) {
                 is_hidden
             )
         `)
-        .ilike("content", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "content",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
     query = applyVisibilityFilter(query);
@@ -324,7 +439,52 @@ async function searchPostsByContent(searchTerm) {
 }
 
 
-async function searchPostsByUserIds(userIds) {
+async function searchPostsById(
+    searchTerm
+) {
+    if (!isUuid(searchTerm)) {
+        return [];
+    }
+
+    let query = client
+        .from("posts")
+        .select(`
+            id,
+            thread_id,
+            user_id,
+            content,
+            created_at,
+            is_anonymous,
+            is_hidden,
+            threads (
+                id,
+                title,
+                is_hidden
+            )
+        `)
+        .eq("id", searchTerm);
+
+    query = applyVisibilityFilter(query);
+
+    const {
+        data,
+        error
+    } = await query;
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(post => ({
+        ...post,
+        targetType: "imageboard_post"
+    }));
+}
+
+
+async function searchPostsByUserIds(
+    userIds
+) {
     if (!userIds.length) {
         return [];
     }
@@ -346,7 +506,10 @@ async function searchPostsByUserIds(userIds) {
             )
         `)
         .in("user_id", userIds)
-        .order("created_at", { ascending: false })
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
     query = applyVisibilityFilter(query);
@@ -369,11 +532,11 @@ async function searchPostsByUserIds(userIds) {
 
 // ============================================================
 // GALLERY SEARCH
-// Confirmed columns:
-// id, user_id, title, description, created_at, is_hidden...
 // ============================================================
 
-async function searchGalleryByText(searchTerm) {
+async function searchGalleryByText(
+    searchTerm
+) {
     if (!searchTerm) {
         return [];
     }
@@ -381,20 +544,36 @@ async function searchGalleryByText(searchTerm) {
     let titleQuery = client
         .from("gallery_items")
         .select("*")
-        .ilike("title", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "title",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    titleQuery = applyVisibilityFilter(titleQuery);
+    titleQuery =
+        applyVisibilityFilter(titleQuery);
 
     let descriptionQuery = client
         .from("gallery_items")
         .select("*")
-        .ilike("description", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "description",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    descriptionQuery = applyVisibilityFilter(descriptionQuery);
+    descriptionQuery =
+        applyVisibilityFilter(
+            descriptionQuery
+        );
 
     const [
         titleResult,
@@ -412,15 +591,17 @@ async function searchGalleryByText(searchTerm) {
         throw descriptionResult.error;
     }
 
-    const titleResults = (titleResult.data || []).map(item => ({
-        ...item,
-        targetType: "gallery_item"
-    }));
+    const titleResults =
+        (titleResult.data || []).map(item => ({
+            ...item,
+            targetType: "gallery_item"
+        }));
 
-    const descriptionResults = (descriptionResult.data || []).map(item => ({
-        ...item,
-        targetType: "gallery_item"
-    }));
+    const descriptionResults =
+        (descriptionResult.data || []).map(item => ({
+            ...item,
+            targetType: "gallery_item"
+        }));
 
     return mergeUniqueResults(
         titleResults,
@@ -429,7 +610,39 @@ async function searchGalleryByText(searchTerm) {
 }
 
 
-async function searchGalleryByUserIds(userIds) {
+async function searchGalleryById(
+    searchTerm
+) {
+    if (!isUuid(searchTerm)) {
+        return [];
+    }
+
+    let query = client
+        .from("gallery_items")
+        .select("*")
+        .eq("id", searchTerm);
+
+    query = applyVisibilityFilter(query);
+
+    const {
+        data,
+        error
+    } = await query;
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(item => ({
+        ...item,
+        targetType: "gallery_item"
+    }));
+}
+
+
+async function searchGalleryByUserIds(
+    userIds
+) {
     if (!userIds.length) {
         return [];
     }
@@ -438,7 +651,10 @@ async function searchGalleryByUserIds(userIds) {
         .from("gallery_items")
         .select("*")
         .in("user_id", userIds)
-        .order("created_at", { ascending: false })
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
     query = applyVisibilityFilter(query);
@@ -461,19 +677,11 @@ async function searchGalleryByUserIds(userIds) {
 
 // ============================================================
 // GUESTBOOK ENTRY SEARCH
-//
-// Confirmed columns:
-// id
-// profile_id
-// user_id
-// author_name
-// message
-// is_anonymous
-// created_at
-// is_hidden
 // ============================================================
 
-async function searchGuestbookEntriesByText(searchTerm) {
+async function searchGuestbookEntriesByText(
+    searchTerm
+) {
     if (!searchTerm) {
         return [];
     }
@@ -481,20 +689,34 @@ async function searchGuestbookEntriesByText(searchTerm) {
     let messageQuery = client
         .from("guestbook_entries")
         .select("*")
-        .ilike("message", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "message",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    messageQuery = applyVisibilityFilter(messageQuery);
+    messageQuery =
+        applyVisibilityFilter(messageQuery);
 
     let authorQuery = client
         .from("guestbook_entries")
         .select("*")
-        .ilike("author_name", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "author_name",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    authorQuery = applyVisibilityFilter(authorQuery);
+    authorQuery =
+        applyVisibilityFilter(authorQuery);
 
     const [
         messageResult,
@@ -512,15 +734,17 @@ async function searchGuestbookEntriesByText(searchTerm) {
         throw authorResult.error;
     }
 
-    const messageResults = (messageResult.data || []).map(entry => ({
-        ...entry,
-        targetType: "guestbook_entry"
-    }));
+    const messageResults =
+        (messageResult.data || []).map(entry => ({
+            ...entry,
+            targetType: "guestbook_entry"
+        }));
 
-    const authorResults = (authorResult.data || []).map(entry => ({
-        ...entry,
-        targetType: "guestbook_entry"
-    }));
+    const authorResults =
+        (authorResult.data || []).map(entry => ({
+            ...entry,
+            targetType: "guestbook_entry"
+        }));
 
     return mergeUniqueResults(
         messageResults,
@@ -529,7 +753,39 @@ async function searchGuestbookEntriesByText(searchTerm) {
 }
 
 
-async function searchGuestbookEntriesByUserIds(userIds) {
+async function searchGuestbookEntriesById(
+    searchTerm
+) {
+    if (!isUuid(searchTerm)) {
+        return [];
+    }
+
+    let query = client
+        .from("guestbook_entries")
+        .select("*")
+        .eq("id", searchTerm);
+
+    query = applyVisibilityFilter(query);
+
+    const {
+        data,
+        error
+    } = await query;
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(entry => ({
+        ...entry,
+        targetType: "guestbook_entry"
+    }));
+}
+
+
+async function searchGuestbookEntriesByUserIds(
+    userIds
+) {
     if (!userIds.length) {
         return [];
     }
@@ -538,19 +794,27 @@ async function searchGuestbookEntriesByUserIds(userIds) {
         .from("guestbook_entries")
         .select("*")
         .in("user_id", userIds)
-        .order("created_at", { ascending: false })
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    userQuery = applyVisibilityFilter(userQuery);
+    userQuery =
+        applyVisibilityFilter(userQuery);
 
     let profileQuery = client
         .from("guestbook_entries")
         .select("*")
         .in("profile_id", userIds)
-        .order("created_at", { ascending: false })
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    profileQuery = applyVisibilityFilter(profileQuery);
+    profileQuery =
+        applyVisibilityFilter(profileQuery);
 
     const [
         userResult,
@@ -568,15 +832,17 @@ async function searchGuestbookEntriesByUserIds(userIds) {
         throw profileResult.error;
     }
 
-    const userResults = (userResult.data || []).map(entry => ({
-        ...entry,
-        targetType: "guestbook_entry"
-    }));
+    const userResults =
+        (userResult.data || []).map(entry => ({
+            ...entry,
+            targetType: "guestbook_entry"
+        }));
 
-    const profileResults = (profileResult.data || []).map(entry => ({
-        ...entry,
-        targetType: "guestbook_entry"
-    }));
+    const profileResults =
+        (profileResult.data || []).map(entry => ({
+            ...entry,
+            targetType: "guestbook_entry"
+        }));
 
     return mergeUniqueResults(
         userResults,
@@ -587,19 +853,11 @@ async function searchGuestbookEntriesByUserIds(userIds) {
 
 // ============================================================
 // GUESTBOOK REPLY SEARCH
-//
-// Confirmed columns:
-// id
-// entry_id
-// user_id
-// author_name
-// message
-// is_anonymous
-// created_at
-// is_hidden
 // ============================================================
 
-async function searchGuestbookRepliesByText(searchTerm) {
+async function searchGuestbookRepliesByText(
+    searchTerm
+) {
     if (!searchTerm) {
         return [];
     }
@@ -607,20 +865,34 @@ async function searchGuestbookRepliesByText(searchTerm) {
     let messageQuery = client
         .from("guestbook_replies")
         .select("*")
-        .ilike("message", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "message",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    messageQuery = applyVisibilityFilter(messageQuery);
+    messageQuery =
+        applyVisibilityFilter(messageQuery);
 
     let authorQuery = client
         .from("guestbook_replies")
         .select("*")
-        .ilike("author_name", `%${searchTerm}%`)
-        .order("created_at", { ascending: false })
+        .ilike(
+            "author_name",
+            `%${searchTerm}%`
+        )
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    authorQuery = applyVisibilityFilter(authorQuery);
+    authorQuery =
+        applyVisibilityFilter(authorQuery);
 
     const [
         messageResult,
@@ -638,15 +910,17 @@ async function searchGuestbookRepliesByText(searchTerm) {
         throw authorResult.error;
     }
 
-    const messageResults = (messageResult.data || []).map(reply => ({
-        ...reply,
-        targetType: "guestbook_reply"
-    }));
+    const messageResults =
+        (messageResult.data || []).map(reply => ({
+            ...reply,
+            targetType: "guestbook_reply"
+        }));
 
-    const authorResults = (authorResult.data || []).map(reply => ({
-        ...reply,
-        targetType: "guestbook_reply"
-    }));
+    const authorResults =
+        (authorResult.data || []).map(reply => ({
+            ...reply,
+            targetType: "guestbook_reply"
+        }));
 
     return mergeUniqueResults(
         messageResults,
@@ -655,7 +929,39 @@ async function searchGuestbookRepliesByText(searchTerm) {
 }
 
 
-async function searchGuestbookRepliesByUserIds(userIds) {
+async function searchGuestbookRepliesById(
+    searchTerm
+) {
+    if (!isUuid(searchTerm)) {
+        return [];
+    }
+
+    let query = client
+        .from("guestbook_replies")
+        .select("*")
+        .eq("id", searchTerm);
+
+    query = applyVisibilityFilter(query);
+
+    const {
+        data,
+        error
+    } = await query;
+
+    if (error) {
+        throw error;
+    }
+
+    return (data || []).map(reply => ({
+        ...reply,
+        targetType: "guestbook_reply"
+    }));
+}
+
+
+async function searchGuestbookRepliesByUserIds(
+    userIds
+) {
     if (!userIds.length) {
         return [];
     }
@@ -664,10 +970,14 @@ async function searchGuestbookRepliesByUserIds(userIds) {
         .from("guestbook_replies")
         .select("*")
         .in("user_id", userIds)
-        .order("created_at", { ascending: false })
+        .order(
+            "created_at",
+            { ascending: false }
+        )
         .limit(100);
 
-    query = applyVisibilityFilter(query);
+    query =
+        applyVisibilityFilter(query);
 
     const {
         data,
@@ -689,26 +999,81 @@ async function searchGuestbookRepliesByUserIds(userIds) {
 // SEARCH ALL CONTENT
 // ============================================================
 
-async function searchAllContent(searchTerm, matchingUserIds) {
+async function searchAllContent(
+    searchTerm,
+    matchingUserIds
+) {
     const searches = [];
 
     if (searchTerm) {
         searches.push(
-            searchThreadsByTitle(searchTerm),
-            searchPostsByContent(searchTerm),
-            searchGalleryByText(searchTerm),
-            searchGuestbookEntriesByText(searchTerm),
-            searchGuestbookRepliesByText(searchTerm)
+            searchThreadsByTitle(
+                searchTerm
+            ),
+
+            searchPostsByContent(
+                searchTerm
+            ),
+
+            searchGalleryByText(
+                searchTerm
+            ),
+
+            searchGuestbookEntriesByText(
+                searchTerm
+            ),
+
+            searchGuestbookRepliesByText(
+                searchTerm
+            )
         );
+
+        if (isUuid(searchTerm)) {
+            searches.push(
+                searchThreadsById(
+                    searchTerm
+                ),
+
+                searchPostsById(
+                    searchTerm
+                ),
+
+                searchGalleryById(
+                    searchTerm
+                ),
+
+                searchGuestbookEntriesById(
+                    searchTerm
+                ),
+
+                searchGuestbookRepliesById(
+                    searchTerm
+                )
+            );
+        }
     }
 
     if (matchingUserIds.length) {
         searches.push(
-            searchThreadsByUserIds(matchingUserIds),
-            searchPostsByUserIds(matchingUserIds),
-            searchGalleryByUserIds(matchingUserIds),
-            searchGuestbookEntriesByUserIds(matchingUserIds),
-            searchGuestbookRepliesByUserIds(matchingUserIds)
+            searchThreadsByUserIds(
+                matchingUserIds
+            ),
+
+            searchPostsByUserIds(
+                matchingUserIds
+            ),
+
+            searchGalleryByUserIds(
+                matchingUserIds
+            ),
+
+            searchGuestbookEntriesByUserIds(
+                matchingUserIds
+            ),
+
+            searchGuestbookRepliesByUserIds(
+                matchingUserIds
+            )
         );
     }
 
@@ -716,9 +1081,12 @@ async function searchAllContent(searchTerm, matchingUserIds) {
         return [];
     }
 
-    const results = await Promise.all(searches);
+    const results =
+        await Promise.all(searches);
 
-    return mergeUniqueResults(...results);
+    return mergeUniqueResults(
+        ...results
+    );
 }
 
 
@@ -726,23 +1094,41 @@ async function searchAllContent(searchTerm, matchingUserIds) {
 // SEARCH SPECIFIC CONTENT TYPE
 // ============================================================
 
-async function searchContent(searchTerm, matchingUserIds, type) {
+async function searchContent(
+    searchTerm,
+    matchingUserIds,
+    type
+) {
     if (type === "imageboard_thread") {
         const results = [];
 
         if (searchTerm) {
             results.push(
-                await searchThreadsByTitle(searchTerm)
+                searchThreadsByTitle(
+                    searchTerm
+                )
             );
+
+            if (isUuid(searchTerm)) {
+                results.push(
+                    searchThreadsById(
+                        searchTerm
+                    )
+                );
+            }
         }
 
         if (matchingUserIds.length) {
             results.push(
-                await searchThreadsByUserIds(matchingUserIds)
+                searchThreadsByUserIds(
+                    matchingUserIds
+                )
             );
         }
 
-        return mergeUniqueResults(...results);
+        return mergeUniqueResults(
+            ...results
+        );
     }
 
 
@@ -751,17 +1137,31 @@ async function searchContent(searchTerm, matchingUserIds, type) {
 
         if (searchTerm) {
             results.push(
-                await searchPostsByContent(searchTerm)
+                searchPostsByContent(
+                    searchTerm
+                )
             );
+
+            if (isUuid(searchTerm)) {
+                results.push(
+                    searchPostsById(
+                        searchTerm
+                    )
+                );
+            }
         }
 
         if (matchingUserIds.length) {
             results.push(
-                await searchPostsByUserIds(matchingUserIds)
+                searchPostsByUserIds(
+                    matchingUserIds
+                )
             );
         }
 
-        return mergeUniqueResults(...results);
+        return mergeUniqueResults(
+            ...results
+        );
     }
 
 
@@ -770,17 +1170,31 @@ async function searchContent(searchTerm, matchingUserIds, type) {
 
         if (searchTerm) {
             results.push(
-                await searchGalleryByText(searchTerm)
+                searchGalleryByText(
+                    searchTerm
+                )
             );
+
+            if (isUuid(searchTerm)) {
+                results.push(
+                    searchGalleryById(
+                        searchTerm
+                    )
+                );
+            }
         }
 
         if (matchingUserIds.length) {
             results.push(
-                await searchGalleryByUserIds(matchingUserIds)
+                searchGalleryByUserIds(
+                    matchingUserIds
+                )
             );
         }
 
-        return mergeUniqueResults(...results);
+        return mergeUniqueResults(
+            ...results
+        );
     }
 
 
@@ -789,19 +1203,31 @@ async function searchContent(searchTerm, matchingUserIds, type) {
 
         if (searchTerm) {
             results.push(
-                await searchGuestbookEntriesByText(searchTerm)
+                searchGuestbookEntriesByText(
+                    searchTerm
+                )
             );
+
+            if (isUuid(searchTerm)) {
+                results.push(
+                    searchGuestbookEntriesById(
+                        searchTerm
+                    )
+                );
+            }
         }
 
         if (matchingUserIds.length) {
             results.push(
-                await searchGuestbookEntriesByUserIds(
+                searchGuestbookEntriesByUserIds(
                     matchingUserIds
                 )
             );
         }
 
-        return mergeUniqueResults(...results);
+        return mergeUniqueResults(
+            ...results
+        );
     }
 
 
@@ -810,19 +1236,31 @@ async function searchContent(searchTerm, matchingUserIds, type) {
 
         if (searchTerm) {
             results.push(
-                await searchGuestbookRepliesByText(searchTerm)
+                searchGuestbookRepliesByText(
+                    searchTerm
+                )
             );
+
+            if (isUuid(searchTerm)) {
+                results.push(
+                    searchGuestbookRepliesById(
+                        searchTerm
+                    )
+                );
+            }
         }
 
         if (matchingUserIds.length) {
             results.push(
-                await searchGuestbookRepliesByUserIds(
+                searchGuestbookRepliesByUserIds(
                     matchingUserIds
                 )
             );
         }
 
-        return mergeUniqueResults(...results);
+        return mergeUniqueResults(
+            ...results
+        );
     }
 
 
@@ -834,20 +1272,24 @@ async function searchContent(searchTerm, matchingUserIds, type) {
 // RENDER RESULTS
 // ============================================================
 
-function renderResult(item, usernameMap) {
-    const username = getDisplayedUsername(
-        item,
-        usernameMap
-    );
+function renderResult(
+    item,
+    usernameMap
+) {
+    const username =
+        getDisplayedUsername(
+            item,
+            usernameMap
+        );
 
-    const hiddenLabel = item.is_hidden
-        ? `
-            <span class="moderation-hidden-label">
-                Hidden
-            </span>
-        `
-        : "";
-
+    const hiddenLabel =
+        item.is_hidden
+            ? `
+                <span class="moderation-hidden-label">
+                    Hidden
+                </span>
+            `
+            : "";
 
     let title = "";
     let content = "";
@@ -857,21 +1299,31 @@ function renderResult(item, usernameMap) {
     // IMAGEBOARD THREAD
     // --------------------------------------------------------
 
-    if (item.targetType === "imageboard_thread") {
-        title = `Thread: ${item.title || "Untitled thread"}`;
+    if (
+        item.targetType ===
+        "imageboard_thread"
+    ) {
+        title =
+            `Thread: ${
+                item.title ||
+                "Untitled thread"
+            }`;
 
         content = `
             <p>
                 <strong>Board:</strong>
                 ${escapeHtml(
-                    item.boards?.name || "Unknown board"
+                    item.boards?.name ||
+                    "Unknown board"
                 )}
             </p>
 
             <p>
                 <strong>Last activity:</strong>
                 ${escapeHtml(
-                    formatDate(item.last_post_at)
+                    formatDate(
+                        item.last_post_at
+                    )
                 )}
             </p>
 
@@ -894,16 +1346,23 @@ function renderResult(item, usernameMap) {
     // IMAGEBOARD POST
     // --------------------------------------------------------
 
-    if (item.targetType === "imageboard_post") {
+    if (
+        item.targetType ===
+        "imageboard_post"
+    ) {
         title = `
             Post in:
-            ${item.threads?.title || "Unknown thread"}
+            ${
+                item.threads?.title ||
+                "Unknown thread"
+            }
         `;
 
         content = `
             <p>
                 ${formatMultilineText(
-                    item.content || "(No text)"
+                    item.content ||
+                    "(No text)"
                 )}
             </p>
         `;
@@ -914,16 +1373,23 @@ function renderResult(item, usernameMap) {
     // GALLERY ITEM
     // --------------------------------------------------------
 
-    if (item.targetType === "gallery_item") {
+    if (
+        item.targetType ===
+        "gallery_item"
+    ) {
         title = `
             Gallery item:
-            ${item.title || "Untitled"}
+            ${
+                item.title ||
+                "Untitled"
+            }
         `;
 
         content = `
             <p>
                 ${formatMultilineText(
-                    item.description || "(No description)"
+                    item.description ||
+                    "(No description)"
                 )}
             </p>
         `;
@@ -934,13 +1400,18 @@ function renderResult(item, usernameMap) {
     // GUESTBOOK ENTRY
     // --------------------------------------------------------
 
-    if (item.targetType === "guestbook_entry") {
-        title = "Guestbook entry";
+    if (
+        item.targetType ===
+        "guestbook_entry"
+    ) {
+        title =
+            "Guestbook entry";
 
         content = `
             <p>
                 ${formatMultilineText(
-                    item.message || "(No message)"
+                    item.message ||
+                    "(No message)"
                 )}
             </p>
         `;
@@ -951,13 +1422,18 @@ function renderResult(item, usernameMap) {
     // GUESTBOOK REPLY
     // --------------------------------------------------------
 
-    if (item.targetType === "guestbook_reply") {
-        title = "Guestbook reply";
+    if (
+        item.targetType ===
+        "guestbook_reply"
+    ) {
+        title =
+            "Guestbook reply";
 
         content = `
             <p>
                 ${formatMultilineText(
-                    item.message || "(No message)"
+                    item.message ||
+                    "(No message)"
                 )}
             </p>
         `;
@@ -983,8 +1459,17 @@ function renderResult(item, usernameMap) {
                     <p>
                         <strong>Created:</strong>
                         ${escapeHtml(
-                            formatDate(item.created_at)
+                            formatDate(
+                                item.created_at
+                            )
                         )}
+                    </p>
+
+                    <p>
+                        <strong>UUID:</strong>
+                        <code>
+                            ${escapeHtml(item.id)}
+                        </code>
                     </p>
 
                 </div>
@@ -1037,7 +1522,10 @@ function renderResult(item, usernameMap) {
 }
 
 
-function renderResults(results, usernameMap) {
+function renderResults(
+    results,
+    usernameMap
+) {
     if (!results.length) {
         moderationResults.innerHTML = `
             <p>
@@ -1048,13 +1536,15 @@ function renderResults(results, usernameMap) {
         return;
     }
 
-
-    moderationResults.innerHTML = results
-        .map(item =>
-            renderResult(item, usernameMap)
-        )
-        .join("");
-
+    moderationResults.innerHTML =
+        results
+            .map(item =>
+                renderResult(
+                    item,
+                    usernameMap
+                )
+            )
+            .join("");
 
     attachModerationButtons();
 }
@@ -1064,7 +1554,10 @@ function renderResults(results, usernameMap) {
 // HIDE CONTENT
 // ============================================================
 
-async function hideContent(targetType, targetId) {
+async function hideContent(
+    targetType,
+    targetId
+) {
     const reason = prompt(
         "Optional internal moderation reason:\n\n" +
         "Leave blank if you don't need one."
@@ -1074,7 +1567,6 @@ async function hideContent(targetType, targetId) {
         return false;
     }
 
-
     const {
         error
     } = await client.rpc(
@@ -1082,15 +1574,14 @@ async function hideContent(targetType, targetId) {
         {
             p_target_type: targetType,
             p_target_id: targetId,
-            p_reason: reason.trim() || null
+            p_reason:
+                reason.trim() || null
         }
     );
-
 
     if (error) {
         throw error;
     }
-
 
     return true;
 }
@@ -1100,7 +1591,10 @@ async function hideContent(targetType, targetId) {
 // DELETE CONTENT
 // ============================================================
 
-async function deleteContent(targetType, targetId) {
+async function deleteContent(
+    targetType,
+    targetId
+) {
     const confirmed = confirm(
         "Are you sure you want to permanently delete this content?"
     );
@@ -1108,7 +1602,6 @@ async function deleteContent(targetType, targetId) {
     if (!confirmed) {
         return false;
     }
-
 
     const reason = prompt(
         "Optional internal moderation reason:\n\n" +
@@ -1122,6 +1615,7 @@ async function deleteContent(targetType, targetId) {
 
     // Get associated Storage paths before deleting
     // the database row.
+
     const {
         data: preparation,
         error: preparationError
@@ -1133,11 +1627,9 @@ async function deleteContent(targetType, targetId) {
         }
     );
 
-
     if (preparationError) {
         throw preparationError;
     }
-
 
     const storagePaths =
         preparation?.storage_paths || [];
@@ -1147,10 +1639,14 @@ async function deleteContent(targetType, targetId) {
     //
     // Gallery storage is intentionally NOT removed here
     // because we have not established the gallery bucket name.
+
     if (
         (
-            targetType === "imageboard_thread" ||
-            targetType === "imageboard_post"
+            targetType ===
+                "imageboard_thread" ||
+
+            targetType ===
+                "imageboard_post"
         ) &&
         storagePaths.length > 0
     ) {
@@ -1160,7 +1656,6 @@ async function deleteContent(targetType, targetId) {
             .storage
             .from("imageboard-images")
             .remove(storagePaths);
-
 
         if (storageError) {
             throw storageError;
@@ -1175,15 +1670,14 @@ async function deleteContent(targetType, targetId) {
         {
             p_target_type: targetType,
             p_target_id: targetId,
-            p_reason: reason.trim() || null
+            p_reason:
+                reason.trim() || null
         }
     );
-
 
     if (deleteError) {
         throw deleteError;
     }
-
 
     return true;
 }
@@ -1200,7 +1694,9 @@ function attachModerationButtons() {
     // --------------------------------------------------------
 
     document
-        .querySelectorAll(".moderation-hide-button")
+        .querySelectorAll(
+            ".moderation-hide-button"
+        )
         .forEach(button => {
 
             button.addEventListener(
@@ -1215,6 +1711,7 @@ function attachModerationButtons() {
 
 
                     try {
+
                         button.disabled = true;
 
                         const changed =
@@ -1251,7 +1748,9 @@ function attachModerationButtons() {
     // --------------------------------------------------------
 
     document
-        .querySelectorAll(".moderation-delete-button")
+        .querySelectorAll(
+            ".moderation-delete-button"
+        )
         .forEach(button => {
 
             button.addEventListener(
@@ -1266,6 +1765,7 @@ function attachModerationButtons() {
 
 
                     try {
+
                         button.disabled = true;
 
                         const deleted =
@@ -1303,6 +1803,7 @@ function attachModerationButtons() {
 // ============================================================
 
 async function performSearch() {
+
     const searchTerm =
         moderationSearch.value.trim();
 
@@ -1322,17 +1823,23 @@ async function performSearch() {
 
     try {
 
-        // Find matching usernames first.
-        const matchingUsers =
-            await findMatchingUsers(searchTerm);
+        // Find matching usernames or
+        // exact UUID-matching users first.
 
+        const matchingUsers =
+            await findMatchingUsers(
+                searchTerm
+            );
 
         const matchingUserIds =
-            matchingUsers.map(user => user.id);
-
+            matchingUsers.map(
+                user => user.id
+            );
 
         const usernameMap =
-            createUsernameMap(matchingUsers);
+            createUsernameMap(
+                matchingUsers
+            );
 
 
         let results;
@@ -1358,6 +1865,7 @@ async function performSearch() {
 
 
         // Newest first.
+
         results.sort(
             (a, b) =>
                 new Date(
@@ -1377,7 +1885,11 @@ async function performSearch() {
 
         moderationMessage.textContent =
             `${results.length} result` +
-            `${results.length === 1 ? "" : "s"} found. ♡`;
+            `${
+                results.length === 1
+                    ? ""
+                    : "s"
+            } found. ♡`;
 
 
     } catch (error) {
@@ -1387,9 +1899,7 @@ async function performSearch() {
             error
         );
 
-
         moderationMessage.textContent = "";
-
 
         moderationResults.innerHTML = `
             <p class="error-message">
@@ -1453,6 +1963,6 @@ moderationType.addEventListener(
 
 
     moderationMessage.textContent =
-        "Ready. Search by username, title, or content. ♡";
+        "Ready. Search by username, UUID, title, or content. ♡";
 
 })();
