@@ -1272,197 +1272,8 @@ button:focus-visible {
 }
 
 
-/* =========================================================
-   20. DARK MODE
-   ========================================================= */
-
-.dark-mode {
-    --border-color: #72577d;
-    --box-background: #33283b;
-    --accent-color: #d89bdc;
-    --soft-background: #403148;
-    --muted-background: #4b3853;
-    --text-color: #f5eaf7;
-
-    background: #211b29;
-    color: var(--text-color);
-}
-
-.dark-mode .profile-header,
-.dark-mode .intro,
-.dark-mode .card,
-.dark-mode .settings,
-.dark-mode .settings-nav,
-.dark-mode .discover {
-    background: #33283b;
-    border-color: var(--border-color);
-}
-
-.dark-mode .settings-group-options {
-    background: #33283b;
-    border-color: var(--border-color);
-}
-
-.dark-mode .settings-group-button:hover,
-.dark-mode .settings-group-options a:hover,
-.dark-mode .settings-group-options button:hover {
-    background: #403148;
-}
-
-.dark-mode .user-card {
-    background: #403148;
-    border-color: var(--border-color);
-}
-
-.dark-mode .status {
-    background: var(--muted-background);
-}
-
-.dark-mode button {
-    background: linear-gradient(
-        to bottom,
-        #85698f 0%,
-        #72577d 48%,
-        #604b68 100%
-    );
-
-    border-color: #a487ad;
-    color: #fff;
-}
-
-.dark-mode button:hover {
-    background: linear-gradient(
-        to bottom,
-        #967aa0 0%,
-        #806389 48%,
-        #6c5575 100%
-    );
-}
-
-.dark-mode .section-title:hover {
-    color: #f6dff7;
-}
-
-.dark-mode .profile-viewer {
-    background: #33283b;
-    border-color: var(--border-color);
-}
-
-.dark-mode .fo-quote {
-    background: var(--muted-background);
-}
-
-.dark-mode .main-fo,
-.dark-mode .side-fo {
-    background: var(--soft-background);
-    border-color: var(--border-color);
-}
-
-.dark-mode .art-display {
-    background: var(--muted-background);
-}
-
-.dark-mode .caption-editor input {
-    background: #403148;
-    color: #fff;
-    border-color: var(--border-color);
-}
-
-.dark-mode .caption-editor input::placeholder {
-    color: #d8c8dc;
-}
-
-.dark-mode .guestbook-entries {
-    background: #33283b;
-    border-color: var(--border-color);
-}
-
-.dark-mode .guestbook-entry {
-    background: #403148;
-    border-color: var(--border-color);
-}
-
-.dark-mode .reply {
-    background: var(--muted-background);
-}
-
-.dark-mode .guestbook-form input,
-.dark-mode .guestbook-form textarea,
-.dark-mode .reply-form input,
-.dark-mode .reply-form textarea {
-    background: #403148;
-    color: white;
-    border-color: var(--border-color);
-}
-
-.dark-mode .guestbook-form input::placeholder,
-.dark-mode .guestbook-form textarea::placeholder,
-.dark-mode .reply-form input::placeholder,
-.dark-mode .reply-form textarea::placeholder {
-    color: #d8c8dc;
-}
-
-.dark-mode .account-card input {
-    background: #403148;
-    color: white;
-    border-color: var(--border-color);
-}
-
-.dark-mode .account-card input::placeholder {
-    color: #d8c8dc;
-}
-
-.dark-mode .editor-card input,
-.dark-mode .editor-card textarea {
-    background: #403148;
-    color: white;
-    border-color: var(--border-color);
-}
-
-.dark-mode .editor-card input::placeholder,
-.dark-mode .editor-card textarea::placeholder {
-    color: #d8c8dc;
-}
-
-.dark-mode .character-results {
-    background: #33283b;
-}
-
-.dark-mode .character-result {
-    background: #403148;
-    border-color: var(--border-color);
-    color: var(--text-color);
-}
-
-.dark-mode .selected-character {
-    background: var(--muted-background);
-}
-
-.dark-mode .fo-editor,
-.dark-mode .managed-fo {
-    background: var(--soft-background);
-    border-color: var(--border-color);
-}
-
-.dark-mode .suggestion-card {
-    background: #403148;
-    border-color: var(--border-color);
-}
-
-.dark-mode .profile-banner {
-    background: linear-gradient(
-        135deg,
-        #403148,
-        #33283b
-    );
-}
-
-.dark-mode .banner-placeholder {
-    color: #d8c8dc;
-}
-
 /* ============================================================
-   21. ART ARCHIVE
+   20. ART ARCHIVE
    ============================================================ */
 
 .gallery-page {
@@ -1519,7 +1330,7 @@ button:focus-visible {
 }
 
 /* ============================================================
-   22. FOLDER
+   21. FOLDER
    ============================================================ */
 
 .gallery-folder {
@@ -1617,7 +1428,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   23. FOLDER DIALOGS
+   22. FOLDER DIALOGS
    ============================================================ */
 
 .folder-dialog {
@@ -1677,7 +1488,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   24. ARTWORK GRID
+   23. ARTWORK GRID
    ============================================================ */
 
 
@@ -1696,7 +1507,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   25. ARTWORK CARD
+   24. ARTWORK CARD
    ============================================================ */
 
 .artwork-card,
@@ -1765,7 +1576,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   26. ARTWORK ACTION BUTTONS
+   25. ARTWORK ACTION BUTTONS
    ============================================================ */
 
 .artwork-card-actions,
@@ -1831,7 +1642,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   27. UPLOAD PREVIEW
+   26. UPLOAD PREVIEW
    ============================================================ */
 
 .upload-preview {
@@ -1850,7 +1661,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   28. FOLDER CHECKBOXES
+   27. FOLDER CHECKBOXES
    ============================================================ */
 
 .upload-folder-list {
@@ -1876,7 +1687,7 @@ button:focus-visible {
 
 
 /* ============================================================
-   29. ARTWORK DIALOG + GALLERY RESPONSIVE
+   28. ARTWORK DIALOG + GALLERY RESPONSIVE
    ============================================================ */
 
 .artwork-dialog {
@@ -1988,7 +1799,7 @@ button:focus-visible {
 }
 
 /* =========================================================
-   30. IMAGEBOARD
+   29. IMAGEBOARD
    ========================================================= */
 
 .imageboard-page {
@@ -2173,7 +1984,7 @@ button:focus-visible {
 
 
 /* =========================================================
-   31. NEW THREAD
+   30. NEW THREAD
    ========================================================= */
 
 .new-thread-box {
@@ -2251,7 +2062,7 @@ button:focus-visible {
 
 
 /* =========================================================
-   32. NEW THREAD IMAGE UPLOAD
+   31. NEW THREAD IMAGE UPLOAD
    ========================================================= */
 
 .upload-help {
@@ -2296,7 +2107,7 @@ button:focus-visible {
 
 
 /* =========================================================
-   33. IMAGEBOARD THREAD
+   32. IMAGEBOARD THREAD
    ========================================================= */
 
 .thread-header {
@@ -2425,7 +2236,7 @@ button:focus-visible {
 
 
 /* =========================================================
-   34. IMAGEBOARD REPLY FORM
+   33. IMAGEBOARD REPLY FORM
    ========================================================= */
 
 #replyForm {
@@ -2495,7 +2306,7 @@ button:focus-visible {
 
 
 /* =========================================================
-   35. IMAGEBOARD RESPONSIVE
+   34. IMAGEBOARD RESPONSIVE
    ========================================================= */
 
 @media (max-width: 600px) {
@@ -3077,7 +2888,7 @@ button:focus-visible {
 }
 
 /* =========================================================
-   36. GLOBAL MOBILE RESPONSIVE FIXES
+   35. GLOBAL MOBILE RESPONSIVE FIXES
    ========================================================= */
 
 @media (max-width: 700px) {
