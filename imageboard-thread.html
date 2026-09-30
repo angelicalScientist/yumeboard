@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Thread</title>
-
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark-mode");
+        }
+    </script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style-dark.css">
 </head>

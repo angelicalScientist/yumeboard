@@ -8,6 +8,11 @@
         content="width=device-width, initial-scale=1.0"
     >
     <title>Imageboard</title>
+    <script>
+    if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark-mode");
+    }
+</script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style-dark.css">
 </head>
