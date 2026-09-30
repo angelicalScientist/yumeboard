@@ -123,19 +123,6 @@
                 profile.bio || "";
         }
 
-        // ======================================
-        // ABOUT
-        // ======================================
-
-        const profileAbout =
-            document.getElementById(
-                "profileAbout"
-            );
-
-        if (profileAbout) {
-            profileAbout.textContent =
-                profile.about || "";
-        }
 
         // ======================================
         // FANDOMS
