@@ -146,18 +146,7 @@ async function loadBlockedUsers() {
         data: profiles,
         error: profileError
     } = await supabaseClient
-        .from("profiles")
-        .select(`
-            id,
-            username,
-            display_name,
-            bio,
-            avatar_url
-        `)
-        .in(
-            "id",
-            blockedIds
-        );
+        .rpc("get_my_blocked_profiles");
 
 
     if (profileError) {
