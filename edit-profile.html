@@ -4,6 +4,7 @@
 
 <head>
     <link rel="icon" href="favicon.png" type="image/png">
+
     <meta charset="UTF-8">
 
     <meta
@@ -12,6 +13,12 @@
     >
 
     <title>♡ Edit My Profile ♡</title>
+
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark-mode");
+        }
+    </script>
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style-dark.css">
@@ -22,10 +29,19 @@
 <body>
 
 <header class="site-header">
-    <a href="dashboard.html" class="site-logo-link" aria-label="Go to Yumeboard's dashboard">
-        <img src="logotype.png" alt="Yumeboard" class="site-logo">
+    <a
+        href="dashboard.html"
+        class="site-logo-link"
+        aria-label="Go to Yumeboard's dashboard"
+    >
+        <img
+            src="logotype.png"
+            alt="Yumeboard"
+            class="site-logo"
+        >
     </a>
 </header>
+
 
 <main class="profile">
 
@@ -42,6 +58,7 @@
 
 
             <h2>♡ Basic Info ♡</h2>
+
 
             <label for="username">
                 Username
@@ -158,8 +175,12 @@
             <h2>♡ Profile Appearance ♡</h2>
 
 
+            <!-- ============================== -->
+            <!-- PROFILE PICTURE -->
+            <!-- ============================== -->
+
             <label for="avatarUrl">
-                Avatar Image URL
+                Profile Picture URL
             </label>
 
             <input
@@ -168,9 +189,42 @@
                 placeholder="https://..."
             >
 
+            <p class="canonical-help">
+                Or choose an image from your device. ♡
+            </p>
+
+            <label for="avatarFile">
+                Upload Profile Picture
+            </label>
+
+            <input
+                type="file"
+                id="avatarFile"
+                accept="image/*"
+            >
+
+            <div
+                id="avatarPreview"
+                class="profile-image-preview"
+            >
+                <img
+                    id="avatarPreviewImage"
+                    alt="Profile picture preview"
+                    hidden
+                >
+
+                <span id="avatarPreviewPlaceholder">
+                    No profile picture selected. ♡
+                </span>
+            </div>
+
+
+            <!-- ============================== -->
+            <!-- PROFILE BANNER -->
+            <!-- ============================== -->
 
             <label for="bannerUrl">
-                Banner Image URL
+                Profile Banner URL
             </label>
 
             <input
@@ -178,6 +232,35 @@
                 id="bannerUrl"
                 placeholder="https://..."
             >
+
+            <p class="canonical-help">
+                Or choose an image from your device. ♡
+            </p>
+
+            <label for="bannerFile">
+                Upload Profile Banner
+            </label>
+
+            <input
+                type="file"
+                id="bannerFile"
+                accept="image/*"
+            >
+
+            <div
+                id="bannerPreview"
+                class="profile-banner-preview"
+            >
+                <img
+                    id="bannerPreviewImage"
+                    alt="Profile banner preview"
+                    hidden
+                >
+
+                <span id="bannerPreviewPlaceholder">
+                    No banner selected. ♡
+                </span>
+            </div>
 
 
             <button type="submit">
@@ -208,20 +291,47 @@
 <script src="theme.js"></script>
 <script src="./edit-profile.js"></script>
 
-</body>
+
 <footer class="site-footer">
+
     <div class="site-footer-links">
-        <a href="terms.html">Terms of Service</a>
-        <span aria-hidden="true">♡</span>
-        <a href="privacy.html">Privacy Policy</a>
-        <span aria-hidden="true">♡</span>
-        <a href="guidelines.html">Community Guidelines</a>
-        <span aria-hidden="true">♡</span>
-        <a href="contact.html">Contact</a>
+
+        <a href="terms.html">
+            Terms of Service
+        </a>
+
+        <span aria-hidden="true">
+            ♡
+        </span>
+
+        <a href="privacy.html">
+            Privacy Policy
+        </a>
+
+        <span aria-hidden="true">
+            ♡
+        </span>
+
+        <a href="guidelines.html">
+            Community Guidelines
+        </a>
+
+        <span aria-hidden="true">
+            ♡
+        </span>
+
+        <a href="contact.html">
+            Contact
+        </a>
+
     </div>
 
     <p class="site-footer-copy">
-        © 2026 Yumeboard
+        Yumeboard ♡ 2026
     </p>
+
 </footer>
+
+</body>
+
 </html>
