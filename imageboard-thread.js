@@ -1,10 +1,9 @@
+
 (() => {
     "use strict";
 
     const client = window.supabaseClient;
-
-    const threadPage =
-        document.getElementById("threadPage");
+    const threadPage = document.getElementById("threadPage");
 
     const STORAGE_BUCKET = "imageboard-images";
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -13,6 +12,7 @@
 
     let currentReportTarget = null;
     let isSubmittingReply = false;
+    let activePreviewUrl = null;
 
     const REPORT_TARGET_TYPES = new Set([
         "imageboard_thread",
@@ -33,11 +33,9 @@
     // --------------------------------------------------
 
     function getThreadId() {
-        const params = new URLSearchParams(
+        return new URLSearchParams(
             window.location.search
-        );
-
-        return params.get("id");
+        ).get("id");
     }
 
     function escapeHtml(value) {
@@ -50,9 +48,7 @@
     }
 
     function formatDate(value) {
-        if (!value) {
-            return "";
-        }
+        if (!value) return "";
 
         const date = new Date(value);
 
@@ -76,9 +72,7 @@
     }
 
     function renderError(message) {
-        if (!threadPage) {
-            return;
-        }
+        if (!threadPage) return;
 
         threadPage.innerHTML = `
             <section class="thread-error">
@@ -91,6 +85,31 @@
         return error?.message || fallback;
     }
 
+    function getReplyMessage() {
+        return document.getElementById(
+            "replyFormMessage"
+        );
+    }
+
+    function setReplyMessage(message) {
+        const element = getReplyMessage();
+
+        if (element) {
+            element.textContent = message;
+        }
+    }
+
+    function setSubmitButtonState(disabled, text) {
+        const button = document.querySelector(
+            "#replyForm button[type='submit']"
+        );
+
+        if (!button) return;
+
+        button.disabled = disabled;
+        button.textContent = text;
+    }
+
     // --------------------------------------------------
     // Post numbers and references
     // --------------------------------------------------
@@ -101,23 +120,15 @@
         let number = 1;
 
         for (const post of posts) {
-            if (post.is_hidden) {
-                continue;
-            }
+            if (post.is_hidden) continue;
 
-            currentPostNumbers.set(
-                post.id,
-                number
-            );
-
+            currentPostNumbers.set(post.id, number);
             number += 1;
         }
     }
 
     function formatPostContent(content) {
-        if (!content) {
-            return "";
-        }
+        if (!content) return "";
 
         return String(content)
             .split("\n")
@@ -172,17 +183,13 @@
         document.addEventListener("click", (event) => {
             const target = event.target;
 
-            if (!(target instanceof Element)) {
-                return;
-            }
+            if (!(target instanceof Element)) return;
 
             const link = target.closest(
                 "[data-post-reference]"
             );
 
-            if (!link) {
-                return;
-            }
+            if (!link) return;
 
             const postId = link.dataset.postReference;
 
@@ -190,9 +197,7 @@
                 `post-${postId}`
             );
 
-            if (!post) {
-                return;
-            }
+            if (!post) return;
 
             event.preventDefault();
 
@@ -248,11 +253,7 @@
 
                 <label for="reportReason">Reason</label>
 
-                <select
-                    id="reportReason"
-                    name="reason"
-                    required
-                >
+                <select id="reportReason" name="reason" required>
                     <option value="" selected disabled>
                         Choose a reason...
                     </option>
@@ -266,9 +267,7 @@
 
                 <label for="reportDetails">
                     Details
-                    <span class="optional-label">
-                        optional
-                    </span>
+                    <span class="optional-label">optional</span>
                 </label>
 
                 <textarea
@@ -298,10 +297,7 @@
                         Cancel
                     </button>
 
-                    <button
-                        type="submit"
-                        id="reportDialogSubmit"
-                    >
+                    <button type="submit" id="reportDialogSubmit">
                         Submit report
                     </button>
                 </div>
@@ -310,35 +306,23 @@
 
         document.body.appendChild(dialog);
 
-        const form = document.getElementById(
-            "reportDialogForm"
-        );
-
-        const cancelButton = document.getElementById(
+        document.getElementById(
             "reportDialogCancel"
-        );
-
-        cancelButton.addEventListener("click", () => {
+        ).addEventListener("click", () => {
             dialog.close();
         });
 
-        form.addEventListener("submit", async (event) => {
+        document.getElementById(
+            "reportDialogForm"
+        ).addEventListener("submit", async (event) => {
             event.preventDefault();
             await submitReport();
         });
     }
 
-    async function openReportDialog(
-        targetType,
-        targetId
-    ) {
-        if (!REPORT_TARGET_TYPES.has(targetType)) {
-            return;
-        }
-
-        if (!targetId) {
-            return;
-        }
+    function openReportDialog(targetType, targetId) {
+        if (!REPORT_TARGET_TYPES.has(targetType)) return;
+        if (!targetId) return;
 
         ensureReportDialog();
 
@@ -346,10 +330,6 @@
             targetType,
             targetId
         };
-
-        const dialog = document.getElementById(
-            "reportDialog"
-        );
 
         document.getElementById(
             "reportReason"
@@ -370,6 +350,10 @@
         submitButton.disabled = false;
         submitButton.textContent = "Submit report";
 
+        const dialog = document.getElementById(
+            "reportDialog"
+        );
+
         if (typeof dialog.showModal === "function") {
             dialog.showModal();
         } else {
@@ -378,9 +362,7 @@
     }
 
     async function submitReport() {
-        if (!currentReportTarget || !client) {
-            return;
-        }
+        if (!currentReportTarget || !client) return;
 
         const reason = document.getElementById(
             "reportReason"
@@ -399,15 +381,15 @@
         );
 
         if (!reason) {
-            message.textContent =
-                "Please choose a reason.";
-
+            message.textContent = "Please choose a reason.";
             return;
         }
 
         submitButton.disabled = true;
         submitButton.textContent = "Submitting...";
         message.textContent = "";
+
+        let submitted = false;
 
         try {
             const {
@@ -418,40 +400,31 @@
             if (userError || !user) {
                 message.textContent =
                     "You must be logged in to submit a report. ♡";
-
                 return;
             }
 
             const { error } = await client.rpc(
                 "create_report",
                 {
-                    p_target_type:
-                        currentReportTarget.targetType,
-
-                    p_target_id:
-                        currentReportTarget.targetId,
-
+                    p_target_type: currentReportTarget.targetType,
+                    p_target_id: currentReportTarget.targetId,
                     p_reason: reason,
-
                     p_details: details || null
                 }
             );
 
             if (error) {
-                console.error(
-                    "Report submission error:",
-                    error
-                );
+                console.error("Report submission error:", error);
 
-                message.textContent =
-                    getErrorMessage(
-                        error,
-                        "Unable to submit the report."
-                    );
+                message.textContent = getErrorMessage(
+                    error,
+                    "Unable to submit the report."
+                );
 
                 return;
             }
 
+            submitted = true;
             message.textContent =
                 "Report submitted. Thank you. ♡";
 
@@ -460,25 +433,19 @@
                     "reportDialog"
                 );
 
-                if (dialog?.open) {
-                    dialog.close();
-                }
+                if (dialog?.open) dialog.close();
 
                 currentReportTarget = null;
             }, 700);
         } catch (error) {
-            console.error(
-                "Unexpected report error:",
-                error
-            );
+            console.error("Unexpected report error:", error);
 
             message.textContent =
                 "Something went wrong while submitting the report.";
         } finally {
-            if (currentReportTarget) {
+            if (!submitted) {
                 submitButton.disabled = false;
-                submitButton.textContent =
-                    "Submit report";
+                submitButton.textContent = "Submit report";
             }
         }
     }
@@ -487,17 +454,13 @@
         document.addEventListener("click", (event) => {
             const target = event.target;
 
-            if (!(target instanceof Element)) {
-                return;
-            }
+            if (!(target instanceof Element)) return;
 
             const button = target.closest(
                 "[data-report-target-type][data-report-target-id]"
             );
 
-            if (!button) {
-                return;
-            }
+            if (!button) return;
 
             event.preventDefault();
 
@@ -513,9 +476,7 @@
     // --------------------------------------------------
 
     async function loadThread() {
-        if (!client || !threadPage) {
-            return;
-        }
+        if (!client || !threadPage) return;
 
         const threadId = getThreadId();
 
@@ -553,10 +514,7 @@
                     threadError
                 );
 
-                renderError(
-                    "Unable to load this thread."
-                );
-
+                renderError("Unable to load this thread.");
                 return;
             }
 
@@ -590,22 +548,17 @@
                 });
 
             if (postsError) {
-                console.error(
-                    "Posts loading error:",
-                    postsError
-                );
+                console.error("Posts loading error:", postsError);
 
                 renderError(
                     "Unable to load the posts in this thread."
                 );
-
                 return;
             }
 
             const loadedPosts = posts || [];
 
             buildPostNumbers(loadedPosts);
-
             renderThread(thread, loadedPosts);
 
             await setupReplyForm(thread);
@@ -634,7 +587,6 @@
         const replies = visiblePosts.slice(1);
 
         const board = thread.boards;
-
         const boardName = board?.name || "Imageboard";
         const boardSlug = board?.slug || "";
 
@@ -642,13 +594,13 @@
 
         if (thread.is_locked) {
             statuses.push(
-                `<span class="thread-status">Locked</span>`
+                '<span class="thread-status">Locked</span>'
             );
         }
 
         if (thread.is_archived) {
             statuses.push(
-                `<span class="thread-status">Archived</span>`
+                '<span class="thread-status">Archived</span>'
             );
         }
 
@@ -668,18 +620,14 @@
 
                 ${
                     statuses.length
-                        ? `
-                            <div class="thread-statuses">
-                                ${statuses.join("")}
-                            </div>
-                        `
+                        ? `<div class="thread-statuses">
+                            ${statuses.join("")}
+                           </div>`
                         : ""
                 }
 
                 <div class="thread-header-actions">
-                    <a href="imageboard.html">
-                        Back to boards
-                    </a>
+                    <a href="imageboard.html">Back to boards</a>
 
                     <button
                         type="button"
@@ -696,19 +644,15 @@
                 ${
                     openingPost
                         ? renderPost(openingPost, true)
-                        : `
-                            <p class="thread-empty">
-                                This thread has no visible posts.
-                            </p>
-                        `
+                        : `<p class="thread-empty">
+                            This thread has no visible posts.
+                           </p>`
                 }
 
                 <div class="thread-replies">
-                    ${
-                        replies.map(
-                            (post) => renderPost(post, false)
-                        ).join("")
-                    }
+                    ${replies.map(
+                        (post) => renderPost(post, false)
+                    ).join("")}
                 </div>
             </section>
 
@@ -730,7 +674,6 @@
 
     function renderPost(post, isOpeningPost) {
         const profile = post.profiles;
-
         const isAnonymous = Boolean(post.is_anonymous);
 
         const displayName = isAnonymous
@@ -745,9 +688,7 @@
             ? "anonymous"
             : (profile?.username || "");
 
-        const postNumber = currentPostNumbers.get(
-            post.id
-        );
+        const postNumber = currentPostNumbers.get(post.id);
 
         const images = Array.isArray(post.post_images)
             ? post.post_images
@@ -761,9 +702,7 @@
                             image.storage_path
                         );
 
-                        if (!url) {
-                            return "";
-                        }
+                        if (!url) return "";
 
                         return `
                             <a
@@ -775,8 +714,7 @@
                                 <img
                                     src="${escapeHtml(url)}"
                                     alt="${escapeHtml(
-                                        image.alt_text ||
-                                        "Attached image"
+                                        image.alt_text || "Attached image"
                                     )}"
                                     class="thread-post-image"
                                     loading="lazy"
@@ -796,44 +734,30 @@
                 id="post-${escapeHtml(post.id)}"
             >
                 <header class="thread-post-header">
-                    <strong>
-                        ${escapeHtml(displayName)}
-                    </strong>
+                    <strong>${escapeHtml(displayName)}</strong>
 
                     ${
                         username
-                            ? `
-                                <span class="thread-post-username">
-                                    @${escapeHtml(username)}
-                                </span>
-                            `
+                            ? `<span class="thread-post-username">
+                                @${escapeHtml(username)}
+                               </span>`
                             : ""
                     }
 
-                    <time>
-                        ${escapeHtml(formatDate(post.created_at))}
-                    </time>
+                    <time>${escapeHtml(formatDate(post.created_at))}</time>
 
                     ${
                         postNumber
-                            ? `
-                                <a
-                                    href="#post-${escapeHtml(post.id)}"
-                                    class="thread-post-number"
-                                >
-                                    No. ${postNumber}
-                                </a>
-                            `
+                            ? `<a
+                                href="#post-${escapeHtml(post.id)}"
+                                class="thread-post-number"
+                               >No. ${postNumber}</a>`
                             : ""
                     }
 
                     ${
                         isOpeningPost
-                            ? `
-                                <span class="thread-post-label">
-                                    OP
-                                </span>
-                            `
+                            ? '<span class="thread-post-label">OP</span>'
                             : ""
                     }
 
@@ -867,9 +791,7 @@
             "replyFormContainer"
         );
 
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
         if (thread.is_locked || thread.is_archived) {
             container.innerHTML = `
@@ -877,7 +799,6 @@
                     This thread is closed for replies.
                 </p>
             `;
-
             return;
         }
 
@@ -893,28 +814,22 @@
                         You must be logged in to reply.
                     </p>
                 `;
-
                 return;
             }
 
             container.innerHTML = `
                 <form id="replyForm">
-                    <label for="replyContent">
-                        Message
-                    </label>
+                    <label for="replyContent">Message</label>
 
                     <textarea
                         id="replyContent"
-                        required
                         maxlength="10000"
                         placeholder="Write your reply..."
                     ></textarea>
 
                     <label for="replyImage">
                         Image
-                        <span class="optional-label">
-                            optional
-                        </span>
+                        <span class="optional-label">optional</span>
                     </label>
 
                     <input
@@ -947,27 +862,20 @@
                         aria-live="polite"
                     ></p>
 
-                    <button type="submit">
-                        Post reply
-                    </button>
+                    <button type="submit">Post reply</button>
                 </form>
             `;
 
             setupReplyImagePreview();
 
-            const form = document.getElementById(
+            document.getElementById(
                 "replyForm"
-            );
-
-            form.addEventListener("submit", async (event) => {
+            ).addEventListener("submit", async (event) => {
                 event.preventDefault();
                 await submitReply(thread);
             });
         } catch (error) {
-            console.error(
-                "Reply form setup error:",
-                error
-            );
+            console.error("Reply form setup error:", error);
 
             container.innerHTML = `
                 <p class="thread-empty">
@@ -978,39 +886,29 @@
     }
 
     function setupReplyImagePreview() {
-        const input = document.getElementById(
-            "replyImage"
-        );
-
+        const input = document.getElementById("replyImage");
         const preview = document.getElementById(
             "replyImagePreview"
         );
 
-        if (!input || !preview) {
-            return;
-        }
-
-        let previewUrl = null;
+        if (!input || !preview) return;
 
         input.addEventListener("change", () => {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-                previewUrl = null;
+            if (activePreviewUrl) {
+                URL.revokeObjectURL(activePreviewUrl);
+                activePreviewUrl = null;
             }
 
-            preview.innerHTML = "";
+            preview.replaceChildren();
             preview.hidden = true;
 
             const file = input.files?.[0];
 
-            if (!file) {
-                return;
-            }
+            if (!file) return;
 
             if (!file.type.startsWith("image/")) {
-                preview.innerHTML = `
-                    <p>Please choose a valid image file.</p>
-                `;
+                preview.textContent =
+                    "Please choose a valid image file.";
 
                 preview.hidden = false;
                 input.value = "";
@@ -1018,19 +916,18 @@
             }
 
             if (file.size > MAX_IMAGE_SIZE) {
-                preview.innerHTML = `
-                    <p>This image is larger than 10 MB.</p>
-                `;
+                preview.textContent =
+                    "This image is larger than 10 MB.";
 
                 preview.hidden = false;
                 input.value = "";
                 return;
             }
 
-            previewUrl = URL.createObjectURL(file);
+            activePreviewUrl = URL.createObjectURL(file);
 
             const image = document.createElement("img");
-            image.src = previewUrl;
+            image.src = activePreviewUrl;
             image.alt = "Image preview";
 
             const filename = document.createElement("p");
@@ -1046,7 +943,9 @@
     // --------------------------------------------------
 
     async function submitReply(thread) {
-        if (isSubmittingReply) {
+        if (isSubmittingReply) return;
+        if (!client) {
+            setReplyMessage("Supabase is not available.");
             return;
         }
 
@@ -1062,20 +961,13 @@
             "replyAnonymous"
         );
 
-        const message = document.getElementById(
-            "replyFormMessage"
-        );
-
-        const submitButton = document.querySelector(
-            "#replyForm button[type='submit']"
-        );
+        const message = getReplyMessage();
 
         if (
             !contentInput ||
             !imageInput ||
             !anonymousInput ||
-            !message ||
-            !submitButton
+            !message
         ) {
             return;
         }
@@ -1087,34 +979,33 @@
         if (!content && !file) {
             message.textContent =
                 "Please write a message or choose an image.";
-
             return;
         }
 
         if (file && !file.type.startsWith("image/")) {
             message.textContent =
                 "Please choose a valid image file.";
-
             return;
         }
 
         if (file && file.size > MAX_IMAGE_SIZE) {
             message.textContent =
                 "That image is larger than 10 MB.";
-
             return;
         }
 
         isSubmittingReply = true;
-        submitButton.disabled = true;
-        submitButton.textContent = "Posting...";
+        setSubmitButtonState(true, "Posting...");
         message.textContent = "";
 
         let postId = null;
+        let replyCreated = false;
+        let imageSaved = false;
+        let failureMessage = null;
 
         try {
-            // Get the authenticated user. The Storage policy
-            // requires their UUID to be the first path segment.
+            // Get the signed-in user once. The same UUID must
+            // be the first folder in the Storage object path.
             const {
                 data: { user } = {},
                 error: userError
@@ -1128,7 +1019,20 @@
 
             const userId = user.id;
 
-            // Create the reply first.
+            // Validate the selected file before creating a post.
+            if (file) {
+                if (!file.type.startsWith("image/")) {
+                    throw new Error("Please choose a valid image file.");
+                }
+
+                if (file.size > MAX_IMAGE_SIZE) {
+                    throw new Error(
+                        "That image is larger than 10 MB."
+                    );
+                }
+            }
+
+            // Create the reply.
             const {
                 data: createdPostId,
                 error: postError
@@ -1155,30 +1059,29 @@
 
             if (!postId) {
                 throw new Error(
-                    "The reply was created, but no post ID was returned."
+                    "The server did not return the new post ID."
                 );
             }
 
+            replyCreated = true;
+
             // Upload the optional image.
             if (file) {
-                const extensionFromName =
-                    file.name.includes(".")
-                        ? file.name
-                            .split(".")
-                            .pop()
-                            .toLowerCase()
-                        : "";
+                const extensionFromName = file.name.includes(".")
+                    ? file.name.split(".").pop().toLowerCase()
+                    : "";
 
-                // FUCKING KILLLIGN MYSELF
-                const extension =
-                    /^[a-z0-9]{1,10}$/.test(
-                        extensionFromName
-                    )
-                        ? extensionFromName
-                        : "img";
+                const extension = /^[a-z0-9]{1,10}$/.test(
+                    extensionFromName
+                )
+                    ? extensionFromName
+                    : "img";
 
+                // IMPORTANT:
+                // The first path segment MUST be userId.
+                // Do not replace this with a random UUID.
                 const storagePath = [
-                    user.id,
+                    userId,
                     thread.id,
                     `${postId}.${extension}`
                 ].join("/");
@@ -1187,14 +1090,10 @@
                     error: uploadError
                 } = await client.storage
                     .from(STORAGE_BUCKET)
-                    .upload(
-                        storagePath,
-                        file,
-                        {
-                            upsert: false,
-                            contentType: file.type
-                        }
-                    );
+                    .upload(storagePath, file, {
+                        upsert: false,
+                        contentType: file.type
+                    });
 
                 if (uploadError) {
                     console.error(
@@ -1203,12 +1102,11 @@
                     );
 
                     throw new Error(
-                        "Your reply was posted, but its image upload failed. Please try again."
+                        "The reply was posted, but the image upload failed. Your reply will still be saved."
                     );
                 }
 
-                // Save the image metadata only after Storage upload
-                // succeeds.
+                // Record the uploaded image in the database.
                 const {
                     error: imageInsertError
                 } = await client
@@ -1226,62 +1124,70 @@
                     );
 
                     throw new Error(
-                        "Your reply was posted, but its image record could not be saved."
+                        "The reply was posted and the image uploaded, but the image record could not be saved. Please contact a moderator if the image remains missing."
                     );
                 }
+
+                imageSaved = true;
             }
-
-            // Reload the thread to display the new reply.
-            await loadThread();
-
-            window.setTimeout(() => {
-                const post = document.getElementById(
-                    `post-${postId}`
-                );
-
-                if (!post) {
-                    return;
-                }
-
-                post.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-
-                post.classList.add(
-                    "thread-post-reference-highlight"
-                );
-
-                window.setTimeout(() => {
-                    post.classList.remove(
-                        "thread-post-reference-highlight"
-                    );
-                }, 1800);
-            }, 100);
         } catch (error) {
-            console.error(
-                "Reply submission error:",
-                error
-            );
+            console.error("Reply submission error:", error);
 
-            message.textContent = getErrorMessage(
+            failureMessage = getErrorMessage(
                 error,
                 "Something went wrong while posting your reply."
             );
         } finally {
             isSubmittingReply = false;
-
-            // The form may have been replaced by loadThread().
-            // Only update the button if it is still on the page.
-            const currentButton = document.querySelector(
-                "#replyForm button[type='submit']"
-            );
-
-            if (currentButton) {
-                currentButton.disabled = false;
-                currentButton.textContent = "Post reply";
-            }
         }
+
+        // Reload if the reply was created, even if its image failed.
+        // This prevents the user from accidentally reposting it.
+        if (replyCreated) {
+            await loadThread();
+
+            if (failureMessage) {
+                setReplyMessage(failureMessage);
+            } else if (imageSaved || !file) {
+                setReplyMessage("Reply posted successfully! ♡");
+            }
+
+            if (postId) {
+                window.setTimeout(() => {
+                    const post = document.getElementById(
+                        `post-${postId}`
+                    );
+
+                    if (!post) return;
+
+                    post.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+
+                    post.classList.add(
+                        "thread-post-reference-highlight"
+                    );
+
+                    window.setTimeout(() => {
+                        post.classList.remove(
+                            "thread-post-reference-highlight"
+                        );
+                    }, 1800);
+                }, 100);
+            }
+
+            return;
+        }
+
+        // If the post itself failed, leave the form intact so the
+        // user can correct the issue and try again.
+        setReplyMessage(
+            failureMessage ||
+            "Something went wrong while posting your reply."
+        );
+
+        setSubmitButtonState(false, "Post reply");
     }
 
     // --------------------------------------------------
@@ -1289,7 +1195,9 @@
     // --------------------------------------------------
 
     if (!client) {
-        renderError("Supabase is not available.");
+        renderError(
+            "Supabase is not available. Please refresh the page."
+        );
         return;
     }
 
