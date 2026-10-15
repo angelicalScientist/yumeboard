@@ -6,13 +6,13 @@
     const threadPage =
         document.getElementById("threadPage");
 
-    const STORAGE_BUCKET =
-        "imageboard-images";
+    const STORAGE_BUCKET = "imageboard-images";
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
-    const currentPostNumbers =
-        new Map();
+    const currentPostNumbers = new Map();
 
     let currentReportTarget = null;
+    let isSubmittingReply = false;
 
     const REPORT_TARGET_TYPES = new Set([
         "imageboard_thread",
@@ -28,16 +28,17 @@
         "Other"
     ];
 
+    // --------------------------------------------------
+    // General helpers
+    // --------------------------------------------------
 
     function getThreadId() {
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
+        const params = new URLSearchParams(
+            window.location.search
+        );
 
         return params.get("id");
     }
-
 
     function escapeHtml(value) {
         return String(value ?? "")
@@ -48,43 +49,37 @@
             .replaceAll("'", "&#039;");
     }
 
-
     function formatDate(value) {
         if (!value) {
             return "";
         }
 
-        const date =
-            new Date(value);
+        const date = new Date(value);
 
-        if (
-            Number.isNaN(
-                date.getTime()
-            )
-        ) {
+        if (Number.isNaN(date.getTime())) {
             return "";
         }
 
         return date.toLocaleString();
     }
 
-
     function getImageUrl(storagePath) {
-        if (!storagePath) {
+        if (!storagePath || !client) {
             return null;
         }
 
-        const {
-            data
-        } = client.storage
+        const { data } = client.storage
             .from(STORAGE_BUCKET)
             .getPublicUrl(storagePath);
 
         return data?.publicUrl || null;
     }
 
-
     function renderError(message) {
+        if (!threadPage) {
+            return;
+        }
+
         threadPage.innerHTML = `
             <section class="thread-error">
                 <p>${escapeHtml(message)}</p>
@@ -92,6 +87,13 @@
         `;
     }
 
+    function getErrorMessage(error, fallback) {
+        return error?.message || fallback;
+    }
+
+    // --------------------------------------------------
+    // Post numbers and references
+    // --------------------------------------------------
 
     function buildPostNumbers(posts) {
         currentPostNumbers.clear();
@@ -112,7 +114,6 @@
         }
     }
 
-
     function formatPostContent(content) {
         if (!content) {
             return "";
@@ -124,57 +125,39 @@
             .join("<br>");
     }
 
-
     function formatPostLine(line) {
-        const escaped =
-            escapeHtml(line);
+        const escaped = escapeHtml(line);
 
-        const withReferences =
-            escaped.replace(
-                /&gt;&gt;([0-9]+)/g,
-                (match, numberText) => {
-                    const number =
-                        Number(numberText);
+        const withReferences = escaped.replace(
+            /&gt;&gt;([0-9]+)/g,
+            (match, numberText) => {
+                const number = Number(numberText);
 
-                    let referencedPostId = null;
+                let referencedPostId = null;
 
-                    for (
-                        const [
-                            postId,
-                            postNumber
-                        ]
-                        of currentPostNumbers
-                    ) {
-                        if (
-                            postNumber === number
-                        ) {
-                            referencedPostId =
-                                postId;
-                            break;
-                        }
+                for (const [postId, postNumber]
+                    of currentPostNumbers) {
+                    if (postNumber === number) {
+                        referencedPostId = postId;
+                        break;
                     }
-
-                    if (
-                        !referencedPostId
-                    ) {
-                        return match;
-                    }
-
-                    return `
-                        <a
-                            href="#post-${escapeHtml(referencedPostId)}"
-                            class="thread-post-reference"
-                            data-post-reference="${escapeHtml(referencedPostId)}"
-                        >
-                            &gt;&gt;${number}
-                        </a>
-                    `;
                 }
-            );
 
-        if (
-            withReferences.startsWith("&gt;")
-        ) {
+                if (!referencedPostId) {
+                    return match;
+                }
+
+                return `
+                    <a
+                        href="#post-${escapeHtml(referencedPostId)}"
+                        class="thread-post-reference"
+                        data-post-reference="${escapeHtml(referencedPostId)}"
+                    >&gt;&gt;${number}</a>
+                `;
+            }
+        );
+
+        if (withReferences.startsWith("&gt;")) {
             return `
                 <span class="thread-quotetext">
                     ${withReferences}
@@ -185,81 +168,70 @@
         return withReferences;
     }
 
-
-    function escapeFormattedText(value) {
-        return value;
-    }
-
-
     function setupPostReferenceLinks() {
-        document.addEventListener(
-            "click",
-            (event) => {
-                const link =
-                    event.target.closest(
-                        "[data-post-reference]"
-                    );
+        document.addEventListener("click", (event) => {
+            const target = event.target;
 
-                if (!link) {
-                    return;
-                }
+            if (!(target instanceof Element)) {
+                return;
+            }
 
-                const postId =
-                    link.dataset.postReference;
+            const link = target.closest(
+                "[data-post-reference]"
+            );
 
-                const target =
-                    document.getElementById(
-                        `post-${postId}`
-                    );
+            if (!link) {
+                return;
+            }
 
-                if (!target) {
-                    return;
-                }
+            const postId = link.dataset.postReference;
 
-                event.preventDefault();
+            const post = document.getElementById(
+                `post-${postId}`
+            );
 
-                target.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
+            if (!post) {
+                return;
+            }
 
-                target.classList.add(
+            event.preventDefault();
+
+            post.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            post.classList.add(
+                "thread-post-reference-highlight"
+            );
+
+            window.history.replaceState(
+                null,
+                "",
+                `#post-${postId}`
+            );
+
+            window.setTimeout(() => {
+                post.classList.remove(
                     "thread-post-reference-highlight"
                 );
-
-                window.history.replaceState(
-                    null,
-                    "",
-                    `#post-${postId}`
-                );
-
-                window.setTimeout(() => {
-                    target.classList.remove(
-                        "thread-post-reference-highlight"
-                    );
-                }, 1800);
-            }
-        );
+            }, 1800);
+        });
     }
 
+    // --------------------------------------------------
+    // Reporting
+    // --------------------------------------------------
 
     function ensureReportDialog() {
-        if (
-            document.getElementById(
-                "reportDialog"
-            )
-        ) {
+        if (document.getElementById("reportDialog")) {
             return;
         }
 
-        const dialog =
-            document.createElement("dialog");
+        const dialog = document.createElement("dialog");
 
-        dialog.id =
-            "reportDialog";
-
-        dialog.className =
-            "report-dialog";
+        dialog.id = "reportDialog";
+        dialog.className = "report-dialog";
 
         dialog.innerHTML = `
             <form
@@ -270,34 +242,26 @@
                 <h2>Report content</h2>
 
                 <p class="report-dialog-intro">
-                    Tell the moderation team what is wrong with
-                    this content. ♡
+                    Tell the moderation team what is wrong
+                    with this content. ♡
                 </p>
 
-                <label for="reportReason">
-                    Reason
-                </label>
+                <label for="reportReason">Reason</label>
 
                 <select
                     id="reportReason"
                     name="reason"
                     required
                 >
-                    <option
-                        value=""
-                        selected
-                        disabled
-                    >
+                    <option value="" selected disabled>
                         Choose a reason...
                     </option>
 
-                    ${REPORT_REASONS.map(
-                        (reason) => `
-                            <option value="${escapeHtml(reason)}">
-                                ${escapeHtml(reason)}
-                            </option>
-                        `
-                    ).join("")}
+                    ${REPORT_REASONS.map((reason) => `
+                        <option value="${escapeHtml(reason)}">
+                            ${escapeHtml(reason)}
+                        </option>
+                    `).join("")}
                 </select>
 
                 <label for="reportDetails">
@@ -346,43 +310,29 @@
 
         document.body.appendChild(dialog);
 
-        const form =
-            document.getElementById(
-                "reportDialogForm"
-            );
-
-        const cancelButton =
-            document.getElementById(
-                "reportDialogCancel"
-            );
-
-        cancelButton.addEventListener(
-            "click",
-            () => {
-                dialog.close();
-            }
+        const form = document.getElementById(
+            "reportDialogForm"
         );
 
-        form.addEventListener(
-            "submit",
-            async (event) => {
-                event.preventDefault();
-
-                await submitReport();
-            }
+        const cancelButton = document.getElementById(
+            "reportDialogCancel"
         );
+
+        cancelButton.addEventListener("click", () => {
+            dialog.close();
+        });
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            await submitReport();
+        });
     }
-
 
     async function openReportDialog(
         targetType,
         targetId
     ) {
-        if (
-            !REPORT_TARGET_TYPES.has(
-                targetType
-            )
-        ) {
+        if (!REPORT_TARGET_TYPES.has(targetType)) {
             return;
         }
 
@@ -397,76 +347,56 @@
             targetId
         };
 
-        const dialog =
-            document.getElementById(
-                "reportDialog"
-            );
+        const dialog = document.getElementById(
+            "reportDialog"
+        );
 
-        const reason =
-            document.getElementById(
-                "reportReason"
-            );
+        document.getElementById(
+            "reportReason"
+        ).value = "";
 
-        const details =
-            document.getElementById(
-                "reportDetails"
-            );
+        document.getElementById(
+            "reportDetails"
+        ).value = "";
 
-        const message =
-            document.getElementById(
-                "reportDialogMessage"
-            );
+        document.getElementById(
+            "reportDialogMessage"
+        ).textContent = "";
 
-        const submitButton =
-            document.getElementById(
-                "reportDialogSubmit"
-            );
+        const submitButton = document.getElementById(
+            "reportDialogSubmit"
+        );
 
-        reason.value = "";
-        details.value = "";
-        message.textContent = "";
         submitButton.disabled = false;
-        submitButton.textContent =
-            "Submit report";
+        submitButton.textContent = "Submit report";
 
-        if (
-            typeof dialog.showModal ===
-            "function"
-        ) {
+        if (typeof dialog.showModal === "function") {
             dialog.showModal();
         } else {
-            dialog.setAttribute(
-                "open",
-                ""
-            );
+            dialog.setAttribute("open", "");
         }
     }
 
-
     async function submitReport() {
-        if (!currentReportTarget) {
+        if (!currentReportTarget || !client) {
             return;
         }
 
-        const reason =
-            document.getElementById(
-                "reportReason"
-            ).value;
+        const reason = document.getElementById(
+            "reportReason"
+        ).value;
 
-        const details =
-            document.getElementById(
-                "reportDetails"
-            ).value.trim();
+        const details = document.getElementById(
+            "reportDetails"
+        ).value.trim();
 
-        const message =
-            document.getElementById(
-                "reportDialogMessage"
-            );
+        const message = document.getElementById(
+            "reportDialogMessage"
+        );
 
-        const submitButton =
-            document.getElementById(
-                "reportDialogSubmit"
-            );
+        const submitButton = document.getElementById(
+            "reportDialogSubmit"
+        );
 
         if (!reason) {
             message.textContent =
@@ -475,239 +405,238 @@
             return;
         }
 
-        const {
-            data: {
-                user
-            } = {}
-        } = await client.auth.getUser();
-
-        if (!user) {
-            message.textContent =
-                "You must be logged in to submit a report. ♡";
-
-            return;
-        }
-
         submitButton.disabled = true;
-        submitButton.textContent =
-            "Submitting...";
-
+        submitButton.textContent = "Submitting...";
         message.textContent = "";
 
-        const {
-            error
-        } = await client.rpc(
-            "create_report",
-            {
-                p_target_type:
-                    currentReportTarget.targetType,
+        try {
+            const {
+                data: { user } = {},
+                error: userError
+            } = await client.auth.getUser();
 
-                p_target_id:
-                    currentReportTarget.targetId,
+            if (userError || !user) {
+                message.textContent =
+                    "You must be logged in to submit a report. ♡";
 
-                p_reason:
-                    reason,
-
-                p_details:
-                    details || null
+                return;
             }
-        );
 
-        if (error) {
+            const { error } = await client.rpc(
+                "create_report",
+                {
+                    p_target_type:
+                        currentReportTarget.targetType,
+
+                    p_target_id:
+                        currentReportTarget.targetId,
+
+                    p_reason: reason,
+
+                    p_details: details || null
+                }
+            );
+
+            if (error) {
+                console.error(
+                    "Report submission error:",
+                    error
+                );
+
+                message.textContent =
+                    getErrorMessage(
+                        error,
+                        "Unable to submit the report."
+                    );
+
+                return;
+            }
+
+            message.textContent =
+                "Report submitted. Thank you. ♡";
+
+            window.setTimeout(() => {
+                const dialog = document.getElementById(
+                    "reportDialog"
+                );
+
+                if (dialog?.open) {
+                    dialog.close();
+                }
+
+                currentReportTarget = null;
+            }, 700);
+        } catch (error) {
             console.error(
-                "Report submission error:",
+                "Unexpected report error:",
                 error
             );
 
             message.textContent =
-                error.message ||
-                "Unable to submit the report.";
-
-            submitButton.disabled = false;
-            submitButton.textContent =
-                "Submit report";
-
-            return;
-        }
-
-        message.textContent =
-            "Report submitted. Thank you. ♡";
-
-        window.setTimeout(() => {
-            const dialog =
-                document.getElementById(
-                    "reportDialog"
-                );
-
-            if (
-                dialog?.open
-            ) {
-                dialog.close();
+                "Something went wrong while submitting the report.";
+        } finally {
+            if (currentReportTarget) {
+                submitButton.disabled = false;
+                submitButton.textContent =
+                    "Submit report";
             }
-
-            currentReportTarget = null;
-        }, 700);
+        }
     }
-
 
     function setupReportButtons() {
-        document.addEventListener(
-            "click",
-            (event) => {
-                const button =
-                    event.target.closest(
-                        "[data-report-target-type][data-report-target-id]"
-                    );
+        document.addEventListener("click", (event) => {
+            const target = event.target;
 
-                if (!button) {
-                    return;
-                }
-
-                event.preventDefault();
-
-                openReportDialog(
-                    button.dataset
-                        .reportTargetType,
-
-                    button.dataset
-                        .reportTargetId
-                );
+            if (!(target instanceof Element)) {
+                return;
             }
-        );
+
+            const button = target.closest(
+                "[data-report-target-type][data-report-target-id]"
+            );
+
+            if (!button) {
+                return;
+            }
+
+            event.preventDefault();
+
+            openReportDialog(
+                button.dataset.reportTargetType,
+                button.dataset.reportTargetId
+            );
+        });
     }
 
+    // --------------------------------------------------
+    // Load thread and posts
+    // --------------------------------------------------
 
     async function loadThread() {
-        const threadId =
-            getThreadId();
+        if (!client || !threadPage) {
+            return;
+        }
+
+        const threadId = getThreadId();
 
         if (!threadId) {
-            renderError(
-                "No thread was specified."
-            );
-
+            renderError("No thread was specified.");
             return;
         }
 
-        const {
-            data: thread,
-            error: threadError
-        } = await client
-            .from("threads")
-            .select(`
-                id,
-                board_id,
-                user_id,
-                title,
-                created_at,
-                last_post_at,
-                is_locked,
-                is_archived,
-                boards (
-                    name,
-                    slug
-                )
-            `)
-            .eq("id", threadId)
-            .single();
-
-        if (threadError) {
-            console.error(
-                "Thread loading error:",
-                threadError
-            );
-
-            renderError(
-                "Unable to load this thread."
-            );
-
-            return;
-        }
-
-        const {
-            data: posts,
-            error: postsError
-        } = await client
-            .from("posts")
-            .select(`
-                id,
-                user_id,
-                content,
-                created_at,
-                is_hidden,
-                is_anonymous,
-                profiles!posts_user_id_fkey (
+        try {
+            const {
+                data: thread,
+                error: threadError
+            } = await client
+                .from("threads")
+                .select(`
                     id,
-                    username,
-                    display_name,
-                    avatar_url
-                ),
-                post_images (
+                    board_id,
+                    user_id,
+                    title,
+                    created_at,
+                    last_post_at,
+                    is_locked,
+                    is_archived,
+                    boards (
+                        name,
+                        slug
+                    )
+                `)
+                .eq("id", threadId)
+                .single();
+
+            if (threadError || !thread) {
+                console.error(
+                    "Thread loading error:",
+                    threadError
+                );
+
+                renderError(
+                    "Unable to load this thread."
+                );
+
+                return;
+            }
+
+            const {
+                data: posts,
+                error: postsError
+            } = await client
+                .from("posts")
+                .select(`
                     id,
-                    storage_path,
-                    alt_text
-                )
-            `)
-            .eq("thread_id", threadId)
-            .order(
-                "created_at",
-                {
+                    user_id,
+                    content,
+                    created_at,
+                    is_hidden,
+                    is_anonymous,
+                    profiles!posts_user_id_fkey (
+                        id,
+                        username,
+                        display_name,
+                        avatar_url
+                    ),
+                    post_images (
+                        id,
+                        storage_path,
+                        alt_text
+                    )
+                `)
+                .eq("thread_id", threadId)
+                .order("created_at", {
                     ascending: true
-                }
-            );
+                });
 
-        if (postsError) {
+            if (postsError) {
+                console.error(
+                    "Posts loading error:",
+                    postsError
+                );
+
+                renderError(
+                    "Unable to load the posts in this thread."
+                );
+
+                return;
+            }
+
+            const loadedPosts = posts || [];
+
+            buildPostNumbers(loadedPosts);
+
+            renderThread(thread, loadedPosts);
+
+            await setupReplyForm(thread);
+        } catch (error) {
             console.error(
-                "Posts loading error:",
-                postsError
+                "Unexpected thread loading error:",
+                error
             );
 
             renderError(
-                "Unable to load the posts in this thread."
+                "Something went wrong while loading this thread."
             );
-
-            return;
         }
-
-        buildPostNumbers(
-            posts || []
-        );
-
-        renderThread(
-            thread,
-            posts || []
-        );
-
-        setupReplyForm(thread);
     }
 
+    // --------------------------------------------------
+    // Render thread
+    // --------------------------------------------------
 
-    function renderThread(
-        thread,
-        posts
-    ) {
-        const visiblePosts =
-            posts.filter(
-                (post) =>
-                    !post.is_hidden
-            );
+    function renderThread(thread, posts) {
+        const visiblePosts = posts.filter(
+            (post) => !post.is_hidden
+        );
 
-        const openingPost =
-            visiblePosts[0] || null;
+        const openingPost = visiblePosts[0] || null;
+        const replies = visiblePosts.slice(1);
 
-        const replies =
-            visiblePosts.slice(1);
+        const board = thread.boards;
 
-        const board =
-            thread.boards;
-
-        const boardName =
-            board?.name ||
-            "Imageboard";
-
-        const boardSlug =
-            board?.slug ||
-            "";
+        const boardName = board?.name || "Imageboard";
+        const boardSlug = board?.slug || "";
 
         const statuses = [];
 
@@ -725,23 +654,16 @@
 
         threadPage.innerHTML = `
             <section class="thread-header">
-
                 <p class="board-slug">
                     /${escapeHtml(boardSlug)}/
                 </p>
 
-                <h2>
-                    ${escapeHtml(thread.title)}
-                </h2>
+                <h2>${escapeHtml(thread.title)}</h2>
 
                 <p class="thread-header-meta">
                     ${escapeHtml(boardName)}
                     · Started
-                    ${escapeHtml(
-                        formatDate(
-                            thread.created_at
-                        )
-                    )}
+                    ${escapeHtml(formatDate(thread.created_at))}
                 </p>
 
                 ${
@@ -755,10 +677,7 @@
                 }
 
                 <div class="thread-header-actions">
-
-                    <a
-                        href="imageboard.html"
-                    >
+                    <a href="imageboard.html">
                         Back to boards
                     </a>
 
@@ -770,19 +689,13 @@
                     >
                         ⚑ Report thread
                     </button>
-
                 </div>
-
             </section>
 
             <section class="thread-posts">
-
                 ${
                     openingPost
-                        ? renderPost(
-                            openingPost,
-                            true
-                        )
+                        ? renderPost(openingPost, true)
                         : `
                             <p class="thread-empty">
                                 This thread has no visible posts.
@@ -792,20 +705,11 @@
 
                 <div class="thread-replies">
                     ${
-                        replies.length
-                            ? replies
-                                .map(
-                                    (post) =>
-                                        renderPost(
-                                            post,
-                                            false
-                                        )
-                                )
-                                .join("")
-                            : ""
+                        replies.map(
+                            (post) => renderPost(post, false)
+                        ).join("")
                     }
                 </div>
-
             </section>
 
             <section
@@ -824,103 +728,74 @@
         `;
     }
 
+    function renderPost(post, isOpeningPost) {
+        const profile = post.profiles;
 
-    function renderPost(
-        post,
-        isOpeningPost
-    ) {
-        const profile =
-            post.profiles;
+        const isAnonymous = Boolean(post.is_anonymous);
 
-        const isAnonymous =
-            Boolean(
-                post.is_anonymous
+        const displayName = isAnonymous
+            ? "Anonymous"
+            : (
+                profile?.display_name ||
+                profile?.username ||
+                "User"
             );
 
-        const displayName =
-            isAnonymous
-                ? "Anonymous"
-                : (
-                    profile?.display_name ||
-                    profile?.username ||
-                    "User"
-                );
+        const username = isAnonymous
+            ? "anonymous"
+            : (profile?.username || "");
 
-        const username =
-            isAnonymous
-                ? "anonymous"
-                : (
-                    profile?.username ||
-                    ""
-                );
+        const postNumber = currentPostNumbers.get(
+            post.id
+        );
 
-        const postNumber =
-            currentPostNumbers.get(
-                post.id
-            );
+        const images = Array.isArray(post.post_images)
+            ? post.post_images
+            : [];
 
-        const images =
-            Array.isArray(
-                post.post_images
-            )
-                ? post.post_images
-                : [];
+        const imageMarkup = images.length
+            ? `
+                <div class="thread-post-images">
+                    ${images.map((image) => {
+                        const url = getImageUrl(
+                            image.storage_path
+                        );
 
-        const imageMarkup =
-            images.length
-                ? `
-                    <div class="thread-post-images">
-                        ${
-                            images
-                                .map(
-                                    (image) => {
-                                        const url =
-                                            getImageUrl(
-                                                image.storage_path
-                                            );
-
-                                        if (!url) {
-                                            return "";
-                                        }
-
-                                        return `
-                                            <a
-                                                href="${escapeHtml(url)}"
-                                                class="thread-post-image-link"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <img
-                                                    src="${escapeHtml(url)}"
-                                                    alt="${escapeHtml(
-                                                        image.alt_text ||
-                                                        "Attached image"
-                                                    )}"
-                                                    class="thread-post-image"
-                                                    loading="lazy"
-                                                >
-                                            </a>
-                                        `;
-                                    }
-                                )
-                                .join("")
+                        if (!url) {
+                            return "";
                         }
-                    </div>
-                `
-                : "";
+
+                        return `
+                            <a
+                                href="${escapeHtml(url)}"
+                                class="thread-post-image-link"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <img
+                                    src="${escapeHtml(url)}"
+                                    alt="${escapeHtml(
+                                        image.alt_text ||
+                                        "Attached image"
+                                    )}"
+                                    class="thread-post-image"
+                                    loading="lazy"
+                                >
+                            </a>
+                        `;
+                    }).join("")}
+                </div>
+            `
+            : "";
 
         return `
             <article
                 class="thread-post ${
-                    isOpeningPost
-                        ? "thread-op"
-                        : ""
+                    isOpeningPost ? "thread-op" : ""
                 }"
                 id="post-${escapeHtml(post.id)}"
             >
-
                 <header class="thread-post-header">
-
                     <strong>
                         ${escapeHtml(displayName)}
                     </strong>
@@ -936,11 +811,7 @@
                     }
 
                     <time>
-                        ${escapeHtml(
-                            formatDate(
-                                post.created_at
-                            )
-                        )}
+                        ${escapeHtml(formatDate(post.created_at))}
                     </time>
 
                     ${
@@ -974,44 +845,33 @@
                     >
                         ⚑ Report
                     </button>
-
                 </header>
 
                 <div class="thread-post-body">
-
                     ${imageMarkup}
 
                     <div class="thread-post-content">
-                        ${
-                            escapeFormattedText(
-                                formatPostContent(
-                                    post.content
-                                )
-                            )
-                        }
+                        ${formatPostContent(post.content)}
                     </div>
-
                 </div>
-
             </article>
         `;
     }
 
+    // --------------------------------------------------
+    // Reply form
+    // --------------------------------------------------
 
     async function setupReplyForm(thread) {
-        const container =
-            document.getElementById(
-                "replyFormContainer"
-            );
+        const container = document.getElementById(
+            "replyFormContainer"
+        );
 
         if (!container) {
             return;
         }
 
-        if (
-            thread.is_locked ||
-            thread.is_archived
-        ) {
+        if (thread.is_locked || thread.is_archived) {
             container.innerHTML = `
                 <p class="thread-empty">
                     This thread is closed for replies.
@@ -1021,352 +881,372 @@
             return;
         }
 
-        const {
-            data: {
-                user
-            } = {}
-        } = await client.auth.getUser();
+        try {
+            const {
+                data: { user } = {},
+                error
+            } = await client.auth.getUser();
 
-        if (!user) {
+            if (error || !user) {
+                container.innerHTML = `
+                    <p class="thread-empty">
+                        You must be logged in to reply.
+                    </p>
+                `;
+
+                return;
+            }
+
             container.innerHTML = `
-                <p class="thread-empty">
-                    You must be logged in to reply.
-                </p>
+                <form id="replyForm">
+                    <label for="replyContent">
+                        Message
+                    </label>
+
+                    <textarea
+                        id="replyContent"
+                        required
+                        maxlength="10000"
+                        placeholder="Write your reply..."
+                    ></textarea>
+
+                    <label for="replyImage">
+                        Image
+                        <span class="optional-label">
+                            optional
+                        </span>
+                    </label>
+
+                    <input
+                        type="file"
+                        id="replyImage"
+                        accept="image/*"
+                    >
+
+                    <p class="upload-help">
+                        Images must be 10 MB or smaller.
+                    </p>
+
+                    <div
+                        id="replyImagePreview"
+                        class="image-preview"
+                        hidden
+                    ></div>
+
+                    <label>
+                        <input
+                            type="checkbox"
+                            id="replyAnonymous"
+                        >
+                        Post anonymously
+                    </label>
+
+                    <p
+                        id="replyFormMessage"
+                        class="editor-message"
+                        aria-live="polite"
+                    ></p>
+
+                    <button type="submit">
+                        Post reply
+                    </button>
+                </form>
             `;
 
-            return;
-        }
+            setupReplyImagePreview();
 
-        container.innerHTML = `
-            <form id="replyForm">
-
-                <label for="replyContent">
-                    Message
-                </label>
-
-                <textarea
-                    id="replyContent"
-                    required
-                    maxlength="10000"
-                    placeholder="Write your reply..."
-                ></textarea>
-
-                <label for="replyImage">
-                    Image
-                    <span class="optional-label">
-                        optional
-                    </span>
-                </label>
-
-                <input
-                    type="file"
-                    id="replyImage"
-                    accept="image/*"
-                >
-
-                <p class="upload-help">
-                    Images must be 10 MB or smaller.
-                </p>
-
-                <div
-                    id="replyImagePreview"
-                    class="image-preview"
-                    hidden
-                ></div>
-
-                <label>
-                    <input
-                        type="checkbox"
-                        id="replyAnonymous"
-                    >
-                    Post anonymously
-                </label>
-
-                <p
-                    id="replyFormMessage"
-                    class="editor-message"
-                    aria-live="polite"
-                ></p>
-
-                <button
-                    type="submit"
-                >
-                    Post reply
-                </button>
-
-            </form>
-        `;
-
-        setupReplyImagePreview();
-
-        const form =
-            document.getElementById(
+            const form = document.getElementById(
                 "replyForm"
             );
 
-        form.addEventListener(
-            "submit",
-            async (event) => {
+            form.addEventListener("submit", async (event) => {
                 event.preventDefault();
+                await submitReply(thread);
+            });
+        } catch (error) {
+            console.error(
+                "Reply form setup error:",
+                error
+            );
 
-                await submitReply(
-                    thread
-                );
-            }
-        );
+            container.innerHTML = `
+                <p class="thread-empty">
+                    Unable to load the reply form. Please refresh.
+                </p>
+            `;
+        }
     }
 
-
     function setupReplyImagePreview() {
-        const input =
-            document.getElementById(
-                "replyImage"
-            );
+        const input = document.getElementById(
+            "replyImage"
+        );
 
-        const preview =
-            document.getElementById(
-                "replyImagePreview"
-            );
+        const preview = document.getElementById(
+            "replyImagePreview"
+        );
 
         if (!input || !preview) {
             return;
         }
 
-        input.addEventListener(
-            "change",
-            () => {
-                const file =
-                    input.files?.[0];
+        let previewUrl = null;
 
-                if (!file) {
-                    preview.innerHTML = "";
-                    preview.hidden = true;
-                    return;
-                }
+        input.addEventListener("change", () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = null;
+            }
 
-                if (
-                    file.size >
-                    10 * 1024 * 1024
-                ) {
-                    preview.innerHTML = `
-                        <p>
-                            This image is larger than 10 MB.
-                        </p>
-                    `;
+            preview.innerHTML = "";
+            preview.hidden = true;
 
-                    preview.hidden = false;
-                    input.value = "";
+            const file = input.files?.[0];
 
-                    return;
-                }
+            if (!file) {
+                return;
+            }
 
-                const url =
-                    URL.createObjectURL(
-                        file
-                    );
-
+            if (!file.type.startsWith("image/")) {
                 preview.innerHTML = `
-                    <img
-                        src="${escapeHtml(url)}"
-                        alt="Image preview"
-                    >
-                    <p>
-                        ${escapeHtml(file.name)}
-                    </p>
+                    <p>Please choose a valid image file.</p>
                 `;
 
                 preview.hidden = false;
+                input.value = "";
+                return;
             }
-        );
+
+            if (file.size > MAX_IMAGE_SIZE) {
+                preview.innerHTML = `
+                    <p>This image is larger than 10 MB.</p>
+                `;
+
+                preview.hidden = false;
+                input.value = "";
+                return;
+            }
+
+            previewUrl = URL.createObjectURL(file);
+
+            const image = document.createElement("img");
+            image.src = previewUrl;
+            image.alt = "Image preview";
+
+            const filename = document.createElement("p");
+            filename.textContent = file.name;
+
+            preview.append(image, filename);
+            preview.hidden = false;
+        });
     }
 
+    // --------------------------------------------------
+    // Submit reply and optional image
+    // --------------------------------------------------
 
     async function submitReply(thread) {
-        const contentInput =
-            document.getElementById(
-                "replyContent"
-            );
+        if (isSubmittingReply) {
+            return;
+        }
 
-        const imageInput =
-            document.getElementById(
-                "replyImage"
-            );
+        const contentInput = document.getElementById(
+            "replyContent"
+        );
 
-        const anonymousInput =
-            document.getElementById(
-                "replyAnonymous"
-            );
+        const imageInput = document.getElementById(
+            "replyImage"
+        );
 
-        const message =
-            document.getElementById(
-                "replyFormMessage"
-            );
+        const anonymousInput = document.getElementById(
+            "replyAnonymous"
+        );
 
-        const submitButton =
-            document.querySelector(
-                "#replyForm button[type='submit']"
-            );
+        const message = document.getElementById(
+            "replyFormMessage"
+        );
 
-        const content =
-            contentInput.value.trim();
+        const submitButton = document.querySelector(
+            "#replyForm button[type='submit']"
+        );
 
-        const file =
-            imageInput.files?.[0] ||
-            null;
+        if (
+            !contentInput ||
+            !imageInput ||
+            !anonymousInput ||
+            !message ||
+            !submitButton
+        ) {
+            return;
+        }
 
-        const isAnonymous =
-            anonymousInput.checked;
+        const content = contentInput.value.trim();
+        const file = imageInput.files?.[0] || null;
+        const isAnonymous = anonymousInput.checked;
 
-        if (!content) {
+        if (!content && !file) {
             message.textContent =
-                "Please write a message.";
+                "Please write a message or choose an image.";
 
             return;
         }
 
-        if (
-            file &&
-            file.size >
-                10 * 1024 * 1024
-        ) {
+        if (file && !file.type.startsWith("image/")) {
+            message.textContent =
+                "Please choose a valid image file.";
+
+            return;
+        }
+
+        if (file && file.size > MAX_IMAGE_SIZE) {
             message.textContent =
                 "That image is larger than 10 MB.";
 
             return;
         }
 
+        isSubmittingReply = true;
         submitButton.disabled = true;
-        submitButton.textContent =
-            "Posting...";
-
+        submitButton.textContent = "Posting...";
         message.textContent = "";
 
-        const {
-            data: postId,
-            error: postError
-        } = await client.rpc(
-            "create_imageboard_post",
-            {
-                p_thread_id:
-                    thread.id,
+        let postId = null;
 
-                p_content:
-                    content,
+        try {
+            // Get the authenticated user. The Storage policy
+            // requires their UUID to be the first path segment.
+            const {
+                data: { user } = {},
+                error: userError
+            } = await client.auth.getUser();
 
-                p_is_anonymous:
-                    isAnonymous,
-
-                p_has_image:
-                    Boolean(file)
+            if (userError || !user) {
+                throw new Error(
+                    "Your session may have expired. Please log in again."
+                );
             }
-        );
 
-        if (postError) {
-            console.error(
-                "Reply creation error:",
-                postError
+            const userId = user.id;
+
+            // Create the reply first.
+            const {
+                data: createdPostId,
+                error: postError
+            } = await client.rpc(
+                "create_imageboard_post",
+                {
+                    p_thread_id: thread.id,
+                    p_content: content || null,
+                    p_is_anonymous: isAnonymous,
+                    p_has_image: Boolean(file)
+                }
             );
 
-            message.textContent =
-                postError.message ||
-                "Unable to create the reply.";
+            if (postError) {
+                throw new Error(
+                    getErrorMessage(
+                        postError,
+                        "Unable to create the reply."
+                    )
+                );
+            }
 
-            submitButton.disabled = false;
-            submitButton.textContent =
-                "Post reply";
+            postId = createdPostId;
 
-            return;
-        }
+            if (!postId) {
+                throw new Error(
+                    "The reply was created, but no post ID was returned."
+                );
+            }
 
-        if (file) {
-            const extension =
-                file.name.includes(".")
-                    ? file.name
-                        .split(".")
-                        .pop()
-                        .toLowerCase()
-                    : "bin";
+            // Upload the optional image.
+            if (file) {
+                const extensionFromName =
+                    file.name.includes(".")
+                        ? file.name
+                            .split(".")
+                            .pop()
+                            .toLowerCase()
+                        : "";
 
-            const storagePath =
-                [
-                    window.crypto.randomUUID
-                        ? window.crypto.randomUUID()
-                        : `${Date.now()}-${Math.random()
-                            .toString(16)
-                            .slice(2)}`,
+                // Use the file extension when present.
+                // The original filename is not used as a path.
+                const extension =
+                    /^[a-z0-9]{1,10}$/.test(
+                        extensionFromName
+                    )
+                        ? extensionFromName
+                        : "img";
+
+                // IMPORTANT:
+                // The first folder MUST equal auth.uid()
+                // because of the existing Storage INSERT policy.
+                const storagePath = [
+                    userId,
                     thread.id,
                     `${postId}.${extension}`
                 ].join("/");
 
-            const {
-                error: uploadError
-            } = await client.storage
-                .from(STORAGE_BUCKET)
-                .upload(
-                    storagePath,
-                    file,
-                    {
-                        upsert: false
-                    }
-                );
-
-            if (uploadError) {
-                console.error(
-                    "Image upload error:",
-                    uploadError
-                );
-
-                message.textContent =
-                    "The reply was created, but the image upload failed.";
-
-                submitButton.disabled = false;
-                submitButton.textContent =
-                    "Post reply";
-
-                return;
-            }
-
-            const {
-                error: imageInsertError
-            } = await client
-                .from("post_images")
-                .insert({
-                    post_id:
-                        postId,
-
-                    storage_path:
+                const {
+                    error: uploadError
+                } = await client.storage
+                    .from(STORAGE_BUCKET)
+                    .upload(
                         storagePath,
+                        file,
+                        {
+                            upsert: false,
+                            contentType: file.type
+                        }
+                    );
 
-                    alt_text:
-                        file.name
-                });
+                if (uploadError) {
+                    console.error(
+                        "Image upload error:",
+                        uploadError
+                    );
 
-            if (imageInsertError) {
-                console.error(
-                    "Post image record error:",
-                    imageInsertError
-                );
+                    throw new Error(
+                        "Your reply was posted, but its image upload failed. Please try again."
+                    );
+                }
 
-                message.textContent =
-                    "The reply was created, but the image record could not be saved.";
+                // Save the image metadata only after Storage upload
+                // succeeds.
+                const {
+                    error: imageInsertError
+                } = await client
+                    .from("post_images")
+                    .insert({
+                        post_id: postId,
+                        storage_path: storagePath,
+                        alt_text: file.name
+                    });
 
-                submitButton.disabled = false;
-                submitButton.textContent =
-                    "Post reply";
+                if (imageInsertError) {
+                    console.error(
+                        "Post image record error:",
+                        imageInsertError
+                    );
 
-                return;
+                    throw new Error(
+                        "Your reply was posted, but its image record could not be saved."
+                    );
+                }
             }
-        }
 
-        await loadThread();
+            // Reload the thread to display the new reply.
+            await loadThread();
 
-        window.setTimeout(() => {
-            const post =
-                document.getElementById(
+            window.setTimeout(() => {
+                const post = document.getElementById(
                     `post-${postId}`
                 );
 
-            if (post) {
+                if (!post) {
+                    return;
+                }
+
                 post.scrollIntoView({
                     behavior: "smooth",
                     block: "start"
@@ -1381,20 +1261,52 @@
                         "thread-post-reference-highlight"
                     );
                 }, 1800);
+            }, 100);
+        } catch (error) {
+            console.error(
+                "Reply submission error:",
+                error
+            );
+
+            message.textContent = getErrorMessage(
+                error,
+                "Something went wrong while posting your reply."
+            );
+        } finally {
+            isSubmittingReply = false;
+
+            // The form may have been replaced by loadThread().
+            // Only update the button if it is still on the page.
+            const currentButton = document.querySelector(
+                "#replyForm button[type='submit']"
+            );
+
+            if (currentButton) {
+                currentButton.disabled = false;
+                currentButton.textContent = "Post reply";
             }
-        }, 100);
+        }
     }
 
+    // --------------------------------------------------
+    // Initialize
+    // --------------------------------------------------
+
+    if (!client) {
+        renderError("Supabase is not available.");
+        return;
+    }
+
+    if (!threadPage) {
+        console.error(
+            'Could not find the "#threadPage" element.'
+        );
+        return;
+    }
 
     ensureReportDialog();
     setupReportButtons();
     setupPostReferenceLinks();
 
-    if (!client) {
-        renderError(
-            "Supabase is not available."
-        );
-    } else {
-        loadThread();
-    }
+    loadThread();
 })();
