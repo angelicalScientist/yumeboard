@@ -1169,8 +1169,7 @@
                             .toLowerCase()
                         : "";
 
-                // Use the file extension when present.
-                // The original filename is not used as a path.
+                // FUCKING KILLLIGN MYSELF
                 const extension =
                     /^[a-z0-9]{1,10}$/.test(
                         extensionFromName
@@ -1178,11 +1177,8 @@
                         ? extensionFromName
                         : "img";
 
-                // IMPORTANT:
-                // The first folder MUST equal auth.uid()
-                // because of the existing Storage INSERT policy.
                 const storagePath = [
-                    userId,
+                    user.id,
                     thread.id,
                     `${postId}.${extension}`
                 ].join("/");
