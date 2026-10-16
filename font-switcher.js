@@ -2,57 +2,50 @@
 (() => {
     const STORAGE_KEY = "yumeboard-font";
 
-    function initFontSwitcher() {
-        const button = document.getElementById("font-toggle");
+    function applyFont(useArial) {
+        document.documentElement.classList.toggle(
+            "accessible-font",
+            useArial
+        );
 
-        function applyFont(useArial) {
-            document.documentElement.classList.toggle(
-                "accessible-font",
-                useArial
-            );
-
+        try {
             localStorage.setItem(
                 STORAGE_KEY,
                 useArial ? "arial" : "default"
             );
-
-            if (button) {
-                button.textContent = useArial
-                    ? "Use default font"
-                    : "Switch to Arial font";
-
-                button.setAttribute(
-                    "aria-pressed",
-                    String(useArial)
-                );
-            }
+        } catch (error) {
+            console.warn("Could not save font preference:", error);
         }
 
-        // Restore the saved preference.
+        const button = document.getElementById("font-toggle");
+
+        if (button) {
+            button.textContent = useArial
+                ? "🖋️ Use default font"
+                : "🖋️ Switch to Arial font";
+
+            button.setAttribute("aria-pressed", String(useArial));
+        }
+    }
+
+    // Restore the saved preference.
+    try {
         applyFont(localStorage.getItem(STORAGE_KEY) === "arial");
-
-        if (!button || button.dataset.fontSwitcherReady === "true") {
-            return;
-        }
-
-        button.dataset.fontSwitcherReady = "true";
-
-        button.addEventListener("click", (event) => {
-            event.preventDefault();
-
-            const currentlyArial =
-                document.documentElement.classList.contains("accessible-font");
-
-            applyFont(!currentlyArial);
-        });
+    } catch (error) {
+        applyFont(false);
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initFontSwitcher
-        );
-    } else {
-        initFontSwitcher();
-    }
+    // Listen for clicks even if the dropdown is rebuilt later.
+    document.addEventListener("click", (event) => {
+        const button = event.target.closest("#font-toggle");
+
+        if (!button) return;
+
+        event.preventDefault();
+
+        const useArial =
+            !document.documentElement.classList.contains("accessible-font");
+
+        applyFont(useArial);
+    });
 })();
