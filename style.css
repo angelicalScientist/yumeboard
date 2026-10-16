@@ -25,6 +25,13 @@
     size-adjust: 180%;
 }
 
+/* Accessibility: alternative font */
+html.accessible-font,
+html.accessible-font body,
+html.accessible-font body * {
+    font-family: Arial, Helvetica, sans-serif !important;
+}
+
 body {
     font-family: "Pixelated Times New Roman", serif;
     font-size: 18px;
