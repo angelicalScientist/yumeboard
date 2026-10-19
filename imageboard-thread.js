@@ -117,23 +117,25 @@
         style.id = "threadFormattingStyles";
 
         style.textContent = `
-            /* Yumeboard violet quote text */
-            .thread-post-content .thread-quotetext {
-                color: #b48ead;
-                margin: 0.25em 0;
-                overflow-wrap: anywhere;
-                white-space: normal;
-            }
-
             .thread-post-content {
                 white-space: normal;
                 overflow-wrap: anywhere;
             }
 
             .thread-post-content p {
-                white-space: pre-wrap;
+                margin: 0 0 0.75em;
             }
 
+            .thread-post-content p:last-child {
+                margin-bottom: 0;
+            }
+
+            .thread-post-content .thread-quotetext {
+                color: #b48ead;
+                margin: 0.25em 0;
+                overflow-wrap: anywhere;
+                white-space: normal;
+            }
 
             .thread-post-content .thread-quotetext p {
                 color: inherit;
@@ -144,7 +146,6 @@
                 color: inherit;
             }
 
-            /* Spoilers are hidden until activated */
             .thread-post-content .thread-spoiler {
                 display: inline;
                 color: transparent;
@@ -207,6 +208,12 @@
                 font-size: 0.9rem;
                 opacity: 0.8;
             }
+
+            .thread-post-reference-highlight {
+                outline: 2px solid #b48ead;
+                outline-offset: 4px;
+                border-radius: 4px;
+            }
         `;
 
         document.head.appendChild(style);
@@ -233,22 +240,17 @@
     // --------------------------------------------------
 
     function configureMarkdown() {
-        if (!window.marked || !window.DOMPurify) {
+        if (
+            !window.marked ||
+            typeof window.marked.parse !== "function" ||
+            !window.DOMPurify
+        ) {
             console.error(
                 "Markdown or DOMPurify failed to load."
             );
 
             return false;
         }
-
-        /*
-         * Supported formatting:
-         *
-         * - Bold, italic, strikethrough, and inline code.
-         * - >>N references to existing visible posts.
-         * - ||spoiler|| creates a clickable spoiler.
-         * - Lines beginning with > display violet quote text.
-         */
 
         window.marked.setOptions({
             gfm: true,
@@ -258,10 +260,6 @@
         window.marked.use({
             renderer: {
                 blockquote(token) {
-                    /*
-                     * Marked versions generally provide token.text.
-                     * The fallback also handles a string argument.
-                     */
                     const quoteText = typeof token === "string"
                         ? token
                         : String(token?.text ?? "");
@@ -283,10 +281,6 @@
             },
 
             extensions: [
-                // ------------------------------------------
-                // Post references: >>1, >>2, >>3, etc.
-                // ------------------------------------------
-
                 {
                     name: "postReference",
                     level: "inline",
@@ -327,14 +321,9 @@
                             }
                         }
 
-                        // Leave references to nonexistent posts as text.
                         return escapeHtml(token.raw);
                     }
                 },
-
-                // ------------------------------------------
-                // Spoilers: ||hidden text||
-                // ------------------------------------------
 
                 {
                     name: "spoiler",
@@ -361,10 +350,6 @@
                     },
 
                     renderer(token) {
-                        /*
-                         * Escape spoiler contents so they cannot inject
-                         * HTML into the rendered post.
-                         */
                         return `
                             <span
                                 class="thread-spoiler"
@@ -382,17 +367,28 @@
         return true;
     }
 
+    // FIX: Normalize newlines and explicitly preserve single
+    // line breaks when converting Markdown to HTML.
     function formatPostContent(content) {
-        if (!content) return "";
+        if (content == null || content === "") {
+            return "";
+        }
 
-        if (!window.marked || !window.DOMPurify) {
-            return escapeHtml(content).replace(/\n/g, "<br>");
+        const text = String(content).replace(/\r\n?/g, "\n");
+
+        if (
+            !window.marked ||
+            typeof window.marked.parse !== "function" ||
+            !window.DOMPurify
+        ) {
+            return escapeHtml(text).replace(/\n/g, "<br>\n");
         }
 
         try {
-            const rawHtml = window.marked.parse(
-                String(content)
-            );
+            const rawHtml = window.marked.parse(text, {
+                gfm: true,
+                breaks: true
+            });
 
             return window.DOMPurify.sanitize(rawHtml, {
                 USE_PROFILES: {
@@ -405,7 +401,7 @@
                 error
             );
 
-            return escapeHtml(content).replace(/\n/g, "<br>");
+            return escapeHtml(text).replace(/\n/g, "<br>\n");
         }
     }
 
@@ -452,14 +448,10 @@
             const quoted = text
                 .split("\n")
                 .map(line => {
-                    if (line.startsWith("> ")) {
-                        return line;
-                    }
-
+                    if (line.startsWith("> ")) return line;
                     if (line.startsWith(">")) {
                         return `> ${line.slice(1)}`;
                     }
-
                     return `> ${line}`;
                 })
                 .join("\n");
@@ -482,9 +474,7 @@
 
             const [prefix, suffix, placeholder] = wrapper;
             const insertedText = selected || placeholder;
-
-            const replacement =
-                prefix + insertedText + suffix;
+            const replacement = prefix + insertedText + suffix;
 
             textarea.setRangeText(
                 replacement,
@@ -509,9 +499,7 @@
         textarea.focus();
 
         textarea.dispatchEvent(
-            new Event("input", {
-                bubbles: true
-            })
+            new Event("input", { bubbles: true })
         );
     }
 
@@ -533,10 +521,7 @@
 
             event.preventDefault();
 
-            applyFormatting(
-                textarea,
-                button.dataset.format
-            );
+            applyFormatting(textarea, button.dataset.format);
         });
     }
 
@@ -550,7 +535,6 @@
 
             if (!(target instanceof Element)) return;
 
-            // Spoiler activation.
             const spoiler = target.closest(".thread-spoiler");
 
             if (spoiler) {
@@ -574,7 +558,6 @@
                 return;
             }
 
-            // Post-reference activation.
             const link = target.closest(
                 "[data-post-reference]"
             );
@@ -582,10 +565,7 @@
             if (!link) return;
 
             const postId = link.dataset.postReference;
-
-            const post = document.getElementById(
-                `post-${postId}`
-            );
+            const post = document.getElementById(`post-${postId}`);
 
             if (!post) return;
 
@@ -613,7 +593,6 @@
             }, 1800);
         });
 
-        // Keyboard support for spoilers.
         document.addEventListener("keydown", event => {
             if (
                 event.key !== "Enter" &&
@@ -631,8 +610,6 @@
             if (!spoiler) return;
 
             event.preventDefault();
-
-            // The click listener performs the actual toggle.
             spoiler.click();
         });
     }
@@ -642,9 +619,7 @@
     // --------------------------------------------------
 
     function ensureReportDialog() {
-        if (document.getElementById("reportDialog")) {
-            return;
-        }
+        if (document.getElementById("reportDialog")) return;
 
         const dialog = document.createElement("dialog");
 
@@ -719,14 +694,11 @@
         document.body.appendChild(dialog);
 
         document.getElementById("reportDialogCancel")
-            .addEventListener("click", () => {
-                dialog.close();
-            });
+            .addEventListener("click", () => dialog.close());
 
         document.getElementById("reportDialogForm")
             .addEventListener("submit", async event => {
                 event.preventDefault();
-
                 await submitReport();
             });
     }
@@ -741,10 +713,7 @@
 
         ensureReportDialog();
 
-        currentReportTarget = {
-            targetType,
-            targetId
-        };
+        currentReportTarget = { targetType, targetId };
 
         document.getElementById("reportReason").value = "";
         document.getElementById("reportDetails").value = "";
@@ -772,21 +741,10 @@
     async function submitReport() {
         if (!currentReportTarget || !client) return;
 
-        const reason = document.getElementById(
-            "reportReason"
-        ).value;
-
-        const details = document.getElementById(
-            "reportDetails"
-        ).value.trim();
-
-        const message = document.getElementById(
-            "reportDialogMessage"
-        );
-
-        const submitButton = document.getElementById(
-            "reportDialogSubmit"
-        );
+        const reason = document.getElementById("reportReason").value;
+        const details = document.getElementById("reportDetails").value.trim();
+        const message = document.getElementById("reportDialogMessage");
+        const submitButton = document.getElementById("reportDialogSubmit");
 
         if (!reason) {
             message.textContent = "Please choose a reason.";
@@ -808,55 +766,38 @@
             if (userError || !user) {
                 message.textContent =
                     "You must be logged in to submit a report. ♡";
-
                 return;
             }
 
-            const { error } = await client.rpc(
-                "create_report",
-                {
-                    p_target_type: currentReportTarget.targetType,
-                    p_target_id: currentReportTarget.targetId,
-                    p_reason: reason,
-                    p_details: details || null
-                }
-            );
+            const { error } = await client.rpc("create_report", {
+                p_target_type: currentReportTarget.targetType,
+                p_target_id: currentReportTarget.targetId,
+                p_reason: reason,
+                p_details: details || null
+            });
 
             if (error) {
-                console.error(
-                    "Report submission error:",
-                    error
-                );
-
+                console.error("Report submission error:", error);
                 message.textContent = getErrorMessage(
                     error,
                     "Unable to submit the report."
                 );
-
                 return;
             }
 
             submitted = true;
-
-            message.textContent =
-                "Report submitted. Thank you. ♡";
+            message.textContent = "Report submitted. Thank you. ♡";
 
             window.setTimeout(() => {
                 const currentDialog = document.getElementById(
                     "reportDialog"
                 );
 
-                if (currentDialog?.open) {
-                    currentDialog.close();
-                }
-
+                if (currentDialog?.open) currentDialog.close();
                 currentReportTarget = null;
             }, 700);
         } catch (error) {
-            console.error(
-                "Unexpected report error:",
-                error
-            );
+            console.error("Unexpected report error:", error);
 
             message.textContent =
                 "Something went wrong while submitting the report.";
@@ -927,11 +868,7 @@
                 .single();
 
             if (threadError || !thread) {
-                console.error(
-                    "Thread loading error:",
-                    threadError
-                );
-
+                console.error("Thread loading error:", threadError);
                 renderError("Unable to load this thread.");
                 return;
             }
@@ -961,35 +898,25 @@
                     )
                 `)
                 .eq("thread_id", threadId)
-                .order("created_at", {
-                    ascending: true
-                });
+                .order("created_at", { ascending: true });
 
             if (postsError) {
-                console.error(
-                    "Posts loading error:",
-                    postsError
-                );
+                console.error("Posts loading error:", postsError);
 
                 renderError(
                     "Unable to load the posts in this thread."
                 );
-
                 return;
             }
 
             const loadedPosts = posts || [];
 
             buildPostNumbers(loadedPosts);
-
             renderThread(thread, loadedPosts);
 
             await setupReplyForm(thread);
         } catch (error) {
-            console.error(
-                "Unexpected thread loading error:",
-                error
-            );
+            console.error("Unexpected thread loading error:", error);
 
             renderError(
                 "Something went wrong while loading this thread."
@@ -1002,10 +929,7 @@
     // --------------------------------------------------
 
     function renderThread(thread, posts) {
-        const visiblePosts = posts.filter(
-            post => !post.is_hidden
-        );
-
+        const visiblePosts = posts.filter(post => !post.is_hidden);
         const openingPost = visiblePosts[0] || null;
         const replies = visiblePosts.slice(1);
 
@@ -1108,9 +1032,7 @@
             ? `
                 <div class="thread-post-images">
                     ${images.map(image => {
-                        const url = getImageUrl(
-                            image.storage_path
-                        );
+                        const url = getImageUrl(image.storage_path);
 
                         if (!url) return "";
 
@@ -1197,7 +1119,6 @@
                     This thread is closed for replies.
                 </p>
             `;
-
             return;
         }
 
@@ -1213,7 +1134,6 @@
                         You must be logged in to reply.
                     </p>
                 `;
-
                 return;
             }
 
@@ -1226,41 +1146,29 @@
                         role="toolbar"
                         aria-label="Reply formatting"
                     >
-                        <button
-                            type="button"
-                            data-format="bold"
-                            title="Bold"
-                        ><strong>B</strong></button>
+                        <button type="button" data-format="bold" title="Bold">
+                            <strong>B</strong>
+                        </button>
 
-                        <button
-                            type="button"
-                            data-format="italic"
-                            title="Italic"
-                        ><em>I</em></button>
+                        <button type="button" data-format="italic" title="Italic">
+                            <em>I</em>
+                        </button>
 
-                        <button
-                            type="button"
-                            data-format="strike"
-                            title="Strikethrough"
-                        ><s>S</s></button>
+                        <button type="button" data-format="strike" title="Strikethrough">
+                            <s>S</s>
+                        </button>
 
-                        <button
-                            type="button"
-                            data-format="quote"
-                            title="Violet quote text"
-                        >❝</button>
+                        <button type="button" data-format="quote" title="Violet quote text">
+                            ❝
+                        </button>
 
-                        <button
-                            type="button"
-                            data-format="spoiler"
-                            title="Spoiler"
-                        >▰</button>
+                        <button type="button" data-format="spoiler" title="Spoiler">
+                            ▰
+                        </button>
 
-                        <button
-                            type="button"
-                            data-format="code"
-                            title="Inline code"
-                        >&lt;/&gt;</button>
+                        <button type="button" data-format="code" title="Inline code">
+                            &lt;/&gt;
+                        </button>
                     </div>
 
                     <textarea
@@ -1280,27 +1188,16 @@
                         <span class="optional-label">optional</span>
                     </label>
 
-                    <input
-                        type="file"
-                        id="replyImage"
-                        accept="image/*"
-                    >
+                    <input type="file" id="replyImage" accept="image/*">
 
                     <p class="upload-help">
                         Images must be 10 MB or smaller.
                     </p>
 
-                    <div
-                        id="replyImagePreview"
-                        class="image-preview"
-                        hidden
-                    ></div>
+                    <div id="replyImagePreview" class="image-preview" hidden></div>
 
                     <label>
-                        <input
-                            type="checkbox"
-                            id="replyAnonymous"
-                        >
+                        <input type="checkbox" id="replyAnonymous">
                         Post anonymously
                     </label>
 
@@ -1324,14 +1221,10 @@
             document.getElementById("replyForm")
                 .addEventListener("submit", async event => {
                     event.preventDefault();
-
                     await submitReply(thread);
                 });
         } catch (error) {
-            console.error(
-                "Reply form setup error:",
-                error
-            );
+            console.error("Reply form setup error:", error);
 
             container.innerHTML = `
                 <p class="thread-empty">
@@ -1343,9 +1236,7 @@
 
     function setupReplyImagePreview() {
         const input = document.getElementById("replyImage");
-        const preview = document.getElementById(
-            "replyImagePreview"
-        );
+        const preview = document.getElementById("replyImagePreview");
 
         if (!input || !preview) return;
 
@@ -1363,34 +1254,26 @@
             if (!file) return;
 
             if (!file.type.startsWith("image/")) {
-                preview.textContent =
-                    "Please choose a valid image file.";
-
+                preview.textContent = "Please choose a valid image file.";
                 preview.hidden = false;
                 input.value = "";
-
                 return;
             }
 
             if (file.size > MAX_IMAGE_SIZE) {
-                preview.textContent =
-                    "This image is larger than 10 MB.";
-
+                preview.textContent = "This image is larger than 10 MB.";
                 preview.hidden = false;
                 input.value = "";
-
                 return;
             }
 
             activePreviewUrl = URL.createObjectURL(file);
 
             const image = document.createElement("img");
-
             image.src = activePreviewUrl;
             image.alt = "Image preview";
 
             const filename = document.createElement("p");
-
             filename.textContent = file.name;
 
             preview.append(image, filename);
@@ -1410,18 +1293,9 @@
             return;
         }
 
-        const contentInput = document.getElementById(
-            "replyContent"
-        );
-
-        const imageInput = document.getElementById(
-            "replyImage"
-        );
-
-        const anonymousInput = document.getElementById(
-            "replyAnonymous"
-        );
-
+        const contentInput = document.getElementById("replyContent");
+        const imageInput = document.getElementById("replyImage");
+        const anonymousInput = document.getElementById("replyAnonymous");
         const message = getReplyMessage();
 
         if (
@@ -1433,35 +1307,30 @@
             return;
         }
 
-        const content = contentInput.value.trim();
+        // Do not trim the content itself: leading/trailing newlines
+        // and intentional line breaks should be preserved.
+        const content = contentInput.value;
         const file = imageInput.files?.[0] || null;
         const isAnonymous = anonymousInput.checked;
 
-        if (!content && !file) {
+        if (!content.trim() && !file) {
             message.textContent =
                 "Please write a message or choose an image.";
-
             return;
         }
 
         if (file && !file.type.startsWith("image/")) {
-            message.textContent =
-                "Please choose a valid image file.";
-
+            message.textContent = "Please choose a valid image file.";
             return;
         }
 
         if (file && file.size > MAX_IMAGE_SIZE) {
-            message.textContent =
-                "That image is larger than 10 MB.";
-
+            message.textContent = "That image is larger than 10 MB.";
             return;
         }
 
         isSubmittingReply = true;
-
         setSubmitButtonState(true, "Posting...");
-
         message.textContent = "";
 
         let postId = null;
@@ -1486,15 +1355,12 @@
             const {
                 data: createdPostId,
                 error: postError
-            } = await client.rpc(
-                "create_imageboard_post",
-                {
-                    p_thread_id: thread.id,
-                    p_content: content || null,
-                    p_is_anonymous: isAnonymous,
-                    p_has_image: Boolean(file)
-                }
-            );
+            } = await client.rpc("create_imageboard_post", {
+                p_thread_id: thread.id,
+                p_content: content.trim() ? content : null,
+                p_is_anonymous: isAnonymous,
+                p_has_image: Boolean(file)
+            });
 
             if (postError) {
                 throw new Error(
@@ -1540,10 +1406,7 @@
                     });
 
                 if (uploadError) {
-                    console.error(
-                        "Image upload error:",
-                        uploadError
-                    );
+                    console.error("Image upload error:", uploadError);
 
                     throw new Error(
                         "Your reply was posted, but the image upload failed. Your reply is still saved."
@@ -1572,10 +1435,7 @@
                 imageSaved = true;
             }
         } catch (error) {
-            console.error(
-                "Reply submission error:",
-                error
-            );
+            console.error("Reply submission error:", error);
 
             failureMessage = getErrorMessage(
                 error,
@@ -1591,16 +1451,12 @@
             if (failureMessage) {
                 setReplyMessage(failureMessage);
             } else if (imageSaved || !file) {
-                setReplyMessage(
-                    "Reply posted successfully! ♡"
-                );
+                setReplyMessage("Reply posted successfully! ♡");
             }
 
             if (postId) {
                 window.setTimeout(() => {
-                    const post = document.getElementById(
-                        `post-${postId}`
-                    );
+                    const post = document.getElementById(`post-${postId}`);
 
                     if (!post) return;
 
@@ -1640,24 +1496,17 @@
         renderError(
             "Supabase is not available. Please refresh the page."
         );
-
         return;
     }
 
     if (!threadPage) {
-        console.error(
-            'Could not find the "#threadPage" element.'
-        );
-
+        console.error('Could not find the "#threadPage" element.');
         return;
     }
 
     ensureFormattingStyles();
-
     ensureReportDialog();
-
     setupReportButtons();
-
     setupPostReferenceLinks();
 
     if (!configureMarkdown()) {
