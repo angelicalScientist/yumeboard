@@ -125,6 +125,16 @@
                 white-space: normal;
             }
 
+            .thread-post-content {
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+
+            .thread-post-content p {
+                white-space: pre-wrap;
+            }
+
+
             .thread-post-content .thread-quotetext p {
                 color: inherit;
                 margin: 0;
@@ -1658,4 +1668,3 @@
 
     loadThread();
 })();
-//crap
