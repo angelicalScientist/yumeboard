@@ -1,4 +1,3 @@
-
 (() => {
     "use strict";
 
@@ -40,11 +39,11 @@
 
     function escapeHtml(value) {
         return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     function formatDate(value) {
@@ -88,7 +87,9 @@
     function setReplyMessage(message) {
         const element = getReplyMessage();
 
-        if (element) element.textContent = message;
+        if (element) {
+            element.textContent = message;
+        }
     }
 
     function setSubmitButtonState(disabled, text) {
@@ -103,7 +104,105 @@
     }
 
     // --------------------------------------------------
-    // Markdown and safe formatting
+    // Formatting styles
+    // --------------------------------------------------
+
+    function ensureFormattingStyles() {
+        if (document.getElementById("threadFormattingStyles")) {
+            return;
+        }
+
+        const style = document.createElement("style");
+        style.id = "threadFormattingStyles";
+
+        style.textContent = `
+            /* Yumeboard violet quote text */
+            .thread-post-content .thread-quotetext {
+                color: #b48ead;
+                margin: 0.25em 0;
+                overflow-wrap: anywhere;
+                white-space: normal;
+            }
+
+            .thread-post-content .thread-quotetext p {
+                color: inherit;
+                margin: 0;
+            }
+
+            .thread-post-content .thread-quotetext a {
+                color: inherit;
+            }
+
+            /* Spoilers are hidden until activated */
+            .thread-post-content .thread-spoiler {
+                display: inline;
+                color: transparent;
+                background-color: #555;
+                border-radius: 3px;
+                padding: 0 3px;
+                cursor: pointer;
+                overflow-wrap: anywhere;
+                transition:
+                    color 0.15s ease,
+                    background-color 0.15s ease;
+                -webkit-box-decoration-break: clone;
+                box-decoration-break: clone;
+            }
+
+            .thread-post-content .thread-spoiler.revealed {
+                color: inherit;
+                background-color: rgba(128, 128, 128, 0.2);
+            }
+
+            .thread-post-content .thread-spoiler:focus-visible {
+                outline: 2px solid currentColor;
+                outline-offset: 2px;
+            }
+
+            .thread-post-content blockquote {
+                margin: 0.5em 0;
+                padding-left: 0.8em;
+                border-left: 2px solid currentColor;
+            }
+
+            .thread-post-content pre {
+                overflow-x: auto;
+                padding: 0.75em;
+                border-radius: 5px;
+            }
+
+            .thread-post-content code {
+                overflow-wrap: anywhere;
+            }
+
+            .thread-post-content a {
+                overflow-wrap: anywhere;
+            }
+
+            .reply-formatting-toolbar,
+            .formatting-toolbar {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.4rem;
+                margin: 0.5rem 0;
+            }
+
+            .reply-formatting-toolbar button,
+            .formatting-toolbar button {
+                cursor: pointer;
+            }
+
+            .reply-formatting-help {
+                font-size: 0.9rem;
+                opacity: 0.8;
+            }
+        `;
+
+        document.head.appendChild(style);
+    }
+
+    // --------------------------------------------------
+    // Post numbering
     // --------------------------------------------------
 
     function buildPostNumbers(posts) {
@@ -118,11 +217,16 @@
         }
     }
 
+    // --------------------------------------------------
+    // Markdown, violet quote text, and spoilers
+    // --------------------------------------------------
+
     function configureMarkdown() {
         if (!window.marked || !window.DOMPurify) {
             console.error(
                 "Markdown or DOMPurify failed to load."
             );
+
             return false;
         }
 
@@ -132,14 +236,51 @@
         });
 
         window.marked.use({
+            renderer: {
+                /*
+                 * Convert Markdown blockquotes into Yumeboard
+                 * quote lines.
+                 *
+                 * Every line retains its visible > symbol.
+                 * Inline Markdown is parsed within each line.
+                 * The final HTML is sanitized in formatPostContent().
+                 */
+                blockquote(token) {
+                    const quoteText = typeof token === "string"
+                        ? token
+                        : String(token?.text ?? "");
+
+                    return quoteText
+                        .split("\n")
+                        .map(line => {
+                            const renderedLine =
+                                window.marked.parseInline(line);
+
+                            return `
+                                <div class="thread-quotetext">
+                                    &gt; ${renderedLine}
+                                </div>
+                            `;
+                        })
+                        .join("\n");
+                }
+            },
+
             extensions: [
+                // ------------------------------------------
+                // Post references: >>1, >>2, >>3, etc.
+                // ------------------------------------------
+
                 {
                     name: "postReference",
                     level: "inline",
 
                     start(source) {
                         const index = source.indexOf(">>");
-                        return index === -1 ? undefined : index;
+
+                        return index === -1
+                            ? undefined
+                            : index;
                     },
 
                     tokenizer(source) {
@@ -155,8 +296,10 @@
                     },
 
                     renderer(token) {
-                        for (const [postId, postNumber]
-                            of currentPostNumbers) {
+                        for (
+                            const [postId, postNumber]
+                            of currentPostNumbers
+                        ) {
                             if (postNumber === token.number) {
                                 return `
                                     <a
@@ -171,13 +314,21 @@
                         return escapeHtml(token.raw);
                     }
                 },
+
+                // ------------------------------------------
+                // Spoilers: ||hidden text||
+                // ------------------------------------------
+
                 {
                     name: "spoiler",
                     level: "inline",
 
                     start(source) {
                         const index = source.indexOf("||");
-                        return index === -1 ? undefined : index;
+
+                        return index === -1
+                            ? undefined
+                            : index;
                     },
 
                     tokenizer(source) {
@@ -193,10 +344,6 @@
                     },
 
                     renderer(token) {
-                        const innerHtml = window.marked.parseInline(
-                            token.text
-                        );
-
                         return `
                             <span
                                 class="thread-spoiler"
@@ -204,7 +351,7 @@
                                 role="button"
                                 aria-expanded="false"
                                 aria-label="Spoiler. Activate to reveal."
-                            >${innerHtml}</span>
+                            >${escapeHtml(token.text)}</span>
                         `;
                     }
                 }
@@ -222,16 +369,28 @@
         }
 
         try {
-            const rawHtml = window.marked.parse(String(content));
+            const rawHtml = window.marked.parse(
+                String(content)
+            );
 
             return window.DOMPurify.sanitize(rawHtml, {
-                USE_PROFILES: { html: true }
+                USE_PROFILES: {
+                    html: true
+                }
             });
         } catch (error) {
-            console.error("Markdown rendering error:", error);
+            console.error(
+                "Markdown rendering error:",
+                error
+            );
+
             return escapeHtml(content).replace(/\n/g, "<br>");
         }
     }
+
+    // --------------------------------------------------
+    // Formatting toolbar
+    // --------------------------------------------------
 
     function applyFormatting(textarea, format) {
         if (!textarea) return;
@@ -241,38 +400,47 @@
         const selected = textarea.value.slice(start, end);
 
         const wrappers = {
-            bold: ["**", "**"],
-            italic: ["*", "*"],
-            strike: ["~~", "~~"],
-            spoiler: ["||", "||"],
-            code: ["`", "`"]
+            bold: ["**", "**", "bold text"],
+            italic: ["*", "*", "italic text"],
+            strike: ["~~", "~~", "strikethrough text"],
+            spoiler: ["||", "||", "spoiler text"],
+            code: ["`", "`", "code"]
         };
 
         if (format === "quote") {
-            const lineStart = textarea.value.lastIndexOf(
-                "\n",
-                Math.max(0, start - 1)
-            ) + 1;
+            const value = textarea.value;
 
-            const lineEndIndex = textarea.value.indexOf("\n", end);
+            const lineStart =
+                value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+
+            const lineEndIndex = value.indexOf("\n", end);
+
             const lineEnd = lineEndIndex === -1
-                ? textarea.value.length
+                ? value.length
                 : lineEndIndex;
 
             const selectionEnd = selected
                 ? end
                 : lineEnd;
 
-            const text = textarea.value.slice(
+            const text = value.slice(
                 lineStart,
                 selectionEnd
             );
 
             const quoted = text
                 .split("\n")
-                .map(line => line.startsWith("> ")
-                    ? line
-                    : `> ${line}`)
+                .map(line => {
+                    if (line.startsWith("> ")) {
+                        return line;
+                    }
+
+                    if (line.startsWith(">")) {
+                        return `> ${line.slice(1)}`;
+                    }
+
+                    return `> ${line}`;
+                })
                 .join("\n");
 
             textarea.setRangeText(
@@ -281,13 +449,21 @@
                 selectionEnd,
                 "select"
             );
+
+            textarea.setSelectionRange(
+                lineStart,
+                lineStart + quoted.length
+            );
         } else {
             const wrapper = wrappers[format];
 
             if (!wrapper) return;
 
-            const [prefix, suffix] = wrapper;
-            const replacement = prefix + selected + suffix;
+            const [prefix, suffix, placeholder] = wrapper;
+            const insertedText = selected || placeholder;
+
+            const replacement =
+                prefix + insertedText + suffix;
 
             textarea.setRangeText(
                 replacement,
@@ -299,14 +475,22 @@
             if (!selected) {
                 textarea.setSelectionRange(
                     start + prefix.length,
-                    start + prefix.length
+                    start + prefix.length + placeholder.length
+                );
+            } else {
+                textarea.setSelectionRange(
+                    start + prefix.length,
+                    start + prefix.length + selected.length
                 );
             }
         }
 
         textarea.focus();
+
         textarea.dispatchEvent(
-            new Event("input", { bubbles: true })
+            new Event("input", {
+                bubbles: true
+            })
         );
     }
 
@@ -315,7 +499,7 @@
             ".reply-formatting-toolbar"
         );
 
-        if (!toolbar) return;
+        if (!toolbar || !textarea) return;
 
         toolbar.addEventListener("click", event => {
             const target = event.target;
@@ -324,14 +508,19 @@
 
             const button = target.closest("[data-format]");
 
-            if (!button) return;
+            if (!button || !toolbar.contains(button)) return;
 
-            applyFormatting(textarea, button.dataset.format);
+            event.preventDefault();
+
+            applyFormatting(
+                textarea,
+                button.dataset.format
+            );
         });
     }
 
     // --------------------------------------------------
-    // Post references and spoilers
+    // Post references and spoiler interactions
     // --------------------------------------------------
 
     function setupPostReferenceLinks() {
@@ -340,12 +529,14 @@
 
             if (!(target instanceof Element)) return;
 
+            // Spoiler activation.
             const spoiler = target.closest(".thread-spoiler");
 
             if (spoiler) {
                 spoiler.classList.toggle("revealed");
 
-                const revealed = spoiler.classList.contains("revealed");
+                const revealed =
+                    spoiler.classList.contains("revealed");
 
                 spoiler.setAttribute(
                     "aria-expanded",
@@ -355,19 +546,25 @@
                 spoiler.setAttribute(
                     "aria-label",
                     revealed
-                        ? "Spoiler revealed"
-                        : "Spoiler. Activate to reveal."
+                        ? "Spoiler revealed. Activate to hide."
+                        : "Spoiler hidden. Activate to reveal."
                 );
 
                 return;
             }
 
-            const link = target.closest("[data-post-reference]");
+            // Post-reference activation.
+            const link = target.closest(
+                "[data-post-reference]"
+            );
 
             if (!link) return;
 
             const postId = link.dataset.postReference;
-            const post = document.getElementById(`post-${postId}`);
+
+            const post = document.getElementById(
+                `post-${postId}`
+            );
 
             if (!post) return;
 
@@ -395,19 +592,25 @@
             }, 1800);
         });
 
+        // Keyboard support for spoilers.
         document.addEventListener("keydown", event => {
             if (
-                (event.key !== "Enter" && event.key !== " ") ||
-                !(event.target instanceof Element)
+                event.key !== "Enter" &&
+                event.key !== " "
             ) {
                 return;
             }
 
-            const spoiler = event.target.closest(".thread-spoiler");
+            if (!(event.target instanceof Element)) return;
+
+            const spoiler = event.target.closest(
+                ".thread-spoiler"
+            );
 
             if (!spoiler) return;
 
             event.preventDefault();
+
             spoiler.click();
         });
     }
@@ -417,7 +620,9 @@
     // --------------------------------------------------
 
     function ensureReportDialog() {
-        if (document.getElementById("reportDialog")) return;
+        if (document.getElementById("reportDialog")) {
+            return;
+        }
 
         const dialog = document.createElement("dialog");
 
@@ -481,9 +686,10 @@
                         id="reportDialogCancel"
                     >Cancel</button>
 
-                    <button type="submit" id="reportDialogSubmit">
-                        Submit report
-                    </button>
+                    <button
+                        type="submit"
+                        id="reportDialogSubmit"
+                    >Submit report</button>
                 </div>
             </form>
         `;
@@ -491,27 +697,39 @@
         document.body.appendChild(dialog);
 
         document.getElementById("reportDialogCancel")
-            .addEventListener("click", () => dialog.close());
+            .addEventListener("click", () => {
+                dialog.close();
+            });
 
         document.getElementById("reportDialogForm")
             .addEventListener("submit", async event => {
                 event.preventDefault();
+
                 await submitReport();
             });
     }
 
     function openReportDialog(targetType, targetId) {
-        if (!REPORT_TARGET_TYPES.has(targetType) || !targetId) {
+        if (
+            !REPORT_TARGET_TYPES.has(targetType) ||
+            !targetId
+        ) {
             return;
         }
 
         ensureReportDialog();
 
-        currentReportTarget = { targetType, targetId };
+        currentReportTarget = {
+            targetType,
+            targetId
+        };
 
         document.getElementById("reportReason").value = "";
         document.getElementById("reportDetails").value = "";
-        document.getElementById("reportDialogMessage").textContent = "";
+
+        document.getElementById(
+            "reportDialogMessage"
+        ).textContent = "";
 
         const submitButton = document.getElementById(
             "reportDialogSubmit"
@@ -532,11 +750,21 @@
     async function submitReport() {
         if (!currentReportTarget || !client) return;
 
-        const reason = document.getElementById("reportReason").value;
-        const details = document.getElementById("reportDetails")
-            .value.trim();
-        const message = document.getElementById("reportDialogMessage");
-        const submitButton = document.getElementById("reportDialogSubmit");
+        const reason = document.getElementById(
+            "reportReason"
+        ).value;
+
+        const details = document.getElementById(
+            "reportDetails"
+        ).value.trim();
+
+        const message = document.getElementById(
+            "reportDialogMessage"
+        );
+
+        const submitButton = document.getElementById(
+            "reportDialogSubmit"
+        );
 
         if (!reason) {
             message.textContent = "Please choose a reason.";
@@ -558,37 +786,56 @@
             if (userError || !user) {
                 message.textContent =
                     "You must be logged in to submit a report. ♡";
+
                 return;
             }
 
-            const { error } = await client.rpc("create_report", {
-                p_target_type: currentReportTarget.targetType,
-                p_target_id: currentReportTarget.targetId,
-                p_reason: reason,
-                p_details: details || null
-            });
+            const { error } = await client.rpc(
+                "create_report",
+                {
+                    p_target_type: currentReportTarget.targetType,
+                    p_target_id: currentReportTarget.targetId,
+                    p_reason: reason,
+                    p_details: details || null
+                }
+            );
 
             if (error) {
-                console.error("Report submission error:", error);
+                console.error(
+                    "Report submission error:",
+                    error
+                );
+
                 message.textContent = getErrorMessage(
                     error,
                     "Unable to submit the report."
                 );
+
                 return;
             }
 
             submitted = true;
-            message.textContent = "Report submitted. Thank you. ♡";
+
+            message.textContent =
+                "Report submitted. Thank you. ♡";
 
             window.setTimeout(() => {
-                const dialog = document.getElementById("reportDialog");
+                const currentDialog = document.getElementById(
+                    "reportDialog"
+                );
 
-                if (dialog?.open) dialog.close();
+                if (currentDialog?.open) {
+                    currentDialog.close();
+                }
 
                 currentReportTarget = null;
             }, 700);
         } catch (error) {
-            console.error("Unexpected report error:", error);
+            console.error(
+                "Unexpected report error:",
+                error
+            );
+
             message.textContent =
                 "Something went wrong while submitting the report.";
         } finally {
@@ -658,7 +905,11 @@
                 .single();
 
             if (threadError || !thread) {
-                console.error("Thread loading error:", threadError);
+                console.error(
+                    "Thread loading error:",
+                    threadError
+                );
+
                 renderError("Unable to load this thread.");
                 return;
             }
@@ -688,23 +939,39 @@
                     )
                 `)
                 .eq("thread_id", threadId)
-                .order("created_at", { ascending: true });
+                .order("created_at", {
+                    ascending: true
+                });
 
             if (postsError) {
-                console.error("Posts loading error:", postsError);
-                renderError("Unable to load the posts in this thread.");
+                console.error(
+                    "Posts loading error:",
+                    postsError
+                );
+
+                renderError(
+                    "Unable to load the posts in this thread."
+                );
+
                 return;
             }
 
             const loadedPosts = posts || [];
 
             buildPostNumbers(loadedPosts);
+
             renderThread(thread, loadedPosts);
 
             await setupReplyForm(thread);
         } catch (error) {
-            console.error("Unexpected thread loading error:", error);
-            renderError("Something went wrong while loading this thread.");
+            console.error(
+                "Unexpected thread loading error:",
+                error
+            );
+
+            renderError(
+                "Something went wrong while loading this thread."
+            );
         }
     }
 
@@ -713,7 +980,10 @@
     // --------------------------------------------------
 
     function renderThread(thread, posts) {
-        const visiblePosts = posts.filter(post => !post.is_hidden);
+        const visiblePosts = posts.filter(
+            post => !post.is_hidden
+        );
+
         const openingPost = visiblePosts[0] || null;
         const replies = visiblePosts.slice(1);
 
@@ -724,16 +994,22 @@
         const statuses = [];
 
         if (thread.is_locked) {
-            statuses.push('<span class="thread-status">Locked</span>');
+            statuses.push(
+                '<span class="thread-status">Locked</span>'
+            );
         }
 
         if (thread.is_archived) {
-            statuses.push('<span class="thread-status">Archived</span>');
+            statuses.push(
+                '<span class="thread-status">Archived</span>'
+            );
         }
 
         threadPage.innerHTML = `
             <section class="thread-header">
-                <p class="board-slug">/${escapeHtml(boardSlug)}/</p>
+                <p class="board-slug">
+                    /${escapeHtml(boardSlug)}/
+                </p>
 
                 <h2>${escapeHtml(thread.title)}</h2>
 
@@ -776,7 +1052,9 @@
                 <h2>Reply</h2>
 
                 <div id="replyFormContainer">
-                    <p class="thread-empty">Loading reply form... ♡</p>
+                    <p class="thread-empty">
+                        Loading reply form... ♡
+                    </p>
                 </div>
             </section>
         `;
@@ -808,7 +1086,9 @@
             ? `
                 <div class="thread-post-images">
                     ${images.map(image => {
-                        const url = getImageUrl(image.storage_path);
+                        const url = getImageUrl(
+                            image.storage_path
+                        );
 
                         if (!url) return "";
 
@@ -821,7 +1101,9 @@
                             >
                                 <img
                                     src="${escapeHtml(url)}"
-                                    alt="${escapeHtml(image.alt_text || "Attached image")}"
+                                    alt="${escapeHtml(
+                                        image.alt_text || "Attached image"
+                                    )}"
                                     class="thread-post-image"
                                     loading="lazy"
                                 >
@@ -881,14 +1163,19 @@
     // --------------------------------------------------
 
     async function setupReplyForm(thread) {
-        const container = document.getElementById("replyFormContainer");
+        const container = document.getElementById(
+            "replyFormContainer"
+        );
 
         if (!container) return;
 
         if (thread.is_locked || thread.is_archived) {
             container.innerHTML = `
-                <p class="thread-empty">This thread is closed for replies.</p>
+                <p class="thread-empty">
+                    This thread is closed for replies.
+                </p>
             `;
+
             return;
         }
 
@@ -900,8 +1187,11 @@
 
             if (error || !user) {
                 container.innerHTML = `
-                    <p class="thread-empty">You must be logged in to reply.</p>
+                    <p class="thread-empty">
+                        You must be logged in to reply.
+                    </p>
                 `;
+
                 return;
             }
 
@@ -914,12 +1204,41 @@
                         role="toolbar"
                         aria-label="Reply formatting"
                     >
-                        <button type="button" data-format="bold" title="Bold"><strong>B</strong></button>
-                        <button type="button" data-format="italic" title="Italic"><em>I</em></button>
-                        <button type="button" data-format="strike" title="Strikethrough"><s>S</s></button>
-                        <button type="button" data-format="quote" title="Quote">❝</button>
-                        <button type="button" data-format="spoiler" title="Spoiler">▰</button>
-                        <button type="button" data-format="code" title="Inline code">&lt;/&gt;</button>
+                        <button
+                            type="button"
+                            data-format="bold"
+                            title="Bold"
+                        ><strong>B</strong></button>
+
+                        <button
+                            type="button"
+                            data-format="italic"
+                            title="Italic"
+                        ><em>I</em></button>
+
+                        <button
+                            type="button"
+                            data-format="strike"
+                            title="Strikethrough"
+                        ><s>S</s></button>
+
+                        <button
+                            type="button"
+                            data-format="quote"
+                            title="Violet quote text"
+                        >❝</button>
+
+                        <button
+                            type="button"
+                            data-format="spoiler"
+                            title="Spoiler"
+                        >▰</button>
+
+                        <button
+                            type="button"
+                            data-format="code"
+                            title="Inline code"
+                        >&lt;/&gt;</button>
                     </div>
 
                     <textarea
@@ -930,24 +1249,36 @@
                     ></textarea>
 
                     <p class="reply-formatting-help">
-                        Select text and use a button, or click one to start formatting.
-                        Markdown is supported.
+                        Select text and use a button, or click one to start
+                        formatting. Start a line with &gt; for violet quote text.
                     </p>
 
                     <label for="replyImage">
-                        Image <span class="optional-label">optional</span>
+                        Image
+                        <span class="optional-label">optional</span>
                     </label>
 
-                    <input type="file" id="replyImage" accept="image/*">
+                    <input
+                        type="file"
+                        id="replyImage"
+                        accept="image/*"
+                    >
 
                     <p class="upload-help">
                         Images must be 10 MB or smaller.
                     </p>
 
-                    <div id="replyImagePreview" class="image-preview" hidden></div>
+                    <div
+                        id="replyImagePreview"
+                        class="image-preview"
+                        hidden
+                    ></div>
 
                     <label>
-                        <input type="checkbox" id="replyAnonymous">
+                        <input
+                            type="checkbox"
+                            id="replyAnonymous"
+                        >
                         Post anonymously
                     </label>
 
@@ -971,10 +1302,14 @@
             document.getElementById("replyForm")
                 .addEventListener("submit", async event => {
                     event.preventDefault();
+
                     await submitReply(thread);
                 });
         } catch (error) {
-            console.error("Reply form setup error:", error);
+            console.error(
+                "Reply form setup error:",
+                error
+            );
 
             container.innerHTML = `
                 <p class="thread-empty">
@@ -986,7 +1321,9 @@
 
     function setupReplyImagePreview() {
         const input = document.getElementById("replyImage");
-        const preview = document.getElementById("replyImagePreview");
+        const preview = document.getElementById(
+            "replyImagePreview"
+        );
 
         if (!input || !preview) return;
 
@@ -1004,26 +1341,34 @@
             if (!file) return;
 
             if (!file.type.startsWith("image/")) {
-                preview.textContent = "Please choose a valid image file.";
+                preview.textContent =
+                    "Please choose a valid image file.";
+
                 preview.hidden = false;
                 input.value = "";
+
                 return;
             }
 
             if (file.size > MAX_IMAGE_SIZE) {
-                preview.textContent = "This image is larger than 10 MB.";
+                preview.textContent =
+                    "This image is larger than 10 MB.";
+
                 preview.hidden = false;
                 input.value = "";
+
                 return;
             }
 
             activePreviewUrl = URL.createObjectURL(file);
 
             const image = document.createElement("img");
+
             image.src = activePreviewUrl;
             image.alt = "Image preview";
 
             const filename = document.createElement("p");
+
             filename.textContent = file.name;
 
             preview.append(image, filename);
@@ -1043,12 +1388,26 @@
             return;
         }
 
-        const contentInput = document.getElementById("replyContent");
-        const imageInput = document.getElementById("replyImage");
-        const anonymousInput = document.getElementById("replyAnonymous");
+        const contentInput = document.getElementById(
+            "replyContent"
+        );
+
+        const imageInput = document.getElementById(
+            "replyImage"
+        );
+
+        const anonymousInput = document.getElementById(
+            "replyAnonymous"
+        );
+
         const message = getReplyMessage();
 
-        if (!contentInput || !imageInput || !anonymousInput || !message) {
+        if (
+            !contentInput ||
+            !imageInput ||
+            !anonymousInput ||
+            !message
+        ) {
             return;
         }
 
@@ -1057,22 +1416,30 @@
         const isAnonymous = anonymousInput.checked;
 
         if (!content && !file) {
-            message.textContent = "Please write a message or choose an image.";
+            message.textContent =
+                "Please write a message or choose an image.";
+
             return;
         }
 
         if (file && !file.type.startsWith("image/")) {
-            message.textContent = "Please choose a valid image file.";
+            message.textContent =
+                "Please choose a valid image file.";
+
             return;
         }
 
         if (file && file.size > MAX_IMAGE_SIZE) {
-            message.textContent = "That image is larger than 10 MB.";
+            message.textContent =
+                "That image is larger than 10 MB.";
+
             return;
         }
 
         isSubmittingReply = true;
+
         setSubmitButtonState(true, "Posting...");
+
         message.textContent = "";
 
         let postId = null;
@@ -1097,23 +1464,31 @@
             const {
                 data: createdPostId,
                 error: postError
-            } = await client.rpc("create_imageboard_post", {
-                p_thread_id: thread.id,
-                p_content: content || null,
-                p_is_anonymous: isAnonymous,
-                p_has_image: Boolean(file)
-            });
+            } = await client.rpc(
+                "create_imageboard_post",
+                {
+                    p_thread_id: thread.id,
+                    p_content: content || null,
+                    p_is_anonymous: isAnonymous,
+                    p_has_image: Boolean(file)
+                }
+            );
 
             if (postError) {
                 throw new Error(
-                    getErrorMessage(postError, "Unable to create the reply.")
+                    getErrorMessage(
+                        postError,
+                        "Unable to create the reply."
+                    )
                 );
             }
 
             postId = createdPostId;
 
             if (!postId) {
-                throw new Error("The server did not return the new post ID.");
+                throw new Error(
+                    "The server did not return the new post ID."
+                );
             }
 
             replyCreated = true;
@@ -1123,7 +1498,9 @@
                     ? file.name.split(".").pop().toLowerCase()
                     : "";
 
-                const extension = /^[a-z0-9]{1,10}$/.test(extensionFromName)
+                const extension = /^[a-z0-9]{1,10}$/.test(
+                    extensionFromName
+                )
                     ? extensionFromName
                     : "img";
 
@@ -1141,7 +1518,10 @@
                     });
 
                 if (uploadError) {
-                    console.error("Image upload error:", uploadError);
+                    console.error(
+                        "Image upload error:",
+                        uploadError
+                    );
 
                     throw new Error(
                         "Your reply was posted, but the image upload failed. Your reply is still saved."
@@ -1170,7 +1550,10 @@
                 imageSaved = true;
             }
         } catch (error) {
-            console.error("Reply submission error:", error);
+            console.error(
+                "Reply submission error:",
+                error
+            );
 
             failureMessage = getErrorMessage(
                 error,
@@ -1186,12 +1569,16 @@
             if (failureMessage) {
                 setReplyMessage(failureMessage);
             } else if (imageSaved || !file) {
-                setReplyMessage("Reply posted successfully! ♡");
+                setReplyMessage(
+                    "Reply posted successfully! ♡"
+                );
             }
 
             if (postId) {
                 window.setTimeout(() => {
-                    const post = document.getElementById(`post-${postId}`);
+                    const post = document.getElementById(
+                        `post-${postId}`
+                    );
 
                     if (!post) return;
 
@@ -1228,17 +1615,27 @@
     // --------------------------------------------------
 
     if (!client) {
-        renderError("Supabase is not available. Please refresh the page.");
+        renderError(
+            "Supabase is not available. Please refresh the page."
+        );
+
         return;
     }
 
     if (!threadPage) {
-        console.error('Could not find the "#threadPage" element.');
+        console.error(
+            'Could not find the "#threadPage" element.'
+        );
+
         return;
     }
 
+    ensureFormattingStyles();
+
     ensureReportDialog();
+
     setupReportButtons();
+
     setupPostReferenceLinks();
 
     if (!configureMarkdown()) {
