@@ -1,54 +1,74 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="favicon.png" type="image/png">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>New Thread</title>
-<script src="font-switcher.js"></script>
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+
+    <script src="font-switcher.js"></script>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style-dark.css">
+
+    <style>
+        .formatting-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.5rem 0;
+        }
+
+        .formatting-toolbar button {
+            padding: 0.4rem 0.7rem;
+            cursor: pointer;
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 6px;
+            background: var(--card-background, transparent);
+            color: inherit;
+            font: inherit;
+        }
+
+        .formatting-toolbar button:hover {
+            opacity: 0.8;
+        }
+
+        .formatting-help {
+            margin-top: 0.35rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 
 <body>
 
     <header class="site-header">
-        <a href="dashboard.html" class="site-logo-link" aria-label="Go to Yumeboard's dashboard">
+        <a
+            href="dashboard.html"
+            class="site-logo-link"
+            aria-label="Go to Yumeboard's dashboard"
+        >
             <img src="logotype.png" alt="Yumeboard" class="site-logo">
         </a>
 
         <h1>♡ New Thread ♡</h1>
 
-        <p>
-            Start a new thread on the imageboard!
-        </p>
+        <p>Start a new thread on the imageboard!</p>
     </header>
 
-
     <main class="imageboard-page">
-
         <section class="new-thread-box">
 
             <div id="boardInfo">
-                <p class="loading-message">
-                    Loading board... ♡
-                </p>
+                <p class="loading-message">Loading board... ♡</p>
             </div>
-
 
             <form id="newThreadForm" hidden>
 
-                <label for="threadTitle">
-                    Thread title
-                </label>
+                <label for="threadTitle">Thread title</label>
 
                 <input
                     type="text"
@@ -59,7 +79,6 @@
                     autocomplete="off"
                     placeholder="Give your thread a title..."
                 >
-
 
                 <label for="threadImage">
                     Image <span aria-hidden="true">*</span>
@@ -78,7 +97,6 @@
                     Maximum file size: 10 MB.
                 </p>
 
-
                 <div
                     id="imagePreview"
                     class="image-preview"
@@ -93,13 +111,40 @@
                     <p id="imagePreviewName"></p>
                 </div>
 
-
                 <label for="threadContent">
                     Message
-                    <span class="optional-label">
-                        optional
-                    </span>
+                    <span class="optional-label">optional</span>
                 </label>
+
+                <div
+                    class="formatting-toolbar"
+                    role="toolbar"
+                    aria-label="Message formatting"
+                >
+                    <button type="button" data-format="bold" title="Bold">
+                        <strong>B</strong>
+                    </button>
+
+                    <button type="button" data-format="italic" title="Italic">
+                        <em>I</em>
+                    </button>
+
+                    <button type="button" data-format="strike" title="Strikethrough">
+                        <s>S</s>
+                    </button>
+
+                    <button type="button" data-format="spoiler" title="Spoiler">
+                        Spoiler
+                    </button>
+
+                    <button type="button" data-format="quote" title="Quote">
+                        Quote
+                    </button>
+
+                    <button type="button" data-format="code" title="Inline code">
+                        Code
+                    </button>
+                </div>
 
                 <textarea
                     id="threadContent"
@@ -109,6 +154,14 @@
                     placeholder="Say something about your post... ♡"
                 ></textarea>
 
+                <p class="formatting-help">
+                    Select text and use a formatting button, or type Markdown:
+                    <code>**bold**</code>,
+                    <code>*italic*</code>,
+                    <code>~~strike~~</code>,
+                    <code>||spoiler||</code>,
+                    <code>&gt; quote</code>.
+                </p>
 
                 <p
                     id="threadMessage"
@@ -117,25 +170,17 @@
                 ></p>
 
                 <label class="imageboard-anonymous-option">
-                    <input
-                        type="checkbox"
-                        id="anonymousPost"
-                    >
+                    <input type="checkbox" id="anonymousPost">
                     Post anonymously
                 </label>
+
                 <div class="new-thread-actions">
 
-                    <a
-                        id="cancelThreadButton"
-                        href="imageboard.html"
-                    >
+                    <a id="cancelThreadButton" href="imageboard.html">
                         ← Cancel
                     </a>
 
-                    <button
-                        type="submit"
-                        id="createThreadButton"
-                    >
+                    <button type="submit" id="createThreadButton">
                         ✨ Create thread
                     </button>
 
@@ -144,9 +189,21 @@
             </form>
 
         </section>
-
     </main>
 
+    <footer class="site-footer">
+        <div class="site-footer-links">
+            <a href="terms.html">Terms of Service</a>
+            <span aria-hidden="true">♡</span>
+            <a href="privacy.html">Privacy Policy</a>
+            <span aria-hidden="true">♡</span>
+            <a href="guidelines.html">Community Guidelines</a>
+            <span aria-hidden="true">♡</span>
+            <a href="contact.html">Contact</a>
+        </div>
+
+        <p class="site-footer-copy">© 2026 Yumeboard</p>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase.js"></script>
@@ -154,19 +211,5 @@
     <script src="./imageboard-new-thread.js"></script>
 
 </body>
-<footer class="site-footer">
-    <div class="site-footer-links">
-        <a href="terms.html">Terms of Service</a>
-        <span aria-hidden="true">♡</span>
-        <a href="privacy.html">Privacy Policy</a>
-        <span aria-hidden="true">♡</span>
-        <a href="guidelines.html">Community Guidelines</a>
-        <span aria-hidden="true">♡</span>
-        <a href="contact.html">Contact</a>
-    </div>
-
-    <p class="site-footer-copy">
-        © 2026 Yumeboard
-    </p>
-</footer>
 </html>
+```

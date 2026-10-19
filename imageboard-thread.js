@@ -52,17 +52,13 @@
 
         const date = new Date(value);
 
-        if (Number.isNaN(date.getTime())) {
-            return "";
-        }
-
-        return date.toLocaleString();
+        return Number.isNaN(date.getTime())
+            ? ""
+            : date.toLocaleString();
     }
 
     function getImageUrl(storagePath) {
-        if (!storagePath || !client) {
-            return null;
-        }
+        if (!storagePath || !client) return null;
 
         const { data } = client.storage
             .from(STORAGE_BUCKET)
@@ -86,17 +82,13 @@
     }
 
     function getReplyMessage() {
-        return document.getElementById(
-            "replyFormMessage"
-        );
+        return document.getElementById("replyFormMessage");
     }
 
     function setReplyMessage(message) {
         const element = getReplyMessage();
 
-        if (element) {
-            element.textContent = message;
-        }
+        if (element) element.textContent = message;
     }
 
     function setSubmitButtonState(disabled, text) {
@@ -111,7 +103,7 @@
     }
 
     // --------------------------------------------------
-    // Post numbers and references
+    // Markdown and safe formatting
     // --------------------------------------------------
 
     function buildPostNumbers(posts) {
@@ -122,80 +114,260 @@
         for (const post of posts) {
             if (post.is_hidden) continue;
 
-            currentPostNumbers.set(post.id, number);
-            number += 1;
+            currentPostNumbers.set(post.id, number++);
         }
+    }
+
+    function configureMarkdown() {
+        if (!window.marked || !window.DOMPurify) {
+            console.error(
+                "Markdown or DOMPurify failed to load."
+            );
+            return false;
+        }
+
+        window.marked.setOptions({
+            gfm: true,
+            breaks: true
+        });
+
+        window.marked.use({
+            extensions: [
+                {
+                    name: "postReference",
+                    level: "inline",
+
+                    start(source) {
+                        const index = source.indexOf(">>");
+                        return index === -1 ? undefined : index;
+                    },
+
+                    tokenizer(source) {
+                        const match = /^>>([0-9]+)/.exec(source);
+
+                        if (!match) return undefined;
+
+                        return {
+                            type: "postReference",
+                            raw: match[0],
+                            number: Number(match[1])
+                        };
+                    },
+
+                    renderer(token) {
+                        for (const [postId, postNumber]
+                            of currentPostNumbers) {
+                            if (postNumber === token.number) {
+                                return `
+                                    <a
+                                        href="#post-${escapeHtml(postId)}"
+                                        class="thread-post-reference"
+                                        data-post-reference="${escapeHtml(postId)}"
+                                    >&gt;&gt;${token.number}</a>
+                                `;
+                            }
+                        }
+
+                        return escapeHtml(token.raw);
+                    }
+                },
+                {
+                    name: "spoiler",
+                    level: "inline",
+
+                    start(source) {
+                        const index = source.indexOf("||");
+                        return index === -1 ? undefined : index;
+                    },
+
+                    tokenizer(source) {
+                        const match = /^\|\|([\s\S]+?)\|\|/.exec(source);
+
+                        if (!match) return undefined;
+
+                        return {
+                            type: "spoiler",
+                            raw: match[0],
+                            text: match[1]
+                        };
+                    },
+
+                    renderer(token) {
+                        const innerHtml = window.marked.parseInline(
+                            token.text
+                        );
+
+                        return `
+                            <span
+                                class="thread-spoiler"
+                                tabindex="0"
+                                role="button"
+                                aria-expanded="false"
+                                aria-label="Spoiler. Activate to reveal."
+                            >${innerHtml}</span>
+                        `;
+                    }
+                }
+            ]
+        });
+
+        return true;
     }
 
     function formatPostContent(content) {
         if (!content) return "";
 
-        return String(content)
-            .split("\n")
-            .map(formatPostLine)
-            .join("<br>");
-    }
-
-    function formatPostLine(line) {
-        const escaped = escapeHtml(line);
-
-        const withReferences = escaped.replace(
-            /&gt;&gt;([0-9]+)/g,
-            (match, numberText) => {
-                const number = Number(numberText);
-
-                let referencedPostId = null;
-
-                for (const [postId, postNumber]
-                    of currentPostNumbers) {
-                    if (postNumber === number) {
-                        referencedPostId = postId;
-                        break;
-                    }
-                }
-
-                if (!referencedPostId) {
-                    return match;
-                }
-
-                return `
-                    <a
-                        href="#post-${escapeHtml(referencedPostId)}"
-                        class="thread-post-reference"
-                        data-post-reference="${escapeHtml(referencedPostId)}"
-                    >&gt;&gt;${number}</a>
-                `;
-            }
-        );
-
-        if (withReferences.startsWith("&gt;")) {
-            return `
-                <span class="thread-quotetext">
-                    ${withReferences}
-                </span>
-            `;
+        if (!window.marked || !window.DOMPurify) {
+            return escapeHtml(content).replace(/\n/g, "<br>");
         }
 
-        return withReferences;
+        try {
+            const rawHtml = window.marked.parse(String(content));
+
+            return window.DOMPurify.sanitize(rawHtml, {
+                USE_PROFILES: { html: true }
+            });
+        } catch (error) {
+            console.error("Markdown rendering error:", error);
+            return escapeHtml(content).replace(/\n/g, "<br>");
+        }
     }
 
-    function setupPostReferenceLinks() {
-        document.addEventListener("click", (event) => {
+    function applyFormatting(textarea, format) {
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.slice(start, end);
+
+        const wrappers = {
+            bold: ["**", "**"],
+            italic: ["*", "*"],
+            strike: ["~~", "~~"],
+            spoiler: ["||", "||"],
+            code: ["`", "`"]
+        };
+
+        if (format === "quote") {
+            const lineStart = textarea.value.lastIndexOf(
+                "\n",
+                Math.max(0, start - 1)
+            ) + 1;
+
+            const lineEndIndex = textarea.value.indexOf("\n", end);
+            const lineEnd = lineEndIndex === -1
+                ? textarea.value.length
+                : lineEndIndex;
+
+            const selectionEnd = selected
+                ? end
+                : lineEnd;
+
+            const text = textarea.value.slice(
+                lineStart,
+                selectionEnd
+            );
+
+            const quoted = text
+                .split("\n")
+                .map(line => line.startsWith("> ")
+                    ? line
+                    : `> ${line}`)
+                .join("\n");
+
+            textarea.setRangeText(
+                quoted,
+                lineStart,
+                selectionEnd,
+                "select"
+            );
+        } else {
+            const wrapper = wrappers[format];
+
+            if (!wrapper) return;
+
+            const [prefix, suffix] = wrapper;
+            const replacement = prefix + selected + suffix;
+
+            textarea.setRangeText(
+                replacement,
+                start,
+                end,
+                "select"
+            );
+
+            if (!selected) {
+                textarea.setSelectionRange(
+                    start + prefix.length,
+                    start + prefix.length
+                );
+            }
+        }
+
+        textarea.focus();
+        textarea.dispatchEvent(
+            new Event("input", { bubbles: true })
+        );
+    }
+
+    function setupFormattingToolbar(container, textarea) {
+        const toolbar = container.querySelector(
+            ".reply-formatting-toolbar"
+        );
+
+        if (!toolbar) return;
+
+        toolbar.addEventListener("click", event => {
             const target = event.target;
 
             if (!(target instanceof Element)) return;
 
-            const link = target.closest(
-                "[data-post-reference]"
-            );
+            const button = target.closest("[data-format]");
+
+            if (!button) return;
+
+            applyFormatting(textarea, button.dataset.format);
+        });
+    }
+
+    // --------------------------------------------------
+    // Post references and spoilers
+    // --------------------------------------------------
+
+    function setupPostReferenceLinks() {
+        document.addEventListener("click", event => {
+            const target = event.target;
+
+            if (!(target instanceof Element)) return;
+
+            const spoiler = target.closest(".thread-spoiler");
+
+            if (spoiler) {
+                spoiler.classList.toggle("revealed");
+
+                const revealed = spoiler.classList.contains("revealed");
+
+                spoiler.setAttribute(
+                    "aria-expanded",
+                    String(revealed)
+                );
+
+                spoiler.setAttribute(
+                    "aria-label",
+                    revealed
+                        ? "Spoiler revealed"
+                        : "Spoiler. Activate to reveal."
+                );
+
+                return;
+            }
+
+            const link = target.closest("[data-post-reference]");
 
             if (!link) return;
 
             const postId = link.dataset.postReference;
-
-            const post = document.getElementById(
-                `post-${postId}`
-            );
+            const post = document.getElementById(`post-${postId}`);
 
             if (!post) return;
 
@@ -222,6 +394,22 @@
                 );
             }, 1800);
         });
+
+        document.addEventListener("keydown", event => {
+            if (
+                (event.key !== "Enter" && event.key !== " ") ||
+                !(event.target instanceof Element)
+            ) {
+                return;
+            }
+
+            const spoiler = event.target.closest(".thread-spoiler");
+
+            if (!spoiler) return;
+
+            event.preventDefault();
+            spoiler.click();
+        });
     }
 
     // --------------------------------------------------
@@ -229,9 +417,7 @@
     // --------------------------------------------------
 
     function ensureReportDialog() {
-        if (document.getElementById("reportDialog")) {
-            return;
-        }
+        if (document.getElementById("reportDialog")) return;
 
         const dialog = document.createElement("dialog");
 
@@ -258,7 +444,7 @@
                         Choose a reason...
                     </option>
 
-                    ${REPORT_REASONS.map((reason) => `
+                    ${REPORT_REASONS.map(reason => `
                         <option value="${escapeHtml(reason)}">
                             ${escapeHtml(reason)}
                         </option>
@@ -293,9 +479,7 @@
                         type="button"
                         class="report-dialog-cancel"
                         id="reportDialogCancel"
-                    >
-                        Cancel
-                    </button>
+                    >Cancel</button>
 
                     <button type="submit" id="reportDialogSubmit">
                         Submit report
@@ -306,42 +490,28 @@
 
         document.body.appendChild(dialog);
 
-        document.getElementById(
-            "reportDialogCancel"
-        ).addEventListener("click", () => {
-            dialog.close();
-        });
+        document.getElementById("reportDialogCancel")
+            .addEventListener("click", () => dialog.close());
 
-        document.getElementById(
-            "reportDialogForm"
-        ).addEventListener("submit", async (event) => {
-            event.preventDefault();
-            await submitReport();
-        });
+        document.getElementById("reportDialogForm")
+            .addEventListener("submit", async event => {
+                event.preventDefault();
+                await submitReport();
+            });
     }
 
     function openReportDialog(targetType, targetId) {
-        if (!REPORT_TARGET_TYPES.has(targetType)) return;
-        if (!targetId) return;
+        if (!REPORT_TARGET_TYPES.has(targetType) || !targetId) {
+            return;
+        }
 
         ensureReportDialog();
 
-        currentReportTarget = {
-            targetType,
-            targetId
-        };
+        currentReportTarget = { targetType, targetId };
 
-        document.getElementById(
-            "reportReason"
-        ).value = "";
-
-        document.getElementById(
-            "reportDetails"
-        ).value = "";
-
-        document.getElementById(
-            "reportDialogMessage"
-        ).textContent = "";
+        document.getElementById("reportReason").value = "";
+        document.getElementById("reportDetails").value = "";
+        document.getElementById("reportDialogMessage").textContent = "";
 
         const submitButton = document.getElementById(
             "reportDialogSubmit"
@@ -350,9 +520,7 @@
         submitButton.disabled = false;
         submitButton.textContent = "Submit report";
 
-        const dialog = document.getElementById(
-            "reportDialog"
-        );
+        const dialog = document.getElementById("reportDialog");
 
         if (typeof dialog.showModal === "function") {
             dialog.showModal();
@@ -364,21 +532,11 @@
     async function submitReport() {
         if (!currentReportTarget || !client) return;
 
-        const reason = document.getElementById(
-            "reportReason"
-        ).value;
-
-        const details = document.getElementById(
-            "reportDetails"
-        ).value.trim();
-
-        const message = document.getElementById(
-            "reportDialogMessage"
-        );
-
-        const submitButton = document.getElementById(
-            "reportDialogSubmit"
-        );
+        const reason = document.getElementById("reportReason").value;
+        const details = document.getElementById("reportDetails")
+            .value.trim();
+        const message = document.getElementById("reportDialogMessage");
+        const submitButton = document.getElementById("reportDialogSubmit");
 
         if (!reason) {
             message.textContent = "Please choose a reason.";
@@ -403,35 +561,27 @@
                 return;
             }
 
-            const { error } = await client.rpc(
-                "create_report",
-                {
-                    p_target_type: currentReportTarget.targetType,
-                    p_target_id: currentReportTarget.targetId,
-                    p_reason: reason,
-                    p_details: details || null
-                }
-            );
+            const { error } = await client.rpc("create_report", {
+                p_target_type: currentReportTarget.targetType,
+                p_target_id: currentReportTarget.targetId,
+                p_reason: reason,
+                p_details: details || null
+            });
 
             if (error) {
                 console.error("Report submission error:", error);
-
                 message.textContent = getErrorMessage(
                     error,
                     "Unable to submit the report."
                 );
-
                 return;
             }
 
             submitted = true;
-            message.textContent =
-                "Report submitted. Thank you. ♡";
+            message.textContent = "Report submitted. Thank you. ♡";
 
             window.setTimeout(() => {
-                const dialog = document.getElementById(
-                    "reportDialog"
-                );
+                const dialog = document.getElementById("reportDialog");
 
                 if (dialog?.open) dialog.close();
 
@@ -439,7 +589,6 @@
             }, 700);
         } catch (error) {
             console.error("Unexpected report error:", error);
-
             message.textContent =
                 "Something went wrong while submitting the report.";
         } finally {
@@ -451,7 +600,7 @@
     }
 
     function setupReportButtons() {
-        document.addEventListener("click", (event) => {
+        document.addEventListener("click", event => {
             const target = event.target;
 
             if (!(target instanceof Element)) return;
@@ -509,11 +658,7 @@
                 .single();
 
             if (threadError || !thread) {
-                console.error(
-                    "Thread loading error:",
-                    threadError
-                );
-
+                console.error("Thread loading error:", threadError);
                 renderError("Unable to load this thread.");
                 return;
             }
@@ -543,16 +688,11 @@
                     )
                 `)
                 .eq("thread_id", threadId)
-                .order("created_at", {
-                    ascending: true
-                });
+                .order("created_at", { ascending: true });
 
             if (postsError) {
                 console.error("Posts loading error:", postsError);
-
-                renderError(
-                    "Unable to load the posts in this thread."
-                );
+                renderError("Unable to load the posts in this thread.");
                 return;
             }
 
@@ -563,14 +703,8 @@
 
             await setupReplyForm(thread);
         } catch (error) {
-            console.error(
-                "Unexpected thread loading error:",
-                error
-            );
-
-            renderError(
-                "Something went wrong while loading this thread."
-            );
+            console.error("Unexpected thread loading error:", error);
+            renderError("Something went wrong while loading this thread.");
         }
     }
 
@@ -579,10 +713,7 @@
     // --------------------------------------------------
 
     function renderThread(thread, posts) {
-        const visiblePosts = posts.filter(
-            (post) => !post.is_hidden
-        );
-
+        const visiblePosts = posts.filter(post => !post.is_hidden);
         const openingPost = visiblePosts[0] || null;
         const replies = visiblePosts.slice(1);
 
@@ -593,38 +724,27 @@
         const statuses = [];
 
         if (thread.is_locked) {
-            statuses.push(
-                '<span class="thread-status">Locked</span>'
-            );
+            statuses.push('<span class="thread-status">Locked</span>');
         }
 
         if (thread.is_archived) {
-            statuses.push(
-                '<span class="thread-status">Archived</span>'
-            );
+            statuses.push('<span class="thread-status">Archived</span>');
         }
 
         threadPage.innerHTML = `
             <section class="thread-header">
-                <p class="board-slug">
-                    /${escapeHtml(boardSlug)}/
-                </p>
+                <p class="board-slug">/${escapeHtml(boardSlug)}/</p>
 
                 <h2>${escapeHtml(thread.title)}</h2>
 
                 <p class="thread-header-meta">
                     ${escapeHtml(boardName)}
-                    · Started
-                    ${escapeHtml(formatDate(thread.created_at))}
+                    · Started ${escapeHtml(formatDate(thread.created_at))}
                 </p>
 
-                ${
-                    statuses.length
-                        ? `<div class="thread-statuses">
-                            ${statuses.join("")}
-                           </div>`
-                        : ""
-                }
+                ${statuses.length
+                    ? `<div class="thread-statuses">${statuses.join("")}</div>`
+                    : ""}
 
                 <div class="thread-header-actions">
                     <a href="imageboard.html">Back to boards</a>
@@ -634,25 +754,17 @@
                         class="thread-report-button"
                         data-report-target-type="imageboard_thread"
                         data-report-target-id="${escapeHtml(thread.id)}"
-                    >
-                        ⚑ Report thread
-                    </button>
+                    >⚑ Report thread</button>
                 </div>
             </section>
 
             <section class="thread-posts">
-                ${
-                    openingPost
-                        ? renderPost(openingPost, true)
-                        : `<p class="thread-empty">
-                            This thread has no visible posts.
-                           </p>`
-                }
+                ${openingPost
+                    ? renderPost(openingPost, true)
+                    : `<p class="thread-empty">This thread has no visible posts.</p>`}
 
                 <div class="thread-replies">
-                    ${replies.map(
-                        (post) => renderPost(post, false)
-                    ).join("")}
+                    ${replies.map(post => renderPost(post, false)).join("")}
                 </div>
             </section>
 
@@ -664,9 +776,7 @@
                 <h2>Reply</h2>
 
                 <div id="replyFormContainer">
-                    <p class="thread-empty">
-                        Loading reply form... ♡
-                    </p>
+                    <p class="thread-empty">Loading reply form... ♡</p>
                 </div>
             </section>
         `;
@@ -697,10 +807,8 @@
         const imageMarkup = images.length
             ? `
                 <div class="thread-post-images">
-                    ${images.map((image) => {
-                        const url = getImageUrl(
-                            image.storage_path
-                        );
+                    ${images.map(image => {
+                        const url = getImageUrl(image.storage_path);
 
                         if (!url) return "";
 
@@ -713,9 +821,7 @@
                             >
                                 <img
                                     src="${escapeHtml(url)}"
-                                    alt="${escapeHtml(
-                                        image.alt_text || "Attached image"
-                                    )}"
+                                    alt="${escapeHtml(image.alt_text || "Attached image")}"
                                     class="thread-post-image"
                                     loading="lazy"
                                 >
@@ -728,47 +834,35 @@
 
         return `
             <article
-                class="thread-post ${
-                    isOpeningPost ? "thread-op" : ""
-                }"
+                class="thread-post ${isOpeningPost ? "thread-op" : ""}"
                 id="post-${escapeHtml(post.id)}"
             >
                 <header class="thread-post-header">
                     <strong>${escapeHtml(displayName)}</strong>
 
-                    ${
-                        username
-                            ? `<span class="thread-post-username">
-                                @${escapeHtml(username)}
-                               </span>`
-                            : ""
-                    }
+                    ${username
+                        ? `<span class="thread-post-username">@${escapeHtml(username)}</span>`
+                        : ""}
 
                     <time>${escapeHtml(formatDate(post.created_at))}</time>
 
-                    ${
-                        postNumber
-                            ? `<a
-                                href="#post-${escapeHtml(post.id)}"
-                                class="thread-post-number"
-                               >No. ${postNumber}</a>`
-                            : ""
-                    }
+                    ${postNumber
+                        ? `<a
+                            href="#post-${escapeHtml(post.id)}"
+                            class="thread-post-number"
+                        >No. ${postNumber}</a>`
+                        : ""}
 
-                    ${
-                        isOpeningPost
-                            ? '<span class="thread-post-label">OP</span>'
-                            : ""
-                    }
+                    ${isOpeningPost
+                        ? '<span class="thread-post-label">OP</span>'
+                        : ""}
 
                     <button
                         type="button"
                         class="thread-post-report-button"
                         data-report-target-type="imageboard_post"
                         data-report-target-id="${escapeHtml(post.id)}"
-                    >
-                        ⚑ Report
-                    </button>
+                    >⚑ Report</button>
                 </header>
 
                 <div class="thread-post-body">
@@ -787,17 +881,13 @@
     // --------------------------------------------------
 
     async function setupReplyForm(thread) {
-        const container = document.getElementById(
-            "replyFormContainer"
-        );
+        const container = document.getElementById("replyFormContainer");
 
         if (!container) return;
 
         if (thread.is_locked || thread.is_archived) {
             container.innerHTML = `
-                <p class="thread-empty">
-                    This thread is closed for replies.
-                </p>
+                <p class="thread-empty">This thread is closed for replies.</p>
             `;
             return;
         }
@@ -810,9 +900,7 @@
 
             if (error || !user) {
                 container.innerHTML = `
-                    <p class="thread-empty">
-                        You must be logged in to reply.
-                    </p>
+                    <p class="thread-empty">You must be logged in to reply.</p>
                 `;
                 return;
             }
@@ -821,38 +909,45 @@
                 <form id="replyForm">
                     <label for="replyContent">Message</label>
 
+                    <div
+                        class="reply-formatting-toolbar"
+                        role="toolbar"
+                        aria-label="Reply formatting"
+                    >
+                        <button type="button" data-format="bold" title="Bold"><strong>B</strong></button>
+                        <button type="button" data-format="italic" title="Italic"><em>I</em></button>
+                        <button type="button" data-format="strike" title="Strikethrough"><s>S</s></button>
+                        <button type="button" data-format="quote" title="Quote">❝</button>
+                        <button type="button" data-format="spoiler" title="Spoiler">▰</button>
+                        <button type="button" data-format="code" title="Inline code">&lt;/&gt;</button>
+                    </div>
+
                     <textarea
                         id="replyContent"
                         maxlength="10000"
+                        rows="6"
                         placeholder="Write your reply..."
                     ></textarea>
 
+                    <p class="reply-formatting-help">
+                        Select text and use a button, or click one to start formatting.
+                        Markdown is supported.
+                    </p>
+
                     <label for="replyImage">
-                        Image
-                        <span class="optional-label">optional</span>
+                        Image <span class="optional-label">optional</span>
                     </label>
 
-                    <input
-                        type="file"
-                        id="replyImage"
-                        accept="image/*"
-                    >
+                    <input type="file" id="replyImage" accept="image/*">
 
                     <p class="upload-help">
                         Images must be 10 MB or smaller.
                     </p>
 
-                    <div
-                        id="replyImagePreview"
-                        class="image-preview"
-                        hidden
-                    ></div>
+                    <div id="replyImagePreview" class="image-preview" hidden></div>
 
                     <label>
-                        <input
-                            type="checkbox"
-                            id="replyAnonymous"
-                        >
+                        <input type="checkbox" id="replyAnonymous">
                         Post anonymously
                     </label>
 
@@ -866,14 +961,18 @@
                 </form>
             `;
 
+            setupFormattingToolbar(
+                container,
+                document.getElementById("replyContent")
+            );
+
             setupReplyImagePreview();
 
-            document.getElementById(
-                "replyForm"
-            ).addEventListener("submit", async (event) => {
-                event.preventDefault();
-                await submitReply(thread);
-            });
+            document.getElementById("replyForm")
+                .addEventListener("submit", async event => {
+                    event.preventDefault();
+                    await submitReply(thread);
+                });
         } catch (error) {
             console.error("Reply form setup error:", error);
 
@@ -887,9 +986,7 @@
 
     function setupReplyImagePreview() {
         const input = document.getElementById("replyImage");
-        const preview = document.getElementById(
-            "replyImagePreview"
-        );
+        const preview = document.getElementById("replyImagePreview");
 
         if (!input || !preview) return;
 
@@ -907,18 +1004,14 @@
             if (!file) return;
 
             if (!file.type.startsWith("image/")) {
-                preview.textContent =
-                    "Please choose a valid image file.";
-
+                preview.textContent = "Please choose a valid image file.";
                 preview.hidden = false;
                 input.value = "";
                 return;
             }
 
             if (file.size > MAX_IMAGE_SIZE) {
-                preview.textContent =
-                    "This image is larger than 10 MB.";
-
+                preview.textContent = "This image is larger than 10 MB.";
                 preview.hidden = false;
                 input.value = "";
                 return;
@@ -944,31 +1037,18 @@
 
     async function submitReply(thread) {
         if (isSubmittingReply) return;
+
         if (!client) {
             setReplyMessage("Supabase is not available.");
             return;
         }
 
-        const contentInput = document.getElementById(
-            "replyContent"
-        );
-
-        const imageInput = document.getElementById(
-            "replyImage"
-        );
-
-        const anonymousInput = document.getElementById(
-            "replyAnonymous"
-        );
-
+        const contentInput = document.getElementById("replyContent");
+        const imageInput = document.getElementById("replyImage");
+        const anonymousInput = document.getElementById("replyAnonymous");
         const message = getReplyMessage();
 
-        if (
-            !contentInput ||
-            !imageInput ||
-            !anonymousInput ||
-            !message
-        ) {
+        if (!contentInput || !imageInput || !anonymousInput || !message) {
             return;
         }
 
@@ -977,20 +1057,17 @@
         const isAnonymous = anonymousInput.checked;
 
         if (!content && !file) {
-            message.textContent =
-                "Please write a message or choose an image.";
+            message.textContent = "Please write a message or choose an image.";
             return;
         }
 
         if (file && !file.type.startsWith("image/")) {
-            message.textContent =
-                "Please choose a valid image file.";
+            message.textContent = "Please choose a valid image file.";
             return;
         }
 
         if (file && file.size > MAX_IMAGE_SIZE) {
-            message.textContent =
-                "That image is larger than 10 MB.";
+            message.textContent = "That image is larger than 10 MB.";
             return;
         }
 
@@ -1004,8 +1081,6 @@
         let failureMessage = null;
 
         try {
-            // Get the signed-in user once. The same UUID must
-            // be the first folder in the Storage object path.
             const {
                 data: { user } = {},
                 error: userError
@@ -1019,76 +1094,46 @@
 
             const userId = user.id;
 
-            // Validate the selected file before creating a post.
-            if (file) {
-                if (!file.type.startsWith("image/")) {
-                    throw new Error("Please choose a valid image file.");
-                }
-
-                if (file.size > MAX_IMAGE_SIZE) {
-                    throw new Error(
-                        "That image is larger than 10 MB."
-                    );
-                }
-            }
-
-            // Create the reply.
             const {
                 data: createdPostId,
                 error: postError
-            } = await client.rpc(
-                "create_imageboard_post",
-                {
-                    p_thread_id: thread.id,
-                    p_content: content || null,
-                    p_is_anonymous: isAnonymous,
-                    p_has_image: Boolean(file)
-                }
-            );
+            } = await client.rpc("create_imageboard_post", {
+                p_thread_id: thread.id,
+                p_content: content || null,
+                p_is_anonymous: isAnonymous,
+                p_has_image: Boolean(file)
+            });
 
             if (postError) {
                 throw new Error(
-                    getErrorMessage(
-                        postError,
-                        "Unable to create the reply."
-                    )
+                    getErrorMessage(postError, "Unable to create the reply.")
                 );
             }
 
             postId = createdPostId;
 
             if (!postId) {
-                throw new Error(
-                    "The server did not return the new post ID."
-                );
+                throw new Error("The server did not return the new post ID.");
             }
 
             replyCreated = true;
 
-            // Upload the optional image.
             if (file) {
                 const extensionFromName = file.name.includes(".")
                     ? file.name.split(".").pop().toLowerCase()
                     : "";
 
-                const extension = /^[a-z0-9]{1,10}$/.test(
-                    extensionFromName
-                )
+                const extension = /^[a-z0-9]{1,10}$/.test(extensionFromName)
                     ? extensionFromName
                     : "img";
 
-                // IMPORTANT:
-                // The first path segment MUST be userId.
-                // Do not replace this with a random UUID.
                 const storagePath = [
                     userId,
                     thread.id,
                     `${postId}.${extension}`
                 ].join("/");
 
-                const {
-                    error: uploadError
-                } = await client.storage
+                const { error: uploadError } = await client.storage
                     .from(STORAGE_BUCKET)
                     .upload(storagePath, file, {
                         upsert: false,
@@ -1096,20 +1141,14 @@
                     });
 
                 if (uploadError) {
-                    console.error(
-                        "Image upload error:",
-                        uploadError
-                    );
+                    console.error("Image upload error:", uploadError);
 
                     throw new Error(
-                        "The reply was posted, but the image upload failed. Your reply will still be saved."
+                        "Your reply was posted, but the image upload failed. Your reply is still saved."
                     );
                 }
 
-                // Record the uploaded image in the database.
-                const {
-                    error: imageInsertError
-                } = await client
+                const { error: imageInsertError } = await client
                     .from("post_images")
                     .insert({
                         post_id: postId,
@@ -1124,7 +1163,7 @@
                     );
 
                     throw new Error(
-                        "The reply was posted and the image uploaded, but the image record could not be saved. Please contact a moderator if the image remains missing."
+                        "Your reply was posted and the image uploaded, but its image record could not be saved. Please contact a moderator if the image remains missing."
                     );
                 }
 
@@ -1141,8 +1180,6 @@
             isSubmittingReply = false;
         }
 
-        // Reload if the reply was created, even if its image failed.
-        // This prevents the user from accidentally reposting it.
         if (replyCreated) {
             await loadThread();
 
@@ -1154,9 +1191,7 @@
 
             if (postId) {
                 window.setTimeout(() => {
-                    const post = document.getElementById(
-                        `post-${postId}`
-                    );
+                    const post = document.getElementById(`post-${postId}`);
 
                     if (!post) return;
 
@@ -1180,8 +1215,6 @@
             return;
         }
 
-        // If the post itself failed, leave the form intact so the
-        // user can correct the issue and try again.
         setReplyMessage(
             failureMessage ||
             "Something went wrong while posting your reply."
@@ -1195,22 +1228,24 @@
     // --------------------------------------------------
 
     if (!client) {
-        renderError(
-            "Supabase is not available. Please refresh the page."
-        );
+        renderError("Supabase is not available. Please refresh the page.");
         return;
     }
 
     if (!threadPage) {
-        console.error(
-            'Could not find the "#threadPage" element.'
-        );
+        console.error('Could not find the "#threadPage" element.');
         return;
     }
 
     ensureReportDialog();
     setupReportButtons();
     setupPostReferenceLinks();
+
+    if (!configureMarkdown()) {
+        console.warn(
+            "Posts will display as plain text until Markdown dependencies load."
+        );
+    }
 
     loadThread();
 })();

@@ -1,93 +1,55 @@
+javascript
 (() => {
     "use strict";
 
     const client = window.supabaseClient;
 
     if (!client) {
-        console.error(
-            "New thread: Supabase client not found."
-        );
+        console.error("New thread: Supabase client not found.");
         return;
     }
 
-    const MAX_FILE_SIZE =
-        10 * 1024 * 1024;
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const STORAGE_BUCKET = "imageboard-images";
 
-    const STORAGE_BUCKET =
-        "imageboard-images";
-
-    const boardInfo =
-        document.getElementById("boardInfo");
-
-    const form =
-        document.getElementById("newThreadForm");
-
-    const threadTitle =
-        document.getElementById("threadTitle");
-
-    const threadImage =
-        document.getElementById("threadImage");
-
-    const imagePreview =
-        document.getElementById("imagePreview");
-
-    const imagePreviewImage =
-        document.getElementById(
-            "imagePreviewImage"
-        );
-
-    const imagePreviewName =
-        document.getElementById(
-            "imagePreviewName"
-        );
-
-    const threadContent =
-        document.getElementById("threadContent");
-
-    const threadMessage =
-        document.getElementById("threadMessage");
-
-    const createThreadButton =
-        document.getElementById(
-            "createThreadButton"
-        );
-
-    const cancelThreadButton =
-        document.getElementById(
-            "cancelThreadButton"
-        );
-
-    const anonymousPost =
-        document.getElementById(
-            "anonymousPost"
-        );
+    const boardInfo = document.getElementById("boardInfo");
+    const form = document.getElementById("newThreadForm");
+    const threadTitle = document.getElementById("threadTitle");
+    const threadImage = document.getElementById("threadImage");
+    const imagePreview = document.getElementById("imagePreview");
+    const imagePreviewImage = document.getElementById("imagePreviewImage");
+    const imagePreviewName = document.getElementById("imagePreviewName");
+    const threadContent = document.getElementById("threadContent");
+    const threadMessage = document.getElementById("threadMessage");
+    const createThreadButton = document.getElementById("createThreadButton");
+    const cancelThreadButton = document.getElementById("cancelThreadButton");
+    const anonymousPost = document.getElementById("anonymousPost");
 
     let currentUser = null;
     let currentBoard = null;
     let selectedFile = null;
+    let previewUrl = null;
+    let isSubmitting = false;
 
     function getBoardSlug() {
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
+        const params = new URLSearchParams(window.location.search);
         return params.get("board");
     }
 
-    function showMessage(
-        message,
-        type = ""
-    ) {
-        if (!threadMessage) {
-            return;
-        }
+    function showMessage(message, type = "") {
+        if (!threadMessage) return;
 
-        threadMessage.textContent =
-            message;
+        threadMessage.textContent = message;
+        threadMessage.className = `editor-message ${type}`;
+    }
 
-        threadMessage.className =
-            `editor-message ${type}`;
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     async function getCurrentUser() {
@@ -97,11 +59,7 @@
         } = await client.auth.getUser();
 
         if (error) {
-            console.error(
-                "New thread: could not get user:",
-                error
-            );
-
+            console.error("New thread: could not get user:", error);
             return null;
         }
 
@@ -109,67 +67,38 @@
     }
 
     async function loadBoard() {
-        const boardSlug =
-            getBoardSlug();
+        const boardSlug = getBoardSlug();
 
         if (!boardSlug) {
             boardInfo.innerHTML = `
-                <p class="error-message">
-                    No board was selected.
-                </p>
-
-                <p>
-                    <a href="imageboard.html">
-                        ← Back to boards
-                    </a>
-                </p>
+                <p class="error-message">No board was selected.</p>
+                <p><a href="imageboard.html">← Back to boards</a></p>
             `;
-
             return false;
         }
 
-        const {
-            data: board,
-            error
-        } = await client
+        const { data: board, error } = await client
             .from("boards")
-            .select(`
-                id,
-                name,
-                slug,
-                description
-            `)
+            .select("id, name, slug, description")
             .eq("slug", boardSlug)
             .maybeSingle();
 
         if (error) {
-            console.error(
-                "New thread: could not load board:",
-                error
-            );
+            console.error("New thread: could not load board:", error);
 
             boardInfo.innerHTML = `
                 <p class="error-message">
                     Couldn't load this board. Please try again.
                 </p>
             `;
-
             return false;
         }
 
         if (!board) {
             boardInfo.innerHTML = `
-                <p class="error-message">
-                    That board doesn't exist! ♡
-                </p>
-
-                <p>
-                    <a href="imageboard.html">
-                        ← Back to boards
-                    </a>
-                </p>
+                <p class="error-message">That board doesn't exist! ♡</p>
+                <p><a href="imageboard.html">← Back to boards</a></p>
             `;
-
             return false;
         }
 
@@ -177,50 +106,35 @@
 
         boardInfo.innerHTML = `
             <div class="new-thread-board">
-                <p class="board-slug">
-                    /${escapeHtml(board.slug)}/
-                </p>
-
-                <h2>
-                    ${escapeHtml(board.name)}
-                </h2>
-
-                <p>
-                    ${escapeHtml(
-                        board.description ||
-                        "No description yet."
-                    )}
-                </p>
+                <p class="board-slug">/${escapeHtml(board.slug)}/</p>
+                <h2>${escapeHtml(board.name)}</h2>
+                <p>${escapeHtml(board.description || "No description yet.")}</p>
             </div>
         `;
 
         cancelThreadButton.href =
-            `imageboard.html?board=${encodeURIComponent(
-                board.slug
-            )}`;
+            `imageboard.html?board=${encodeURIComponent(board.slug)}`;
 
         return true;
     }
 
     function handleImageSelection() {
-        const file =
-            threadImage.files[0];
+        const file = threadImage.files[0];
 
         selectedFile = null;
         imagePreview.hidden = true;
         imagePreviewImage.src = "";
         imagePreviewName.textContent = "";
 
-        if (!file) {
-            return;
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
         }
 
-        if (!file.type.startsWith("image/")) {
-            showMessage(
-                "Please choose an image file.",
-                "error"
-            );
+        if (!file) return;
 
+        if (!file.type.startsWith("image/")) {
+            showMessage("Please choose an image file.", "error");
             threadImage.value = "";
             return;
         }
@@ -230,37 +144,35 @@
                 "That image is too large. The maximum file size is 10 MB.",
                 "error"
             );
-
             threadImage.value = "";
             return;
         }
 
         selectedFile = file;
-
-        const previewUrl =
-            URL.createObjectURL(file);
-
-        imagePreviewImage.src =
-            previewUrl;
-
-        imagePreviewName.textContent =
-            file.name;
-
+        previewUrl = URL.createObjectURL(file);
+        imagePreviewImage.src = previewUrl;
+        imagePreviewName.textContent = file.name;
         imagePreview.hidden = false;
 
         showMessage("");
     }
 
-    function createStoragePath(
-        userId,
-        threadId,
-        file
-    ) {
-        const extension =
-            getFileExtension(file.name);
+    function getFileExtension(filename) {
+        const parts = filename.split(".");
 
-        const randomPart =
-            crypto.randomUUID();
+        if (parts.length < 2) return "bin";
+
+        const extension = parts
+            .pop()
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+
+        return extension || "bin";
+    }
+
+    function createStoragePath(userId, threadId, file) {
+        const extension = getFileExtension(file.name);
+        const randomPart = crypto.randomUUID();
 
         return [
             userId,
@@ -269,28 +181,116 @@
         ].join("/");
     }
 
-    function getFileExtension(filename) {
-        const parts =
-            filename.split(".");
+    /*
+     * Formatting toolbar
+     *
+     * The editor stores plain Markdown text. It does not store HTML.
+     * The thread page is responsible for rendering that Markdown safely.
+     */
 
-        if (parts.length < 2) {
-            return "bin";
+    function wrapSelectedText(before, after = before, placeholder = "text") {
+        const start = threadContent.selectionStart;
+        const end = threadContent.selectionEnd;
+        const value = threadContent.value;
+
+        const selectedText = value.slice(start, end);
+        const insertedText = selectedText || placeholder;
+
+        const replacement = before + insertedText + after;
+
+        threadContent.setRangeText(
+            replacement,
+            start,
+            end,
+            "select"
+        );
+
+        if (!selectedText) {
+            threadContent.setSelectionRange(
+                start + before.length,
+                start + before.length + placeholder.length
+            );
         }
 
-        const extension =
-            parts
-                .pop()
-                .toLowerCase()
-                .replace(
-                    /[^a-z0-9]/g,
-                    ""
-                );
+        threadContent.focus();
+        threadContent.dispatchEvent(new Event("input", { bubbles: true }));
+    }
 
-        return extension || "bin";
+    function quoteSelectedLines() {
+        const start = threadContent.selectionStart;
+        const end = threadContent.selectionEnd;
+        const value = threadContent.value;
+
+        const selectedText = value.slice(start, end);
+        const textToQuote = selectedText || "quoted text";
+
+        const quotedText = textToQuote
+            .split("\n")
+            .map(line => `> ${line}`)
+            .join("\n");
+
+        threadContent.setRangeText(
+            quotedText,
+            start,
+            end,
+            "select"
+        );
+
+        if (!selectedText) {
+            threadContent.setSelectionRange(
+                start + 2,
+                start + quotedText.length
+            );
+        }
+
+        threadContent.focus();
+        threadContent.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    function setupFormattingToolbar() {
+        const toolbar = form.querySelector(".formatting-toolbar");
+
+        if (!toolbar) return;
+
+        toolbar.addEventListener("click", event => {
+            const button = event.target.closest("button[data-format]");
+
+            if (!button || !toolbar.contains(button)) return;
+
+            event.preventDefault();
+
+            switch (button.dataset.format) {
+                case "bold":
+                    wrapSelectedText("**", "**", "bold text");
+                    break;
+
+                case "italic":
+                    wrapSelectedText("*", "*", "italic text");
+                    break;
+
+                case "strike":
+                    wrapSelectedText("~~", "~~", "strikethrough text");
+                    break;
+
+                case "spoiler":
+                    wrapSelectedText("||", "||", "spoiler text");
+                    break;
+
+                case "code":
+                    wrapSelectedText("`", "`", "code");
+                    break;
+
+                case "quote":
+                    quoteSelectedLines();
+                    break;
+            }
+        });
     }
 
     async function createThread(event) {
         event.preventDefault();
+
+        if (isSubmitting) return;
 
         showMessage("");
 
@@ -299,34 +299,23 @@
                 "You need to be logged in to create a thread.",
                 "error"
             );
-
             return;
         }
 
         if (!currentBoard) {
-            showMessage(
-                "No board was selected.",
-                "error"
-            );
-
+            showMessage("No board was selected.", "error");
             return;
         }
 
-        const title =
-            threadTitle.value.trim();
+        const title = threadTitle.value.trim();
 
-        const content =
-            threadContent.value.trim();
+        // Keep Markdown intact; trim only surrounding whitespace.
+        const content = threadContent.value.trim();
 
-        const isAnonymous =
-            anonymousPost?.checked === true;
+        const isAnonymous = anonymousPost?.checked === true;
 
         if (!title) {
-            showMessage(
-                "Please give your thread a title.",
-                "error"
-            );
-
+            showMessage("Please give your thread a title.", "error");
             threadTitle.focus();
             return;
         }
@@ -336,74 +325,46 @@
                 "An image is required to start a thread.",
                 "error"
             );
-
             threadImage.focus();
             return;
         }
 
-        if (
-            !selectedFile.type.startsWith(
-                "image/"
-            )
-        ) {
-            showMessage(
-                "Please choose a valid image file.",
-                "error"
-            );
-
+        if (!selectedFile.type.startsWith("image/")) {
+            showMessage("Please choose a valid image file.", "error");
             return;
         }
 
-        if (
-            selectedFile.size >
-            MAX_FILE_SIZE
-        ) {
+        if (selectedFile.size > MAX_FILE_SIZE) {
             showMessage(
                 "That image is too large. The maximum file size is 10 MB.",
                 "error"
             );
-
             return;
         }
 
+        isSubmitting = true;
         createThreadButton.disabled = true;
-
-        createThreadButton.textContent =
-            "Creating...";
+        createThreadButton.textContent = "Creating...";
 
         let threadId = null;
         let postId = null;
-        let storagePath = null;
 
         try {
             /*
-             * 1. Create the thread and opening
-             *    post as an invisible draft.
+             * 1. Create the thread and opening post as an invisible draft.
              */
 
-            const {
-                data,
-                error
-            } = await client.rpc(
+            const { data, error } = await client.rpc(
                 "create_imageboard_thread",
                 {
-                    p_board_id:
-                        currentBoard.id,
-
-                    p_title:
-                        title,
-
-                    p_content:
-                        content || null,
-
-                    p_is_anonymous:
-                        isAnonymous
+                    p_board_id: currentBoard.id,
+                    p_title: title,
+                    p_content: content || null,
+                    p_is_anonymous: isAnonymous
                 }
             );
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
             if (
                 !data ||
@@ -416,180 +377,102 @@
                 );
             }
 
-            threadId =
-                data[0].thread_id;
-
-            postId =
-                data[0].post_id;
+            threadId = data[0].thread_id;
+            postId = data[0].post_id;
 
             /*
              * 2. Upload the mandatory image.
              */
 
-            storagePath =
-                createStoragePath(
-                    currentUser.id,
-                    threadId,
-                    selectedFile
-                );
+            const storagePath = createStoragePath(
+                currentUser.id,
+                threadId,
+                selectedFile
+            );
 
-            const {
-                error: uploadError
-            } = await client.storage
+            const { error: uploadError } = await client.storage
                 .from(STORAGE_BUCKET)
-                .upload(
-                    storagePath,
-                    selectedFile,
-                    {
-                        cacheControl:
-                            "3600",
-
-                        upsert:
-                            false,
-
-                        contentType:
-                            selectedFile.type
-                    }
-                );
-
-            if (uploadError) {
-                throw uploadError;
-            }
-
-            /*
-             * 3. Attach the image to the OP.
-             */
-
-            const {
-                error: imageRowError
-            } = await client
-                .from("post_images")
-                .insert({
-                    post_id:
-                        postId,
-
-                    storage_path:
-                        storagePath,
-
-                    alt_text:
-                        title
+                .upload(storagePath, selectedFile, {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType: selectedFile.type
                 });
 
-            if (imageRowError) {
-                throw imageRowError;
-            }
+            if (uploadError) throw uploadError;
+
+            /*
+             * 3. Attach the image to the opening post.
+             */
+
+            const { error: imageRowError } = await client
+                .from("post_images")
+                .insert({
+                    post_id: postId,
+                    storage_path: storagePath,
+                    alt_text: title
+                });
+
+            if (imageRowError) throw imageRowError;
 
             /*
              * 4. Make the thread publicly visible.
              */
 
-            const {
-                error: finalizeError
-            } = await client.rpc(
+            const { error: finalizeError } = await client.rpc(
                 "finalize_imageboard_thread",
                 {
-                    p_thread_id:
-                        threadId,
-
-                    p_post_id:
-                        postId
+                    p_thread_id: threadId,
+                    p_post_id: postId
                 }
             );
 
-            if (finalizeError) {
-                throw finalizeError;
-            }
+            if (finalizeError) throw finalizeError;
 
             /*
-             * Everything succeeded!
+             * 5. Everything succeeded; open the new thread.
              */
 
             window.location.href =
-                `imageboard-thread.html?id=${encodeURIComponent(
-                    threadId
-                )}`;
+                `imageboard-thread.html?id=${encodeURIComponent(threadId)}`;
 
         } catch (error) {
-            console.error(
-                "New thread creation failed:",
-                error
-            );
+            console.error("New thread creation failed:", error);
 
             showMessage(
-                error.message ||
+                error?.message ||
                 "Something went wrong while creating the thread. Please try again.",
                 "error"
             );
 
-            createThreadButton.disabled =
-                false;
-
-            createThreadButton.textContent =
-                "✨ Create thread";
+            isSubmitting = false;
+            createThreadButton.disabled = false;
+            createThreadButton.textContent = "✨ Create thread";
         }
     }
 
-    function escapeHtml(value) {
-        return String(value)
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
-            );
-    }
-
     async function start() {
-        currentUser =
-            await getCurrentUser();
+        currentUser = await getCurrentUser();
 
         if (!currentUser) {
             boardInfo.innerHTML = `
                 <p class="error-message">
                     You need to be logged in to create a thread.
                 </p>
-
-                <p>
-                    <a href="imageboard.html">
-                        ← Back to boards
-                    </a>
-                </p>
+                <p><a href="imageboard.html">← Back to boards</a></p>
             `;
-
             return;
         }
 
-        const boardLoaded =
-            await loadBoard();
+        const boardLoaded = await loadBoard();
 
         if (boardLoaded) {
             form.hidden = false;
         }
     }
 
-    threadImage.addEventListener(
-        "change",
-        handleImageSelection
-    );
+    threadImage.addEventListener("change", handleImageSelection);
+    form.addEventListener("submit", createThread);
 
-    form.addEventListener(
-        "submit",
-        createThread
-    );
-
+    setupFormattingToolbar();
     start();
 })();
