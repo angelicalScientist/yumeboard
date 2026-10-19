@@ -116,12 +116,20 @@
         style.id = "threadFormattingStyles";
 
         style.textContent = `
+<<<<<<< HEAD
             /* Yumeboard violet quote text */
             .thread-post-content .thread-quotetext {
                 color: #b48ead;
                 margin: 0.25em 0;
                 overflow-wrap: anywhere;
                 white-space: normal;
+=======
+            /* Yumeboard greentext */
+            .thread-post-content .thread-quotetext {
+                color: #789922;
+                margin: 0.25em 0;
+                overflow-wrap: anywhere;
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
             }
 
             .thread-post-content .thread-quotetext p {
@@ -129,10 +137,13 @@
                 margin: 0;
             }
 
+<<<<<<< HEAD
             .thread-post-content .thread-quotetext a {
                 color: inherit;
             }
 
+=======
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
             /* Spoilers are hidden until activated */
             .thread-post-content .thread-spoiler {
                 display: inline;
@@ -218,7 +229,11 @@
     }
 
     // --------------------------------------------------
+<<<<<<< HEAD
     // Markdown, violet quote text, and spoilers
+=======
+    // Markdown, greentext, and spoilers
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
     // --------------------------------------------------
 
     function configureMarkdown() {
@@ -230,6 +245,15 @@
             return false;
         }
 
+        /*
+         * Markdown configuration:
+         *
+         * - Bold, italic, strikethrough, and inline code work normally.
+         * - >>N references link to existing visible posts.
+         * - ||spoiler|| creates a clickable spoiler.
+         * - Lines beginning with > retain Yumeboard greentext styling.
+         */
+
         window.marked.setOptions({
             gfm: true,
             breaks: true
@@ -238,6 +262,7 @@
         window.marked.use({
             renderer: {
                 /*
+<<<<<<< HEAD
                  * Convert Markdown blockquotes into Yumeboard
                  * quote lines.
                  *
@@ -263,6 +288,18 @@
                             `;
                         })
                         .join("\n");
+=======
+                 * Markdown groups consecutive > lines into blockquotes.
+                 * We preserve the content but use Yumeboard's greentext
+                 * styling instead of the default blockquote appearance.
+                 */
+                blockquote(token) {
+                    return `
+                        <div class="thread-quotetext">
+                            ${token.text || ""}
+                        </div>
+                    `;
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
                 }
             },
 
@@ -311,6 +348,7 @@
                             }
                         }
 
+                        // Leave references to nonexistent posts as text.
                         return escapeHtml(token.raw);
                     }
                 },
@@ -344,6 +382,13 @@
                     },
 
                     renderer(token) {
+<<<<<<< HEAD
+=======
+                        /*
+                         * Escape the spoiler contents. This ensures text
+                         * inside a spoiler cannot inject HTML.
+                         */
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
                         return `
                             <span
                                 class="thread-spoiler"
@@ -611,6 +656,10 @@
 
             event.preventDefault();
 
+<<<<<<< HEAD
+=======
+            // The click listener performs the actual toggle.
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
             spoiler.click();
         });
     }
@@ -1225,7 +1274,11 @@
                         <button
                             type="button"
                             data-format="quote"
+<<<<<<< HEAD
                             title="Violet quote text"
+=======
+                            title="Greentext"
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
                         >❝</button>
 
                         <button
@@ -1250,7 +1303,12 @@
 
                     <p class="reply-formatting-help">
                         Select text and use a button, or click one to start
+<<<<<<< HEAD
                         formatting. Start a line with &gt; for violet quote text.
+=======
+                        formatting. Use &gt; at the beginning of a line
+                        for greentext.
+>>>>>>> 3f222086f9e4172d21f22a0ac0a022ccfbc64c89
                     </p>
 
                     <label for="replyImage">
