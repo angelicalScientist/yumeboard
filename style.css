@@ -2271,6 +2271,11 @@ button:focus-visible {
     white-space: normal;
 }
 
+.post-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .thread-replies {
     display: flex;
     flex-direction: column;
