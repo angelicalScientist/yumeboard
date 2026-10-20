@@ -1667,14 +1667,18 @@
     ensureFormattingStyles();
     ensureReportDialog();
 
-
+    // The shared controller owns all appreciation-button
+    // styles, click handlers, and database requests.
     if (
         !window.YumeboardLikes ||
         typeof window.YumeboardLikes.setup !== "function"
     ) {
         console.error(
-            "[Yumeboard] Shared likes script is missing. Check the script tags in imageboard-thread.html."
+            "[Yumeboard] Shared likes script is missing. " +
+            "Check the script tags in imageboard-thread.html."
         );
+    } else {
+        window.YumeboardLikes.setup();
     }
 
     setupReportButtons();
