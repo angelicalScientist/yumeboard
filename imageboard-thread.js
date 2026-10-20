@@ -14,6 +14,26 @@
     let isSubmittingReply = false;
     let activePreviewUrl = null;
 
+    // Prevent simultaneous clicks on the same like button.
+    const activeLikeRequests = new Set();
+
+    const LIKE_CONFIG = {
+        thread: {
+            table: "thread_likes",
+            foreignKey: "thread_id",
+            statsFunction: "get_thread_like_stats",
+            label: "thread"
+        },
+        post: {
+            table: "post_likes",
+            foreignKey: "post_id",
+            statsFunction: "get_post_like_stats",
+            label: "post"
+        }
+    };
+
+    const LIKE_BUTTON_TEXT = "⸜(｡˃ ᵕ ˂ )⸝♡";
+
     const REPORT_TARGET_TYPES = new Set([
         "imageboard_thread",
         "imageboard_post"
@@ -103,6 +123,314 @@
     }
 
     // --------------------------------------------------
+    // Appreciation likes ♡
+    // --------------------------------------------------
+
+    function renderLikeButton(type, id) {
+        if (!LIKE_CONFIG[type]) return "";
+
+        return `
+            <button
+                type="button"
+                class="yb-like-button"
+                data-yb-like-type="${escapeHtml(type)}"
+                data-yb-like-id="${escapeHtml(id)}"
+                aria-pressed="false"
+                aria-label="Appreciate this ${escapeHtml(type)}"
+                title="Send appreciation"
+                disabled
+            >
+                <span class="yb-like-button-text">
+                    ${LIKE_BUTTON_TEXT}
+                </span>
+                <span
+                    class="yb-like-count"
+                    aria-label="Appreciation count"
+                >0</span>
+            </button>
+        `;
+    }
+
+    function ensureLikeStyles() {
+        if (document.getElementById("threadLikeStyles")) {
+            return;
+        }
+
+        const style = document.createElement("style");
+        style.id = "threadLikeStyles";
+
+        style.textContent = `
+            .yb-like-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.45rem;
+                padding: 0.4rem 0.7rem;
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                background: transparent;
+                color: inherit;
+                font: inherit;
+                font-size: 0.9rem;
+                line-height: 1.4;
+                cursor: pointer;
+                transition:
+                    background-color 0.15s ease,
+                    opacity 0.15s ease,
+                    transform 0.15s ease;
+            }
+
+            .yb-like-button:not(:disabled):hover {
+                background: rgba(180, 142, 173, 0.14);
+            }
+
+            .yb-like-button:not(:disabled):active {
+                transform: scale(0.97);
+            }
+
+            .yb-like-button:focus-visible {
+                outline: 2px solid #b48ead;
+                outline-offset: 3px;
+            }
+
+            .yb-like-button:disabled {
+                cursor: default;
+                opacity: 0.65;
+            }
+
+            .yb-like-button[aria-pressed="true"] {
+                border-color: #b48ead;
+                background: rgba(180, 142, 173, 0.16);
+            }
+
+            .yb-like-count {
+                min-width: 1ch;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .thread-header-actions,
+            .thread-post-actions {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.6rem;
+            }
+
+            .thread-post-actions {
+                margin-top: 0.75rem;
+            }
+        `;
+
+        document.head.appendChild(style);
+    }
+
+    async function refreshLikeButtons(root = document) {
+        if (!client || !root) return;
+
+        const buttons = Array.from(
+            root.querySelectorAll(
+                ".yb-like-button[data-yb-like-type][data-yb-like-id]"
+            )
+        );
+
+        if (!buttons.length) return;
+
+        const groups = new Map();
+
+        for (const button of buttons) {
+            const type = button.dataset.ybLikeType;
+            const id = button.dataset.ybLikeId;
+
+            if (!LIKE_CONFIG[type] || !id) continue;
+
+            if (!groups.has(type)) {
+                groups.set(type, new Map());
+            }
+
+            groups.get(type).set(id, button);
+        }
+
+        for (const [type, buttonMap] of groups) {
+            const config = LIKE_CONFIG[type];
+            const ids = Array.from(buttonMap.keys());
+
+            try {
+                const { data, error } = await client.rpc(
+                    config.statsFunction,
+                    { p_ids: ids }
+                );
+
+                if (error) throw error;
+
+                const statsById = new Map(
+                    (data || []).map(row => [
+                        String(row.target_id),
+                        row
+                    ])
+                );
+
+                for (const [id, button] of buttonMap) {
+                    // The user may have navigated or the UI may
+                    // have been rerendered while the RPC was running.
+                    if (!button.isConnected) continue;
+
+                    const stats = statsById.get(String(id));
+
+                    if (!stats) {
+                        button.disabled = true;
+                        button.title =
+                            "Appreciation is unavailable for this item.";
+                        continue;
+                    }
+
+                    const count = button.querySelector(
+                        ".yb-like-count"
+                    );
+
+                    if (count) {
+                        count.textContent = String(
+                            Number(stats.like_count) || 0
+                        );
+                    }
+
+                    const liked = stats.liked_by_me === true;
+
+                    button.setAttribute(
+                        "aria-pressed",
+                        String(liked)
+                    );
+
+                    button.title = liked
+                        ? "Remove your appreciation"
+                        : "Send appreciation";
+
+                    button.setAttribute(
+                        "aria-label",
+                        `${liked ? "Remove appreciation from" : "Appreciate"} this ${config.label}. ${Number(stats.like_count) || 0} appreciations.`
+                    );
+
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error(
+                    `[Yumeboard] Could not load ${type} appreciation stats:`,
+                    error
+                );
+
+                for (const button of buttonMap.values()) {
+                    if (!button.isConnected) continue;
+
+                    button.disabled = true;
+                    button.title =
+                        "Appreciation could not be loaded. Try refreshing.";
+                }
+            }
+        }
+    }
+
+    async function toggleLike(button) {
+        const type = button.dataset.ybLikeType;
+        const targetId = button.dataset.ybLikeId;
+        const config = LIKE_CONFIG[type];
+
+        if (!config || !targetId || !client) return;
+
+        const requestKey = `${type}:${targetId}`;
+
+        if (activeLikeRequests.has(requestKey)) return;
+
+        activeLikeRequests.add(requestKey);
+        button.disabled = true;
+
+        try {
+            const {
+                data: { user } = {},
+                error: userError
+            } = await client.auth.getUser();
+
+            if (userError || !user) {
+                window.alert(
+                    "Please log in to send appreciation. ♡"
+                );
+                return;
+            }
+
+            const currentlyLiked =
+                button.getAttribute("aria-pressed") === "true";
+
+            if (currentlyLiked) {
+                // RLS must permit a user to delete only their own row.
+                const { error } = await client
+                    .from(config.table)
+                    .delete()
+                    .eq(config.foreignKey, targetId)
+                    .eq("user_id", user.id);
+
+                if (error) throw error;
+            } else {
+                // The primary key prevents duplicate likes.
+                // RLS must verify the user and parent visibility.
+                const { error } = await client
+                    .from(config.table)
+                    .insert({
+                        [config.foreignKey]: targetId,
+                        user_id: user.id
+                    });
+
+                if (error) {
+                    // Do not hide other errors. A duplicate can
+                    // happen if another tab liked it concurrently.
+                    if (error.code !== "23505") {
+                        throw error;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(
+                "[Yumeboard] Appreciation update failed:",
+                error
+            );
+
+            window.alert(
+                "Your appreciation couldn't be updated. Please try again."
+            );
+        } finally {
+            activeLikeRequests.delete(requestKey);
+
+            // Refresh the count and current user's state from
+            // the server instead of trusting a local counter.
+            await refreshLikeButtons(threadPage || document);
+        }
+    }
+
+    function setupLikeButtons() {
+        // One delegated handler covers the thread and all its posts,
+        // including buttons added during a later rerender.
+        document.addEventListener("click", event => {
+            const target = event.target;
+
+            if (!(target instanceof Element)) return;
+
+            const button = target.closest(
+                ".yb-like-button[data-yb-like-type][data-yb-like-id]"
+            );
+
+            if (!button || button.disabled) return;
+
+            if (
+                !threadPage ||
+                !threadPage.contains(button)
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+            toggleLike(button);
+        });
+    }
+
+    // --------------------------------------------------
     // Image optimization
     // JPEG and PNG only; GIF animations are preserved.
     // --------------------------------------------------
@@ -114,7 +442,6 @@
         ) {
             return file;
         }
-
 
         if (file.size <= 500 * 1024) {
             return file;
@@ -150,8 +477,6 @@
                 Math.round(bitmap.height * scale)
             );
 
-            // If it's already reasonably small and within
-            // the dimensions limit, leave it alone.
             if (
                 width === bitmap.width &&
                 height === bitmap.height &&
@@ -184,8 +509,6 @@
                 );
             });
 
-            // Some browsers may not support WebP encoding.
-            // Never replace the original with a larger result.
             if (!blob || blob.size >= file.size) {
                 return file;
             }
@@ -1006,6 +1329,9 @@
             buildPostNumbers(loadedPosts);
             renderThread(thread, loadedPosts);
 
+            // Populate counts and the signed-in user's like state.
+            await refreshLikeButtons(threadPage);
+
             await setupReplyForm(thread);
         } catch (error) {
             console.error("Unexpected thread loading error:", error);
@@ -1058,6 +1384,8 @@
 
                 <div class="thread-header-actions">
                     <a href="imageboard.html">Back to boards</a>
+
+                    ${renderLikeButton("thread", thread.id)}
 
                     <button
                         type="button"
@@ -1185,6 +1513,10 @@
                     <div class="thread-post-content">
                         ${formatPostContent(post.content)}
                     </div>
+                </div>
+
+                <div class="thread-post-actions">
+                    ${renderLikeButton("post", post.id)}
                 </div>
             </article>
         `;
@@ -1427,8 +1759,6 @@
         let failureMessage = null;
 
         try {
-            // Optimize inside the try/finally block so the form's
-            // submitting state is always reset, even if processing fails.
             if (file) {
                 message.textContent = "Optimizing image...";
 
@@ -1611,7 +1941,10 @@
     }
 
     ensureFormattingStyles();
+    ensureLikeStyles();
     ensureReportDialog();
+
+    setupLikeButtons();
     setupReportButtons();
     setupPostReferenceLinks();
 
