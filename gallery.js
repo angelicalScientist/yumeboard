@@ -55,8 +55,6 @@ const GALLERY_REPORT_REASONS = [
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    setupGalleryReportButtons();
-
     await loadGallery();
 
 });
