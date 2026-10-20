@@ -593,12 +593,17 @@ async function loadArtworkFolderRelations() {
 
 // =========================================================
 
+
 function renderGallery() {
+    renderFolders();
+    renderOrphanArtwork();
 
-    renderFolders();
-
-    renderOrphanArtwork();
-
+    if (
+        window.YumeboardLikes &&
+        typeof window.YumeboardLikes.refresh === "function"
+    ) {
+        window.YumeboardLikes.refresh(document);
+    }
 }
 
 
@@ -1411,25 +1416,27 @@ function createArtworkCard(artwork) {
 
     );
 
-    if (actions.children.length) {
 
-        content.appendChild(
-
-            actions
-
-        );
-
-    }
-
-    card.appendChild(
-
-        content
-
-    );
-
-    return card;
-
+if (actions.children.length) {
+    content.appendChild(actions);
 }
+
+if (
+    window.YumeboardLikes &&
+    typeof window.YumeboardLikes.buttonMarkup === "function"
+) {
+    const likeContainer = document.createElement("div");
+    likeContainer.className = "gallery-artwork-appreciation";
+    likeContainer.innerHTML =
+        window.YumeboardLikes.buttonMarkup("gallery", artwork.id);
+
+    content.appendChild(likeContainer);
+}
+
+card.appendChild(content);
+
+return card;
+
 
 
 
@@ -4717,4 +4724,4 @@ window.galleryEditArtwork =
 
 window.galleryDeleteArtwork =
 
-    deleteArtwork;
+    deleteArtwork;}

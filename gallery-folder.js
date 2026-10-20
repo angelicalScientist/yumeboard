@@ -1,3 +1,4 @@
+
 // =========================================================
 // GALLERY FOLDER
 // Artwork inside a single gallery folder
@@ -83,8 +84,7 @@ async function loadFolderPage() {
 
         // -------------------------------------------------
         // Load folder
-        // IMPORTANT:
-        // gallery_folders does NOT have a description column.
+        // gallery_folders has no description column.
         // -------------------------------------------------
 
         const {
@@ -173,12 +173,9 @@ function showFolderUnavailable(message) {
         );
 
     if (title) {
-        title.textContent =
-            "Gallery folder";
+        title.textContent = "Gallery folder";
     }
 
-    // gallery_folders has no description column,
-    // so keep the description element empty/hidden.
     if (description) {
         description.textContent = "";
         description.hidden = true;
@@ -194,15 +191,10 @@ function showFolderUnavailable(message) {
     }
 
     if (unavailable) {
-        unavailable.textContent =
-            message;
-
+        unavailable.textContent = message;
         unavailable.hidden = false;
     } else {
-        showStatus(
-            message,
-            true
-        );
+        showStatus(message, true);
     }
 
     const uploadButton =
@@ -232,16 +224,12 @@ function showFolderUnavailable(message) {
 
 function updateOwnerInterface() {
     document
-        .querySelectorAll(
-            ".gallery-owner-only"
-        )
+        .querySelectorAll(".gallery-owner-only")
         .forEach((element) => {
             element.hidden = !isOwner;
 
             if (isOwner) {
-                element.style.removeProperty(
-                    "display"
-                );
+                element.style.removeProperty("display");
             } else {
                 element.style.setProperty(
                     "display",
@@ -285,10 +273,7 @@ async function loadArtwork() {
     } = await client
         .from("gallery_item_folders")
         .select("gallery_item_id")
-        .eq(
-            "folder_id",
-            folderId
-        );
+        .eq("folder_id", folderId);
 
     if (relationError) {
         throw relationError;
@@ -301,8 +286,7 @@ async function loadArtwork() {
     const artworkIds = [
         ...new Set(
             relations.map(
-                (relation) =>
-                    relation.gallery_item_id
+                (relation) => relation.gallery_item_id
             )
         )
     ];
@@ -330,24 +314,12 @@ async function loadArtwork() {
             hidden_at,
             hidden_by
         `)
-        .in(
-            "id",
-            artworkIds
-        )
-        .eq(
-            "user_id",
-            folder.user_id
-        )
-        .eq(
-            "is_hidden",
-            false
-        )
-        .order(
-            "created_at",
-            {
-                ascending: false
-            }
-        );
+        .in("id", artworkIds)
+        .eq("user_id", folder.user_id)
+        .eq("is_hidden", false)
+        .order("created_at", {
+            ascending: false
+        });
 
     if (error) {
         throw error;
@@ -392,13 +364,9 @@ function renderFolder() {
 
     if (title) {
         title.textContent =
-            `📁 ${
-                folder?.name ||
-                "Untitled Folder"
-            }`;
+            `📁 ${folder?.name || "Untitled Folder"}`;
     }
 
-    // gallery_folders does not have a description column.
     if (description) {
         description.textContent = "";
         description.hidden = true;
@@ -419,15 +387,21 @@ function renderFolder() {
     empty.hidden = true;
     grid.hidden = false;
 
-    artworks.forEach(
-        (artwork) => {
-            grid.appendChild(
-                createArtworkCard(
-                    artwork
-                )
-            );
-        }
-    );
+    artworks.forEach((artwork) => {
+        grid.appendChild(
+            createArtworkCard(artwork)
+        );
+    });
+
+    // -----------------------------------------------------
+    // YUMEBOARD APPRECIATION BUTTONS
+    // Load like counts and the current user's like state
+    // after all artwork cards have been added.
+    // -----------------------------------------------------
+
+    if (window.YumeboardLikes) {
+        window.YumeboardLikes.refresh(grid);
+    }
 }
 
 // =========================================================
@@ -436,74 +410,42 @@ function renderFolder() {
 
 function createArtworkCard(artwork) {
     const card =
-        document.createElement(
-            "article"
-        );
+        document.createElement("article");
 
-    card.className =
-        "artwork-card";
+    card.className = "artwork-card";
 
     const image =
-        document.createElement(
-            "img"
-        );
+        document.createElement("img");
 
-    image.className =
-        "artwork-card-image";
+    image.className = "artwork-card-image";
+    image.src = artwork.image_url;
+    image.alt = artwork.title || "Artwork";
+    image.loading = "lazy";
 
-    image.src =
-        artwork.image_url;
+    image.addEventListener("click", () => {
+        openArtworkViewer(artwork);
+    });
 
-    image.alt =
-        artwork.title ||
-        "Artwork";
-
-    image.loading =
-        "lazy";
-
-    image.addEventListener(
-        "click",
-        () => {
-            openArtworkViewer(
-                artwork
-            );
-        }
-    );
-
-    card.appendChild(
-        image
-    );
+    card.appendChild(image);
 
     const content =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-    content.className =
-        "artwork-card-content";
+    content.className = "artwork-card-content";
 
     if (artwork.title) {
         const title =
-            document.createElement(
-                "h3"
-            );
+            document.createElement("h3");
 
-        title.className =
-            "artwork-card-title";
+        title.className = "artwork-card-title";
+        title.textContent = artwork.title;
 
-        title.textContent =
-            artwork.title;
-
-        content.appendChild(
-            title
-        );
+        content.appendChild(title);
     }
 
     if (artwork.description) {
         const description =
-            document.createElement(
-                "p"
-            );
+            document.createElement("p");
 
         description.className =
             "artwork-card-description";
@@ -511,36 +453,57 @@ function createArtworkCard(artwork) {
         description.textContent =
             artwork.description;
 
-        content.appendChild(
-            description
-        );
+        content.appendChild(description);
     }
 
     const actions =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-    actions.className =
-        "artwork-card-actions";
+    actions.className = "artwork-card-actions";
+
+    // -----------------------------------------------------
+    // YUMEBOARD APPRECIATION BUTTONS
+    // Uses the shared controller from yumeboard-likes.js.
+    // Likes belong to the artwork, not the folder itself.
+    // -----------------------------------------------------
+
+    if (
+        window.YumeboardLikes &&
+        typeof window.YumeboardLikes.buttonMarkup === "function"
+    ) {
+        const likeMarkup =
+            window.YumeboardLikes.buttonMarkup(
+                "gallery",
+                artwork.id
+            );
+
+        if (likeMarkup) {
+            const template =
+                document.createElement("template");
+
+            template.innerHTML = likeMarkup;
+
+            const likeButton =
+                template.content.firstElementChild;
+
+            if (likeButton) {
+                actions.appendChild(likeButton);
+            }
+        }
+    }
 
     // -----------------------------------------------------
     // REPORT BUTTON
     // -----------------------------------------------------
 
     const reportButton =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
-    reportButton.type =
-        "button";
-
+    reportButton.type = "button";
     reportButton.className =
         "artwork-card-report-button";
 
-    reportButton.textContent =
-        "⚑ Report";
+    reportButton.textContent = "⚑ Report";
 
     reportButton.dataset.reportTargetType =
         "gallery_item";
@@ -553,9 +516,7 @@ function createArtworkCard(artwork) {
         "Report this artwork"
     );
 
-    actions.appendChild(
-        reportButton
-    );
+    actions.appendChild(reportButton);
 
     // -----------------------------------------------------
     // OWNER ACTIONS
@@ -568,35 +529,23 @@ function createArtworkCard(artwork) {
             String(currentUser.id)
     ) {
         const editButton =
-            document.createElement(
-                "button"
-            );
+            document.createElement("button");
 
-        editButton.type =
-            "button";
-
-        editButton.textContent =
-            "✏️ Edit";
+        editButton.type = "button";
+        editButton.textContent = "✏️ Edit";
 
         editButton.addEventListener(
             "click",
             (event) => {
                 event.stopPropagation();
-
-                editArtwork(
-                    artwork
-                );
+                editArtwork(artwork);
             }
         );
 
         const folderButton =
-            document.createElement(
-                "button"
-            );
+            document.createElement("button");
 
-        folderButton.type =
-            "button";
-
+        folderButton.type = "button";
         folderButton.textContent =
             "📂 Remove from folder";
 
@@ -604,31 +553,19 @@ function createArtworkCard(artwork) {
             "click",
             (event) => {
                 event.stopPropagation();
-
-                removeFromFolder(
-                    artwork
-                );
+                removeFromFolder(artwork);
             }
         );
 
-        actions.appendChild(
-            editButton
-        );
-
-        actions.appendChild(
-            folderButton
-        );
+        actions.appendChild(editButton);
+        actions.appendChild(folderButton);
     }
 
     if (actions.children.length) {
-        content.appendChild(
-            actions
-        );
+        content.appendChild(actions);
     }
 
-    card.appendChild(
-        content
-    );
+    card.appendChild(content);
 
     return card;
 }
@@ -647,16 +584,9 @@ function ensureGalleryReportDialog() {
         return dialog;
     }
 
-    dialog =
-        document.createElement(
-            "dialog"
-        );
-
-    dialog.id =
-        "galleryReportDialog";
-
-    dialog.className =
-        "report-dialog";
+    dialog = document.createElement("dialog");
+    dialog.id = "galleryReportDialog";
+    dialog.className = "report-dialog";
 
     dialog.innerHTML = `
         <form
@@ -679,11 +609,7 @@ function ensureGalleryReportDialog() {
                     name="reason"
                     required
                 >
-                    <option
-                        value=""
-                        selected
-                        disabled
-                    >
+                    <option value="" selected disabled>
                         Choose a reason...
                     </option>
                 </select>
@@ -728,33 +654,22 @@ function ensureGalleryReportDialog() {
         </form>
     `;
 
-    document.body.appendChild(
-        dialog
-    );
+    document.body.appendChild(dialog);
 
     const reasonSelect =
         document.getElementById(
             "galleryReportReason"
         );
 
-    GALLERY_REPORT_REASONS.forEach(
-        (reason) => {
-            const option =
-                document.createElement(
-                    "option"
-                );
+    GALLERY_REPORT_REASONS.forEach((reason) => {
+        const option =
+            document.createElement("option");
 
-            option.value =
-                reason;
+        option.value = reason;
+        option.textContent = reason;
 
-            option.textContent =
-                reason;
-
-            reasonSelect.appendChild(
-                option
-            );
-        }
-    );
+        reasonSelect.appendChild(option);
+    });
 
     const form =
         document.getElementById(
@@ -771,7 +686,6 @@ function ensureGalleryReportDialog() {
             "submit",
             async (event) => {
                 event.preventDefault();
-
                 await submitGalleryReport();
             }
         );
@@ -788,39 +702,28 @@ function ensureGalleryReportDialog() {
         );
     }
 
-    dialog.addEventListener(
-        "close",
-        () => {
-            currentGalleryReportTarget =
-                null;
+    dialog.addEventListener("close", () => {
+        currentGalleryReportTarget = null;
 
-            if (form) {
-                form.reset();
-            }
-
-            const status =
-                document.getElementById(
-                    "galleryReportStatus"
-                );
-
-            if (status) {
-                status.textContent =
-                    "";
-            }
+        if (form) {
+            form.reset();
         }
-    );
 
-    dialog.addEventListener(
-        "click",
-        (event) => {
-            if (
-                event.target ===
-                dialog
-            ) {
-                dialog.close();
-            }
+        const status =
+            document.getElementById(
+                "galleryReportStatus"
+            );
+
+        if (status) {
+            status.textContent = "";
         }
-    );
+    });
+
+    dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) {
+            dialog.close();
+        }
+    });
 
     return dialog;
 }
@@ -829,20 +732,12 @@ function ensureGalleryReportDialog() {
 // OPEN GALLERY REPORT DIALOG
 // =========================================================
 
-function openGalleryReportDialog(
-    targetType,
-    targetId
-) {
-    if (
-        targetType !==
-            "gallery_item" ||
-        !targetId
-    ) {
+function openGalleryReportDialog(targetType, targetId) {
+    if (targetType !== "gallery_item" || !targetId) {
         return;
     }
 
-    const dialog =
-        ensureGalleryReportDialog();
+    const dialog = ensureGalleryReportDialog();
 
     const reasonSelect =
         document.getElementById(
@@ -873,19 +768,16 @@ function openGalleryReportDialog(
     }
 
     if (status) {
-        status.textContent =
-            "";
+        status.textContent = "";
     }
 
     if (!dialog.open) {
         dialog.showModal();
     }
 
-    requestAnimationFrame(
-        () => {
-            reasonSelect?.focus();
-        }
-    );
+    requestAnimationFrame(() => {
+        reasonSelect?.focus();
+    });
 }
 
 // =========================================================
@@ -893,9 +785,7 @@ function openGalleryReportDialog(
 // =========================================================
 
 async function submitGalleryReport() {
-    if (
-        !currentGalleryReportTarget
-    ) {
+    if (!currentGalleryReportTarget) {
         return;
     }
 
@@ -920,12 +810,10 @@ async function submitGalleryReport() {
         );
 
     const reason =
-        reasonSelect?.value?.trim() ||
-        "";
+        reasonSelect?.value?.trim() || "";
 
     const details =
-        detailsInput?.value?.trim() ||
-        "";
+        detailsInput?.value?.trim() || "";
 
     if (!reason) {
         if (status) {
@@ -934,7 +822,6 @@ async function submitGalleryReport() {
         }
 
         reasonSelect?.focus();
-
         return;
     }
 
@@ -945,26 +832,15 @@ async function submitGalleryReport() {
         }
 
         detailsInput?.focus();
-
         return;
     }
 
-    // -----------------------------------------------------
-    // Reporting requires an authenticated user.
-    // The button/dialog itself remains visible to everyone.
-    // -----------------------------------------------------
-
     const {
-        data: {
-            user
-        },
+        data: { user },
         error: userError
     } = await client.auth.getUser();
 
-    if (
-        userError ||
-        !user
-    ) {
+    if (userError || !user) {
         if (status) {
             status.textContent =
                 "You must be logged in to submit a report. ♡";
@@ -974,38 +850,26 @@ async function submitGalleryReport() {
     }
 
     if (submitButton) {
-        submitButton.disabled =
-            true;
-
-        submitButton.textContent =
-            "Submitting... 🌸";
+        submitButton.disabled = true;
+        submitButton.textContent = "Submitting... 🌸";
     }
 
     if (status) {
-        status.textContent =
-            "Sending report... 🌸";
+        status.textContent = "Sending report... 🌸";
     }
 
     try {
-        const {
-            error
-        } = await client.rpc(
-            "create_report",
-            {
+        const { error } =
+            await client.rpc("create_report", {
                 p_target_type:
                     currentGalleryReportTarget.targetType,
 
                 p_target_id:
                     currentGalleryReportTarget.targetId,
 
-                p_reason:
-                    reason,
-
-                p_details:
-                    details ||
-                    null
-            }
-        );
+                p_reason: reason,
+                p_details: details || null
+            });
 
         if (error) {
             throw error;
@@ -1017,26 +881,21 @@ async function submitGalleryReport() {
         }
 
         if (submitButton) {
-            submitButton.disabled =
-                true;
-
+            submitButton.disabled = true;
             submitButton.textContent =
                 "Report submitted ♡";
         }
 
-        setTimeout(
-            () => {
-                const dialog =
-                    document.getElementById(
-                        "galleryReportDialog"
-                    );
+        setTimeout(() => {
+            const dialog =
+                document.getElementById(
+                    "galleryReportDialog"
+                );
 
-                if (dialog?.open) {
-                    dialog.close();
-                }
-            },
-            1200
-        );
+            if (dialog?.open) {
+                dialog.close();
+            }
+        }, 1200);
 
     } catch (error) {
         console.error(
@@ -1047,17 +906,13 @@ async function submitGalleryReport() {
         if (status) {
             status.textContent =
                 `Couldn't submit report: ${
-                    error?.message ||
-                    "Unknown error"
+                    error?.message || "Unknown error"
                 }`;
         }
 
         if (submitButton) {
-            submitButton.disabled =
-                false;
-
-            submitButton.textContent =
-                "Submit report";
+            submitButton.disabled = false;
+            submitButton.textContent = "Submit report";
         }
     }
 }
@@ -1067,97 +922,64 @@ async function submitGalleryReport() {
 // =========================================================
 
 function setupGalleryReportButtons() {
-    document.addEventListener(
-        "click",
-        (event) => {
-            const button =
-                event.target.closest(
-                    "[data-report-target-type][data-report-target-id]"
-                );
-
-            if (!button) {
-                return;
-            }
-
-            const targetType =
-                button.dataset
-                    .reportTargetType;
-
-            const targetId =
-                button.dataset
-                    .reportTargetId;
-
-            if (
-                targetType !==
-                "gallery_item"
-            ) {
-                return;
-            }
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            openGalleryReportDialog(
-                targetType,
-                targetId
+    document.addEventListener("click", (event) => {
+        const button =
+            event.target.closest(
+                "[data-report-target-type][data-report-target-id]"
             );
+
+        if (!button) {
+            return;
         }
-    );
+
+        const targetType =
+            button.dataset.reportTargetType;
+
+        const targetId =
+            button.dataset.reportTargetId;
+
+        if (targetType !== "gallery_item") {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        openGalleryReportDialog(targetType, targetId);
+    });
 }
 
 // =========================================================
 // ARTWORK VIEWER
 // =========================================================
 
-function openArtworkViewer(
-    artwork
-) {
+function openArtworkViewer(artwork) {
     const dialog =
-        document.getElementById(
-            "artworkDialog"
-        );
+        document.getElementById("artworkDialog");
 
     const image =
-        document.getElementById(
-            "artworkDialogImage"
-        );
+        document.getElementById("artworkDialogImage");
 
     const title =
-        document.getElementById(
-            "artworkDialogTitle"
-        );
+        document.getElementById("artworkDialogTitle");
 
     const description =
-        document.getElementById(
-            "artworkDialogDescription"
-        );
+        document.getElementById("artworkDialogDescription");
 
-    if (
-        !dialog ||
-        !image ||
-        !title ||
-        !description
-    ) {
+    if (!dialog || !image || !title || !description) {
         return;
     }
 
-    image.src =
-        artwork.image_url;
-
-    image.alt =
-        artwork.title ||
-        "Artwork";
+    image.src = artwork.image_url;
+    image.alt = artwork.title || "Artwork";
 
     title.textContent =
-        artwork.title ||
-        "♡ Artwork";
+        artwork.title || "♡ Artwork";
 
     description.textContent =
-        artwork.description ||
-        "";
+        artwork.description || "";
 
-    description.hidden =
-        !artwork.description;
+    description.hidden = !artwork.description;
 
     if (!dialog.open) {
         dialog.showModal();
@@ -1168,9 +990,7 @@ function openArtworkViewer(
 // EDIT ARTWORK
 // =========================================================
 
-function editArtwork(
-    artwork
-) {
+function editArtwork(artwork) {
     if (
         !isOwner ||
         !currentUser ||
@@ -1181,226 +1001,118 @@ function editArtwork(
     }
 
     const dialog =
-        document.createElement(
-            "dialog"
-        );
+        document.createElement("dialog");
 
-    dialog.className =
-        "artwork-edit-dialog";
+    dialog.className = "artwork-edit-dialog";
 
     const heading =
-        document.createElement(
-            "h2"
-        );
+        document.createElement("h2");
 
-    heading.textContent =
-        "✏️ Edit artwork";
-
-    dialog.appendChild(
-        heading
-    );
+    heading.textContent = "✏️ Edit artwork";
+    dialog.appendChild(heading);
 
     const preview =
-        document.createElement(
-            "img"
-        );
+        document.createElement("img");
 
-    preview.className =
-        "artwork-edit-preview";
+    preview.className = "artwork-edit-preview";
+    preview.src = artwork.image_url;
+    preview.alt = artwork.title || "Artwork";
 
-    preview.src =
-        artwork.image_url;
-
-    preview.alt =
-        artwork.title ||
-        "Artwork";
-
-    dialog.appendChild(
-        preview
-    );
+    dialog.appendChild(preview);
 
     const form =
-        document.createElement(
-            "form"
-        );
+        document.createElement("form");
 
-    form.className =
-        "artwork-edit-form";
-
-    // -----------------------------------------------------
-    // TITLE
-    // -----------------------------------------------------
+    form.className = "artwork-edit-form";
 
     const titleLabel =
-        document.createElement(
-            "label"
-        );
+        document.createElement("label");
 
-    titleLabel.textContent =
-        "Title";
+    titleLabel.textContent = "Title";
 
     const titleInput =
-        document.createElement(
-            "input"
-        );
+        document.createElement("input");
 
-    titleInput.type =
-        "text";
+    titleInput.type = "text";
+    titleInput.maxLength = 200;
+    titleInput.value = artwork.title || "";
 
-    titleInput.maxLength =
-        200;
-
-    titleInput.value =
-        artwork.title ||
-        "";
-
-    titleLabel.appendChild(
-        titleInput
-    );
-
-    // -----------------------------------------------------
-    // DESCRIPTION
-    // -----------------------------------------------------
+    titleLabel.appendChild(titleInput);
 
     const descriptionLabel =
-        document.createElement(
-            "label"
-        );
+        document.createElement("label");
 
-    descriptionLabel.textContent =
-        "Description";
+    descriptionLabel.textContent = "Description";
 
     const descriptionInput =
-        document.createElement(
-            "textarea"
-        );
+        document.createElement("textarea");
 
-    descriptionInput.rows =
-        5;
+    descriptionInput.rows = 5;
+    descriptionInput.maxLength = 2000;
+    descriptionInput.value = artwork.description || "";
 
-    descriptionInput.maxLength =
-        2000;
-
-    descriptionInput.value =
-        artwork.description ||
-        "";
-
-    descriptionLabel.appendChild(
-        descriptionInput
-    );
-
-    // -----------------------------------------------------
-    // STATUS
-    // -----------------------------------------------------
+    descriptionLabel.appendChild(descriptionInput);
 
     const status =
-        document.createElement(
-            "p"
-        );
+        document.createElement("p");
 
-    status.className =
-        "artwork-edit-status";
-
-    // -----------------------------------------------------
-    // BUTTONS
-    // -----------------------------------------------------
+    status.className = "artwork-edit-status";
 
     const buttons =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-    buttons.className =
-        "artwork-edit-actions";
+    buttons.className = "artwork-edit-actions";
 
     const cancelButton =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
-    cancelButton.type =
-        "button";
-
-    cancelButton.textContent =
-        "Cancel";
+    cancelButton.type = "button";
+    cancelButton.textContent = "Cancel";
 
     const deleteButton =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
-    deleteButton.type =
-        "button";
-
-    deleteButton.textContent =
-        "🗑️ Delete artwork";
+    deleteButton.type = "button";
+    deleteButton.textContent = "🗑️ Delete artwork";
 
     const saveButton =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
-    saveButton.type =
-        "submit";
+    saveButton.type = "submit";
+    saveButton.textContent = "Save changes ♡";
 
-    saveButton.textContent =
-        "Save changes ♡";
-
-    // -----------------------------------------------------
-    // CANCEL
-    // -----------------------------------------------------
-
-    cancelButton.addEventListener(
-        "click",
-        () => {
-            dialog.close();
-        }
-    );
-
-    // -----------------------------------------------------
-    // DELETE
-    // -----------------------------------------------------
+    cancelButton.addEventListener("click", () => {
+        dialog.close();
+    });
 
     deleteButton.addEventListener(
         "click",
         async () => {
-            const confirmed =
-                window.confirm(
-                    `Delete "${
-                        artwork.title ||
-                        "this artwork"
-                    }" permanently?\n\n` +
-                    "The artwork and uploaded image will be removed. This cannot be undone."
-                );
+            const confirmed = window.confirm(
+                `Delete "${
+                    artwork.title || "this artwork"
+                }" permanently?\n\n` +
+                "The artwork and uploaded image will be removed. This cannot be undone."
+            );
 
             if (!confirmed) {
                 return;
             }
 
-            deleteButton.disabled =
-                true;
+            deleteButton.disabled = true;
+            cancelButton.disabled = true;
+            saveButton.disabled = true;
 
-            cancelButton.disabled =
-                true;
-
-            saveButton.disabled =
-                true;
-
-            status.textContent =
-                "Deleting artwork... 🌸";
+            status.textContent = "Deleting artwork... 🌸";
 
             try {
-                await performArtworkDelete(
-                    artwork
-                );
+                await performArtworkDelete(artwork);
 
                 dialog.close();
 
                 await loadFolderPage();
 
-                showStatus(
-                    "Artwork deleted. ♡"
-                );
+                showStatus("Artwork deleted. ♡");
 
             } catch (error) {
                 console.error(
@@ -1410,70 +1122,38 @@ function editArtwork(
 
                 status.textContent =
                     `Couldn't delete artwork: ${
-                        error?.message ||
-                        "Unknown error"
+                        error?.message || "Unknown error"
                     }`;
 
-                deleteButton.disabled =
-                    false;
-
-                cancelButton.disabled =
-                    false;
-
-                saveButton.disabled =
-                    false;
+                deleteButton.disabled = false;
+                cancelButton.disabled = false;
+                saveButton.disabled = false;
             }
         }
     );
-
-    // -----------------------------------------------------
-    // SAVE
-    // -----------------------------------------------------
 
     form.addEventListener(
         "submit",
         async (event) => {
             event.preventDefault();
 
-            saveButton.disabled =
-                true;
+            saveButton.disabled = true;
+            cancelButton.disabled = true;
+            deleteButton.disabled = true;
 
-            cancelButton.disabled =
-                true;
-
-            deleteButton.disabled =
-                true;
-
-            status.textContent =
-                "Saving artwork... 🌸";
+            status.textContent = "Saving artwork... 🌸";
 
             try {
-                const {
-                    error
-                } = await client
-                    .from(
-                        "gallery_items"
-                    )
+                const { error } = await client
+                    .from("gallery_items")
                     .update({
-                        title:
-                            titleInput.value.trim() ||
-                            null,
-
+                        title: titleInput.value.trim() || null,
                         description:
-                            descriptionInput.value.trim() ||
-                            null,
-
-                        updated_at:
-                            new Date().toISOString()
+                            descriptionInput.value.trim() || null,
+                        updated_at: new Date().toISOString()
                     })
-                    .eq(
-                        "id",
-                        artwork.id
-                    )
-                    .eq(
-                        "user_id",
-                        currentUser.id
-                    );
+                    .eq("id", artwork.id)
+                    .eq("user_id", currentUser.id);
 
                 if (error) {
                     throw error;
@@ -1483,9 +1163,7 @@ function editArtwork(
 
                 await loadFolderPage();
 
-                showStatus(
-                    "Artwork updated! ♡"
-                );
+                showStatus("Artwork updated! ♡");
 
             } catch (error) {
                 console.error(
@@ -1495,81 +1173,41 @@ function editArtwork(
 
                 status.textContent =
                     `Couldn't update artwork: ${
-                        error?.message ||
-                        "Unknown error"
+                        error?.message || "Unknown error"
                     }`;
 
-                saveButton.disabled =
-                    false;
-
-                cancelButton.disabled =
-                    false;
-
-                deleteButton.disabled =
-                    false;
+                saveButton.disabled = false;
+                cancelButton.disabled = false;
+                deleteButton.disabled = false;
             }
         }
     );
 
-    // -----------------------------------------------------
-    // BUILD FORM
-    // -----------------------------------------------------
+    buttons.appendChild(cancelButton);
+    buttons.appendChild(deleteButton);
+    buttons.appendChild(saveButton);
 
-    buttons.appendChild(
-        cancelButton
-    );
+    form.appendChild(titleLabel);
+    form.appendChild(descriptionLabel);
+    form.appendChild(status);
+    form.appendChild(buttons);
 
-    buttons.appendChild(
-        deleteButton
-    );
-
-    buttons.appendChild(
-        saveButton
-    );
-
-    form.appendChild(
-        titleLabel
-    );
-
-    form.appendChild(
-        descriptionLabel
-    );
-
-    form.appendChild(
-        status
-    );
-
-    form.appendChild(
-        buttons
-    );
-
-    dialog.appendChild(
-        form
-    );
-
-    document.body.appendChild(
-        dialog
-    );
+    dialog.appendChild(form);
+    document.body.appendChild(dialog);
 
     dialog.addEventListener(
         "close",
         () => {
             dialog.remove();
         },
-        {
-            once: true
-        }
+        { once: true }
     );
 
-    dialog.addEventListener(
-        "cancel",
-        () => {
-            dialog.close();
-        }
-    );
+    dialog.addEventListener("cancel", () => {
+        dialog.close();
+    });
 
     dialog.showModal();
-
     titleInput.focus();
 }
 
@@ -1577,18 +1215,14 @@ function editArtwork(
 // DELETE ARTWORK
 // =========================================================
 
-async function performArtworkDelete(
-    artwork
-) {
+async function performArtworkDelete(artwork) {
     if (
         !currentUser ||
         !isOwner ||
         String(artwork.user_id) !==
             String(currentUser.id)
     ) {
-        throw new Error(
-            "You don't own this artwork."
-        );
+        throw new Error("You don't own this artwork.");
     }
 
     const storagePath =
@@ -1596,19 +1230,11 @@ async function performArtworkDelete(
         artwork.image_path ||
         null;
 
-    // -----------------------------------------------------
-    // Delete uploaded image from Storage first.
-    // -----------------------------------------------------
-
     if (storagePath) {
-        const {
-            error: storageError
-        } = await client
+        const { error: storageError } = await client
             .storage
             .from("gallery")
-            .remove([
-                storagePath
-            ]);
+            .remove([storagePath]);
 
         if (storageError) {
             throw new Error(
@@ -1617,45 +1243,20 @@ async function performArtworkDelete(
         }
     }
 
-    // -----------------------------------------------------
-    // Remove all folder relationships.
-    // -----------------------------------------------------
-
-    const {
-        error: relationError
-    } = await client
-        .from(
-            "gallery_item_folders"
-        )
+    const { error: relationError } = await client
+        .from("gallery_item_folders")
         .delete()
-        .eq(
-            "gallery_item_id",
-            artwork.id
-        );
+        .eq("gallery_item_id", artwork.id);
 
     if (relationError) {
         throw relationError;
     }
 
-    // -----------------------------------------------------
-    // Delete artwork database row.
-    // -----------------------------------------------------
-
-    const {
-        error: artworkError
-    } = await client
-        .from(
-            "gallery_items"
-        )
+    const { error: artworkError } = await client
+        .from("gallery_items")
         .delete()
-        .eq(
-            "id",
-            artwork.id
-        )
-        .eq(
-            "user_id",
-            currentUser.id
-        );
+        .eq("id", artwork.id)
+        .eq("user_id", currentUser.id);
 
     if (artworkError) {
         throw artworkError;
@@ -1666,9 +1267,7 @@ async function performArtworkDelete(
 // REMOVE ARTWORK FROM THIS FOLDER
 // =========================================================
 
-async function removeFromFolder(
-    artwork
-) {
+async function removeFromFolder(artwork) {
     if (
         !isOwner ||
         !currentUser ||
@@ -1678,39 +1277,25 @@ async function removeFromFolder(
         return;
     }
 
-    const confirmed =
-        window.confirm(
-            `Remove "${
-                artwork.title ||
-                "this artwork"
-            }" from this folder?\n\n` +
-            "The artwork itself will stay in your gallery."
-        );
+    const confirmed = window.confirm(
+        `Remove "${
+            artwork.title || "this artwork"
+        }" from this folder?\n\n` +
+        "The artwork itself will stay in your gallery."
+    );
 
     if (!confirmed) {
         return;
     }
 
-    showStatus(
-        "Removing artwork from folder... 🌸"
-    );
+    showStatus("Removing artwork from folder... 🌸");
 
     try {
-        const {
-            error
-        } = await client
-            .from(
-                "gallery_item_folders"
-            )
+        const { error } = await client
+            .from("gallery_item_folders")
             .delete()
-            .eq(
-                "gallery_item_id",
-                artwork.id
-            )
-            .eq(
-                "folder_id",
-                folderId
-            );
+            .eq("gallery_item_id", artwork.id)
+            .eq("folder_id", folderId);
 
         if (error) {
             throw error;
@@ -1718,9 +1303,7 @@ async function removeFromFolder(
 
         await loadFolderPage();
 
-        showStatus(
-            "Artwork removed from this folder. ♡"
-        );
+        showStatus("Artwork removed from this folder. ♡");
 
     } catch (error) {
         console.error(
@@ -1730,8 +1313,7 @@ async function removeFromFolder(
 
         showStatus(
             `Couldn't remove artwork from folder: ${
-                error?.message ||
-                "Unknown error"
+                error?.message || "Unknown error"
             }`,
             true
         );
@@ -1743,22 +1325,15 @@ async function removeFromFolder(
 // =========================================================
 
 async function openUploadDialog() {
-    if (
-        !isOwner ||
-        !currentUser
-    ) {
+    if (!isOwner || !currentUser) {
         return;
     }
 
     const dialog =
-        document.getElementById(
-            "uploadDialog"
-        );
+        document.getElementById("uploadDialog");
 
     const form =
-        document.getElementById(
-            "uploadForm"
-        );
+        document.getElementById("uploadForm");
 
     if (!dialog || !form) {
         return;
@@ -1767,7 +1342,6 @@ async function openUploadDialog() {
     form.reset();
 
     clearUploadError();
-
     resetUploadPreview();
 
     await renderUploadFolderList();
@@ -1783,25 +1357,20 @@ async function openUploadDialog() {
 
 function closeUploadDialog() {
     const dialog =
-        document.getElementById(
-            "uploadDialog"
-        );
+        document.getElementById("uploadDialog");
 
     if (dialog?.open) {
         dialog.close();
     }
 
     const form =
-        document.getElementById(
-            "uploadForm"
-        );
+        document.getElementById("uploadForm");
 
     if (form) {
         form.reset();
     }
 
     clearUploadError();
-
     resetUploadPreview();
 }
 
@@ -1811,40 +1380,21 @@ function closeUploadDialog() {
 
 async function renderUploadFolderList() {
     const list =
-        document.getElementById(
-            "uploadFolderList"
-        );
+        document.getElementById("uploadFolderList");
 
-    if (
-        !list ||
-        !currentUser
-    ) {
+    if (!list || !currentUser) {
         return;
     }
 
-    list.innerHTML =
-        "<p>Loading folders... 🌸</p>";
+    list.innerHTML = "<p>Loading folders... 🌸</p>";
 
-    const {
-        data: userFolders,
-        error
-    } = await client
-        .from(
-            "gallery_folders"
-        )
-        .select(
-            "id, name"
-        )
-        .eq(
-            "user_id",
-            currentUser.id
-        )
-        .order(
-            "created_at",
-            {
-                ascending: true
-            }
-        );
+    const { data: userFolders, error } = await client
+        .from("gallery_folders")
+        .select("id, name")
+        .eq("user_id", currentUser.id)
+        .order("created_at", {
+            ascending: true
+        });
 
     if (error) {
         console.error(
@@ -1852,9 +1402,7 @@ async function renderUploadFolderList() {
             error
         );
 
-        list.textContent =
-            "Couldn't load folders.";
-
+        list.textContent = "Couldn't load folders.";
         return;
     }
 
@@ -1862,118 +1410,68 @@ async function renderUploadFolderList() {
 
     if (!userFolders?.length) {
         const empty =
-            document.createElement(
-                "p"
-            );
+            document.createElement("p");
 
         empty.textContent =
             "You don't have any folders yet. The artwork can still be uploaded unsorted. ♡";
 
-        list.appendChild(
-            empty
-        );
-
+        list.appendChild(empty);
         return;
     }
 
-    userFolders.forEach(
-        (userFolder) => {
-            const label =
-                document.createElement(
-                    "label"
-                );
+    userFolders.forEach((userFolder) => {
+        const label =
+            document.createElement("label");
 
-            label.className =
-                "upload-folder-option";
+        label.className = "upload-folder-option";
 
-            const checkbox =
-                document.createElement(
-                    "input"
-                );
+        const checkbox =
+            document.createElement("input");
 
-            checkbox.type =
-                "checkbox";
+        checkbox.type = "checkbox";
+        checkbox.name = "folderIds";
+        checkbox.value = String(userFolder.id);
 
-            checkbox.name =
-                "folderIds";
+        checkbox.checked =
+            String(userFolder.id) === String(folderId);
 
-            checkbox.value =
-                String(
-                    userFolder.id
-                );
+        const text =
+            document.createElement("span");
 
-            // Automatically select the
-            // folder currently being viewed.
-            checkbox.checked =
-                String(
-                    userFolder.id
-                ) ===
-                String(folderId);
+        text.textContent =
+            userFolder.name || "Untitled Folder";
 
-            const text =
-                document.createElement(
-                    "span"
-                );
+        label.appendChild(checkbox);
+        label.appendChild(text);
 
-            text.textContent =
-                userFolder.name ||
-                "Untitled Folder";
-
-            label.appendChild(
-                checkbox
-            );
-
-            label.appendChild(
-                text
-            );
-
-            list.appendChild(
-                label
-            );
-        }
-    );
+        list.appendChild(label);
+    });
 }
 
 // =========================================================
 // UPLOAD ARTWORK
 // =========================================================
 
-async function uploadArtwork(
-    event
-) {
+async function uploadArtwork(event) {
     event.preventDefault();
 
-    if (
-        uploading ||
-        !isOwner ||
-        !currentUser
-    ) {
+    if (uploading || !isOwner || !currentUser) {
         return;
     }
 
     const fileInput =
-        document.getElementById(
-            "artworkFile"
-        );
+        document.getElementById("artworkFile");
 
     const titleInput =
-        document.getElementById(
-            "artworkTitle"
-        );
+        document.getElementById("artworkTitle");
 
     const descriptionInput =
-        document.getElementById(
-            "artworkDescription"
-        );
+        document.getElementById("artworkDescription");
 
-    const file =
-        fileInput?.files?.[0];
+    const file = fileInput?.files?.[0];
 
     if (!file) {
-        showUploadError(
-            "Please choose an image."
-        );
-
+        showUploadError("Please choose an image.");
         return;
     }
 
@@ -1985,11 +1483,7 @@ async function uploadArtwork(
         "image/avif"
     ];
 
-    if (
-        !allowedTypes.includes(
-            file.type
-        )
-    ) {
+    if (!allowedTypes.includes(file.type)) {
         showUploadError(
             "Please choose a supported image file."
         );
@@ -1997,8 +1491,7 @@ async function uploadArtwork(
         return;
     }
 
-    const maxSize =
-        10 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024;
 
     if (file.size > maxSize) {
         showUploadError(
@@ -2011,16 +1504,11 @@ async function uploadArtwork(
     uploading = true;
 
     const saveButton =
-        document.getElementById(
-            "uploadSaveButton"
-        );
+        document.getElementById("uploadSaveButton");
 
     if (saveButton) {
-        saveButton.disabled =
-            true;
-
-        saveButton.textContent =
-            "Uploading... 🌸";
+        saveButton.disabled = true;
+        saveButton.textContent = "Uploading... 🌸";
     }
 
     clearUploadError();
@@ -2029,20 +1517,11 @@ async function uploadArtwork(
     let createdArtworkId = null;
 
     try {
-        // -------------------------------------------------
-        // Create unique storage path
-        // -------------------------------------------------
-
-        const extension =
-            getFileExtension(
-                file
-            );
+        const extension = getFileExtension(file);
 
         const uniqueId =
-            typeof crypto !==
-                "undefined" &&
-            typeof crypto.randomUUID ===
-                "function"
+            typeof crypto !== "undefined" &&
+            typeof crypto.randomUUID === "function"
                 ? crypto.randomUUID()
                 : `${Date.now()}-${Math.random()
                     .toString(36)
@@ -2051,49 +1530,25 @@ async function uploadArtwork(
         storagePath =
             `${currentUser.id}/${uniqueId}.${extension}`;
 
-        // -------------------------------------------------
-        // Upload image
-        // -------------------------------------------------
-
-        const {
-            error: uploadStorageError
-        } = await client
+        const { error: uploadStorageError } = await client
             .storage
             .from("gallery")
-            .upload(
-                storagePath,
-                file,
-                {
-                    cacheControl:
-                        "3600",
-
-                    contentType:
-                        file.type,
-
-                    upsert:
-                        false
-                }
-            );
+            .upload(storagePath, file, {
+                cacheControl: "3600",
+                contentType: file.type,
+                upsert: false
+            });
 
         if (uploadStorageError) {
             throw uploadStorageError;
         }
 
-        // -------------------------------------------------
-        // Get public URL
-        // -------------------------------------------------
-
-        const {
-            data: publicUrlData
-        } = client
+        const { data: publicUrlData } = client
             .storage
             .from("gallery")
-            .getPublicUrl(
-                storagePath
-            );
+            .getPublicUrl(storagePath);
 
-        const imageUrl =
-            publicUrlData?.publicUrl;
+        const imageUrl = publicUrlData?.publicUrl;
 
         if (!imageUrl) {
             throw new Error(
@@ -2101,93 +1556,46 @@ async function uploadArtwork(
             );
         }
 
-        // -------------------------------------------------
-        // Create database row
-        // -------------------------------------------------
-
-        const {
-            data: artworkData,
-            error: artworkError
-        } = await client
-            .from(
-                "gallery_items"
-            )
-            .insert({
-                user_id:
-                    currentUser.id,
-
-                image_url:
-                    imageUrl,
-
-                image_path:
-                    storagePath,
-
-                storage_path:
-                    storagePath,
-
-                title:
-                    titleInput?.value.trim() ||
-                    null,
-
-                description:
-                    descriptionInput?.value.trim() ||
-                    null,
-
-                is_hidden:
-                    false
-            })
-            .select("id")
-            .single();
+        const { data: artworkData, error: artworkError } =
+            await client
+                .from("gallery_items")
+                .insert({
+                    user_id: currentUser.id,
+                    image_url: imageUrl,
+                    image_path: storagePath,
+                    storage_path: storagePath,
+                    title: titleInput?.value.trim() || null,
+                    description:
+                        descriptionInput?.value.trim() || null,
+                    is_hidden: false
+                })
+                .select("id")
+                .single();
 
         if (artworkError) {
             throw artworkError;
         }
 
-        createdArtworkId =
-            artworkData?.id ||
-            null;
-
-        // -------------------------------------------------
-        // Folder assignments
-        // -------------------------------------------------
+        createdArtworkId = artworkData?.id || null;
 
         const selectedFolderIds =
             Array.from(
                 document.querySelectorAll(
                     '#uploadFolderList input[type="checkbox"]:checked'
                 )
-            ).map(
-                (checkbox) =>
-                    checkbox.value
+            ).map((checkbox) => checkbox.value);
+
+        if (createdArtworkId && selectedFolderIds.length) {
+            const rows = selectedFolderIds.map(
+                (selectedFolderId) => ({
+                    gallery_item_id: createdArtworkId,
+                    folder_id: selectedFolderId
+                })
             );
 
-        if (
-            createdArtworkId &&
-            selectedFolderIds.length
-        ) {
-            const rows =
-                selectedFolderIds.map(
-                    (
-                        selectedFolderId
-                    ) => ({
-                        gallery_item_id:
-                            createdArtworkId,
-
-                        folder_id:
-                            selectedFolderId
-                    })
-                );
-
-            const {
-                error:
-                    relationError
-            } = await client
-                .from(
-                    "gallery_item_folders"
-                )
-                .insert(
-                    rows
-                );
+            const { error: relationError } = await client
+                .from("gallery_item_folders")
+                .insert(rows);
 
             if (relationError) {
                 console.error(
@@ -2208,17 +1616,11 @@ async function uploadArtwork(
             }
         }
 
-        // -------------------------------------------------
-        // Finished
-        // -------------------------------------------------
-
         closeUploadDialog();
 
         await loadFolderPage();
 
-        showStatus(
-            "Artwork uploaded! ♡"
-        );
+        showStatus("Artwork uploaded! ♡");
 
     } catch (error) {
         console.error(
@@ -2226,24 +1628,14 @@ async function uploadArtwork(
             error
         );
 
-        // If the image was uploaded but the
-        // database row was never created,
-        // remove the orphaned Storage file.
-        if (
-            storagePath &&
-            !createdArtworkId
-        ) {
+        if (storagePath && !createdArtworkId) {
             try {
                 await client
                     .storage
                     .from("gallery")
-                    .remove([
-                        storagePath
-                    ]);
+                    .remove([storagePath]);
 
-            } catch (
-                cleanupError
-            ) {
+            } catch (cleanupError) {
                 console.error(
                     "GALLERY FOLDER: storage cleanup error:",
                     cleanupError
@@ -2253,8 +1645,7 @@ async function uploadArtwork(
 
         showUploadError(
             `Couldn't upload artwork: ${
-                error?.message ||
-                "Unknown error"
+                error?.message || "Unknown error"
             }`
         );
 
@@ -2262,11 +1653,8 @@ async function uploadArtwork(
         uploading = false;
 
         if (saveButton) {
-            saveButton.disabled =
-                false;
-
-            saveButton.textContent =
-                "Upload artwork ♡";
+            saveButton.disabled = false;
+            saveButton.textContent = "Upload artwork ♡";
         }
     }
 }
@@ -2275,24 +1663,15 @@ async function uploadArtwork(
 // FILE EXTENSION
 // =========================================================
 
-function getFileExtension(
-    file
-) {
-    const filename =
-        file?.name || "";
-
-    const parts =
-        filename.split(".");
+function getFileExtension(file) {
+    const filename = file?.name || "";
+    const parts = filename.split(".");
 
     if (parts.length > 1) {
-        const extension =
-            parts
-                .pop()
-                .toLowerCase()
-                .replace(
-                    /[^a-z0-9]/g,
-                    ""
-                );
+        const extension = parts
+            .pop()
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
 
         if (extension) {
             return extension;
@@ -2300,26 +1679,14 @@ function getFileExtension(
     }
 
     const mimeMap = {
-        "image/jpeg":
-            "jpg",
-
-        "image/png":
-            "png",
-
-        "image/gif":
-            "gif",
-
-        "image/webp":
-            "webp",
-
-        "image/avif":
-            "avif"
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/gif": "gif",
+        "image/webp": "webp",
+        "image/avif": "avif"
     };
 
-    return (
-        mimeMap[file?.type] ||
-        "jpg"
-    );
+    return mimeMap[file?.type] || "jpg";
 }
 
 // =========================================================
@@ -2328,87 +1695,53 @@ function getFileExtension(
 
 function updateUploadPreview() {
     const fileInput =
-        document.getElementById(
-            "artworkFile"
-        );
+        document.getElementById("artworkFile");
 
     const preview =
-        document.getElementById(
-            "uploadPreview"
-        );
+        document.getElementById("uploadPreview");
 
     const previewImage =
-        document.getElementById(
-            "uploadPreviewImage"
-        );
+        document.getElementById("uploadPreviewImage");
 
-    const file =
-        fileInput?.files?.[0];
+    const file = fileInput?.files?.[0];
 
-    if (
-        !file ||
-        !preview ||
-        !previewImage
-    ) {
+    if (!file || !preview || !previewImage) {
         resetUploadPreview();
-
         return;
     }
 
-    if (
-        !file.type.startsWith(
-            "image/"
-        )
-    ) {
+    if (!file.type.startsWith("image/")) {
         resetUploadPreview();
-
         return;
     }
 
-    const objectUrl =
-        URL.createObjectURL(
-            file
-        );
+    const objectUrl = URL.createObjectURL(file);
 
-    previewImage.src =
-        objectUrl;
-
-    preview.hidden =
-        false;
+    previewImage.src = objectUrl;
+    preview.hidden = false;
 
     previewImage.addEventListener(
         "load",
         () => {
-            URL.revokeObjectURL(
-                objectUrl
-            );
+            URL.revokeObjectURL(objectUrl);
         },
-        {
-            once: true
-        }
+        { once: true }
     );
 }
 
 function resetUploadPreview() {
     const preview =
-        document.getElementById(
-            "uploadPreview"
-        );
+        document.getElementById("uploadPreview");
 
     const previewImage =
-        document.getElementById(
-            "uploadPreviewImage"
-        );
+        document.getElementById("uploadPreviewImage");
 
     if (preview) {
-        preview.hidden =
-            true;
+        preview.hidden = true;
     }
 
     if (previewImage) {
-        previewImage.removeAttribute(
-            "src"
-        );
+        previewImage.removeAttribute("src");
     }
 }
 
@@ -2416,83 +1749,53 @@ function resetUploadPreview() {
 // UPLOAD ERROR
 // =========================================================
 
-function showUploadError(
-    message
-) {
+function showUploadError(message) {
     const errorElement =
-        document.getElementById(
-            "uploadError"
-        );
+        document.getElementById("uploadError");
 
     if (!errorElement) {
         return;
     }
 
-    errorElement.textContent =
-        message;
-
-    errorElement.hidden =
-        false;
+    errorElement.textContent = message;
+    errorElement.hidden = false;
 }
 
 function clearUploadError() {
     const errorElement =
-        document.getElementById(
-            "uploadError"
-        );
+        document.getElementById("uploadError");
 
     if (!errorElement) {
         return;
     }
 
-    errorElement.textContent =
-        "";
-
-    errorElement.hidden =
-        true;
+    errorElement.textContent = "";
+    errorElement.hidden = true;
 }
 
 // =========================================================
 // STATUS
 // =========================================================
 
-function showStatus(
-    message,
-    isError = false
-) {
+function showStatus(message, isError = false) {
     const status =
-        document.getElementById(
-            "folderStatus"
-        );
+        document.getElementById("folderStatus");
 
     if (!status) {
         return;
     }
 
-    status.textContent =
-        message;
+    status.textContent = message;
 
     status.dataset.state =
-        isError
-            ? "error"
-            : "success";
+        isError ? "error" : "success";
 
-    clearTimeout(
-        statusTimeout
-    );
+    clearTimeout(statusTimeout);
 
-    statusTimeout =
-        setTimeout(
-            () => {
-                status.textContent =
-                    "";
-
-                status.removeAttribute(
-                    "data-state"
-                );
-            },
-            5000
-        );
+    statusTimeout = setTimeout(() => {
+        status.textContent = "";
+        status.removeAttribute("data-state");
+    }, 5000);
 }
 
 // =========================================================
@@ -2501,53 +1804,31 @@ function showStatus(
 
 function bindEvents() {
     const uploadButton =
-        document.getElementById(
-            "uploadArtworkButton"
-        );
+        document.getElementById("uploadArtworkButton");
 
     const refreshButton =
-        document.getElementById(
-            "refreshArtworkButton"
-        );
+        document.getElementById("refreshArtworkButton");
 
     const emptyUploadButton =
-        document.getElementById(
-            "emptyUploadButton"
-        );
+        document.getElementById("emptyUploadButton");
 
     const uploadCancelButton =
-        document.getElementById(
-            "uploadCancelButton"
-        );
+        document.getElementById("uploadCancelButton");
 
     const uploadForm =
-        document.getElementById(
-            "uploadForm"
-        );
+        document.getElementById("uploadForm");
 
     const uploadDialog =
-        document.getElementById(
-            "uploadDialog"
-        );
+        document.getElementById("uploadDialog");
 
     const artworkFile =
-        document.getElementById(
-            "artworkFile"
-        );
+        document.getElementById("artworkFile");
 
     const artworkCloseButton =
-        document.getElementById(
-            "artworkCloseButton"
-        );
+        document.getElementById("artworkCloseButton");
 
     const artworkDialog =
-        document.getElementById(
-            "artworkDialog"
-        );
-
-    // -----------------------------------------------------
-    // Upload button
-    // -----------------------------------------------------
+        document.getElementById("artworkDialog");
 
     if (uploadButton) {
         uploadButton.addEventListener(
@@ -2556,10 +1837,6 @@ function bindEvents() {
         );
     }
 
-    // -----------------------------------------------------
-    // Empty-state upload button
-    // -----------------------------------------------------
-
     if (emptyUploadButton) {
         emptyUploadButton.addEventListener(
             "click",
@@ -2567,31 +1844,20 @@ function bindEvents() {
         );
     }
 
-    // -----------------------------------------------------
-    // Refresh
-    // -----------------------------------------------------
-
     if (refreshButton) {
         refreshButton.addEventListener(
             "click",
             async () => {
-                refreshButton.disabled =
-                    true;
+                refreshButton.disabled = true;
 
                 try {
                     await loadFolderPage();
-
                 } finally {
-                    refreshButton.disabled =
-                        false;
+                    refreshButton.disabled = false;
                 }
             }
         );
     }
-
-    // -----------------------------------------------------
-    // Cancel upload
-    // -----------------------------------------------------
 
     if (uploadCancelButton) {
         uploadCancelButton.addEventListener(
@@ -2600,10 +1866,6 @@ function bindEvents() {
         );
     }
 
-    // -----------------------------------------------------
-    // Upload form
-    // -----------------------------------------------------
-
     if (uploadForm) {
         uploadForm.addEventListener(
             "submit",
@@ -2611,20 +1873,12 @@ function bindEvents() {
         );
     }
 
-    // -----------------------------------------------------
-    // File preview
-    // -----------------------------------------------------
-
     if (artworkFile) {
         artworkFile.addEventListener(
             "change",
             updateUploadPreview
         );
     }
-
-    // -----------------------------------------------------
-    // Upload dialog close
-    // -----------------------------------------------------
 
     if (uploadDialog) {
         uploadDialog.addEventListener(
@@ -2636,35 +1890,22 @@ function bindEvents() {
         );
     }
 
-    // -----------------------------------------------------
-    // Artwork viewer close button
-    // -----------------------------------------------------
-
     if (artworkCloseButton) {
         artworkCloseButton.addEventListener(
             "click",
             () => {
-                if (
-                    artworkDialog?.open
-                ) {
+                if (artworkDialog?.open) {
                     artworkDialog.close();
                 }
             }
         );
     }
 
-    // -----------------------------------------------------
-    // Click outside artwork dialog
-    // -----------------------------------------------------
-
     if (artworkDialog) {
         artworkDialog.addEventListener(
             "click",
             (event) => {
-                if (
-                    event.target ===
-                    artworkDialog
-                ) {
+                if (event.target === artworkDialog) {
                     artworkDialog.close();
                 }
             }
@@ -2676,5 +1917,4 @@ function bindEvents() {
 // GLOBAL API
 // =========================================================
 
-window.galleryFolderLoad =
-    loadFolderPage;
+window.galleryFolderLoad = loadFolderPage;
