@@ -1295,6 +1295,7 @@ async function loadPublicFos(
             // IMAGE
             // =========================
 
+            
             const imageHTML =
                 image
                     ? `
@@ -1302,9 +1303,12 @@ async function loadPublicFos(
                             src="${escapeHtml(image)}"
                             alt="${escapeHtml(character.canonical_name)}"
                             class="fo-card-image"
+                            loading="lazy"
+                            decoding="async"
                         >
                     `
                     : "";
+
 
             // =========================
             // CARD

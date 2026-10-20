@@ -505,16 +505,22 @@ button:focus-visible {
     align-items: center;
 }
 
+/* Main F/O image */
 .fo-image {
+    display: block;
     width: 200px;
     height: 240px;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    flex-shrink: 0;
     border-radius: 18px;
     border: 3px solid var(--accent-color);
 }
 
+/* F/O information */
 .fo-info {
     flex: 1;
+    min-width: 0;
 }
 
 .fo-info h3 {
@@ -529,6 +535,7 @@ button:focus-visible {
     font-style: italic;
 }
 
+/* Main F/O card */
 .main-fo {
     padding: 20px;
     background: var(--soft-background);
@@ -536,13 +543,16 @@ button:focus-visible {
     border-radius: 15px;
 }
 
+/* Grid for side F/Os */
 .side-fos-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
 }
 
+/* Individual side F/O card */
 .side-fo {
+    min-width: 0;
     padding: 15px;
     background: var(--soft-background);
     border: 2px solid var(--border-color);
@@ -554,19 +564,64 @@ button:focus-visible {
     transform: translateY(-3px);
 }
 
+/* Side F/O thumbnails */
 .side-fo-image,
 .main-fo .side-fo-image {
     display: block;
     width: 100%;
-    max-height: 250px;
-    object-fit: cover;
+    height: 200px;
+    object-fit: contain;
+    object-position: center;
     border-radius: 12px;
-    margin-bottom: 12px;
+    margin: 0 auto 12px;
 }
 
+/* Public profile F/O card thumbnails */
+.fo-card-image {
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    height: 220px;
+    object-fit: contain;
+    object-position: center;
+    margin: 0 auto 12px;
+    border-radius: 12px;
+}
+
+/* Doubles preference */
 .doubles-preference {
     font-size: 13px;
     opacity: 0.8;
+}
+
+/* Smaller screens */
+@media (max-width: 600px) {
+    .fo-layout {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .fo-image {
+        width: 100%;
+        max-width: 220px;
+        height: 220px;
+        margin: 0 auto;
+    }
+
+    .side-fos-list {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
+    .side-fo-image,
+    .main-fo .side-fo-image {
+        height: 170px;
+    }
+
+    .fo-card-image {
+        max-width: 180px;
+        height: 180px;
+    }
 }
 
 
