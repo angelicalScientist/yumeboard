@@ -1,4 +1,5 @@
-// --------------------------------------------------
+
+ // --------------------------------------------------
 // DOM ELEMENTS
 // --------------------------------------------------
 
@@ -9,7 +10,6 @@ const loadMoreButton = document.getElementById("loadMoreButton");
 const loadMoreContainer = document.getElementById("loadMoreContainer");
 const backToProfile = document.getElementById("backToProfile");
 
-// Searchable fandom picker
 const fandomSearch = document.getElementById("fandomSearch");
 const fandomSuggestions = document.getElementById("fandomSuggestions");
 const selectedFandom = document.getElementById("selectedFandom");
@@ -80,7 +80,7 @@ async function getCurrentUser() {
 
 
 // --------------------------------------------------
-// LOAD CURRENT USER'S F/OS
+// LOAD CURRENT USER'S F/Os
 // --------------------------------------------------
 
 async function loadCurrentUserFos() {
@@ -141,7 +141,7 @@ function getFoCompatibility(myFo, theirFo) {
         return null;
     }
 
-    if (myCharacterId !== theirCharacterId) {
+    if (String(myCharacterId) !== String(theirCharacterId)) {
         return null;
     }
 
@@ -179,10 +179,7 @@ function getFoCompatibility(myFo, theirFo) {
 
 
 function getUserCompatibility(theirFos) {
-    if (
-        !currentUserFos.length ||
-        !theirFos.length
-    ) {
+    if (!currentUserFos.length || !theirFos.length) {
         return {
             type: "none",
             text: ""
@@ -286,9 +283,7 @@ function showFandomSuggestions() {
         return;
     }
 
-    const query = fandomSearch.value
-        .trim()
-        .toLowerCase();
+    const query = fandomSearch.value.trim().toLowerCase();
 
     fandomSuggestions.innerHTML = "";
 
@@ -305,24 +300,18 @@ function showFandomSuggestions() {
 
     const matches = allFandoms
         .filter(function (fandom) {
-            return fandom.name
-                .toLowerCase()
-                .includes(query);
+            return fandom.name.toLowerCase().includes(query);
         })
         .slice(0, MAX_FANDOM_SUGGESTIONS);
 
     if (matches.length === 0) {
-        const emptyMessage =
-            document.createElement("p");
+        const emptyMessage = document.createElement("p");
 
-        emptyMessage.className =
-            "fandom-no-results";
-
+        emptyMessage.className = "fandom-no-results";
         emptyMessage.textContent =
             "No matching fandoms found. ♡";
 
         fandomSuggestions.appendChild(emptyMessage);
-
         fandomSuggestions.hidden = false;
 
         fandomSearch.setAttribute(
@@ -376,9 +365,7 @@ function selectFandom(fandom) {
         "false"
     );
 
-    selectedFandomName.textContent =
-        fandom.name;
-
+    selectedFandomName.textContent = fandom.name;
     selectedFandom.hidden = false;
 
     loadUsers(true);
@@ -456,8 +443,7 @@ function renderUser(user) {
         user.username ||
         "Unnamed user";
 
-    const username =
-        user.username || "";
+    const username = user.username || "";
 
     const avatarHTML = user.avatar_url
         ? `
@@ -465,6 +451,8 @@ function renderUser(user) {
                 src="${escapeHtml(user.avatar_url)}"
                 alt=""
                 class="user-card-avatar"
+                loading="lazy"
+                decoding="async"
             >
         `
         : `
@@ -481,37 +469,18 @@ function renderUser(user) {
         `
         : "";
 
-    let mainFoHTML = "";
-
-    if (user.fos && user.fos.length > 0) {
-        const mainFo =
-            user.fos.find(function (fo) {
-                return fo.is_main;
-            }) || user.fos[0];
-
-        const characterName =
-            mainFo.characters?.canonical_name ||
-            "Unknown character";
-
-        mainFoHTML = `
-            <p class="user-card-fo">
-                ♡ Main F/O:
-                <strong>${escapeHtml(characterName)}</strong>
-            </p>
-        `;
-    }
-
     const compatibilityHTML =
         getCompatibilityHTML(user.compatibility);
+
+    // Main F/Os are intentionally not displayed on Discover.
+    // F/O data is still loaded separately for compatibility.
 
     card.innerHTML = `
         <div class="user-card-top">
             ${avatarHTML}
 
             <div class="user-card-heading">
-                <h3>
-                    ${escapeHtml(displayName)}
-                </h3>
+                <h3>${escapeHtml(displayName)}</h3>
 
                 <p class="user-card-username">
                     @${escapeHtml(username)}
@@ -520,8 +489,6 @@ function renderUser(user) {
         </div>
 
         ${bioHTML}
-
-        ${mainFoHTML}
 
         ${compatibilityHTML}
 
@@ -536,15 +503,10 @@ function renderUser(user) {
     const profileButton =
         card.querySelector(".view-profile-button");
 
-    if (profileButton) {
-        profileButton.addEventListener(
-            "click",
-            function () {
-                window.location.href =
-                    `users-profile.html?id=${encodeURIComponent(user.id)}`;
-            }
-        );
-    }
+    profileButton.addEventListener("click", function () {
+        window.location.href =
+            `users-profile.html?id=${encodeURIComponent(user.id)}`;
+    });
 
     userList.appendChild(card);
 }
@@ -555,7 +517,6 @@ function renderUser(user) {
 // --------------------------------------------------
 
 async function loadUsers(reset = false) {
-
     if (loadingUsers) {
         if (reset) {
             pendingLoad = true;
@@ -582,14 +543,12 @@ async function loadUsers(reset = false) {
     loadingUsers = true;
 
     if (searchMessage) {
-        searchMessage.textContent =
-            "Loading users... 🌸";
+        searchMessage.textContent = "Loading users... 🌸";
     }
 
     let visibleUsersAdded = 0;
 
-    const targetVisibleUsers =
-        USERS_PER_PAGE;
+    const targetVisibleUsers = USERS_PER_PAGE;
 
     try {
         while (
@@ -644,7 +603,6 @@ async function loadUsers(reset = false) {
                     );
             }
 
-            // Fandom filter.
             if (currentFandomId) {
                 profileQuery = profileQuery.eq(
                     "profile_fandoms.fandom_id",
@@ -671,12 +629,9 @@ async function loadUsers(reset = false) {
                 break;
             }
 
-            const loadedProfiles =
-                profiles || [];
+            const loadedProfiles = profiles || [];
 
-            if (
-                loadedProfiles.length < USERS_PER_PAGE
-            ) {
+            if (loadedProfiles.length < USERS_PER_PAGE) {
                 hasMoreUsers = false;
             }
 
@@ -692,8 +647,7 @@ async function loadUsers(reset = false) {
 
             const foMap = new Map();
 
-            // Load F/Os belonging to the profiles
-            // in this batch.
+            // Load F/Os for compatibility checking only.
             if (userIds.length > 0) {
                 const {
                     data: fos,
@@ -725,22 +679,15 @@ async function loadUsers(reset = false) {
                 } else {
                     (fos || []).forEach(function (fo) {
                         if (!foMap.has(fo.user_id)) {
-                            foMap.set(
-                                fo.user_id,
-                                []
-                            );
+                            foMap.set(fo.user_id, []);
                         }
 
-                        foMap
-                            .get(fo.user_id)
-                            .push(fo);
+                        foMap.get(fo.user_id).push(fo);
                     });
                 }
             }
 
-            // Filter and render profiles.
             for (const profile of loadedProfiles) {
-                // Never show yourself.
                 if (
                     currentUser &&
                     profile.id === currentUser.id
@@ -748,21 +695,18 @@ async function loadUsers(reset = false) {
                     continue;
                 }
 
-                // Never show users you blocked.
                 if (blockedUserIds.has(profile.id)) {
                     continue;
                 }
 
-                const theirFos =
-                    foMap.get(profile.id) || [];
+                const theirFos = foMap.get(profile.id) || [];
 
                 profile.fos = theirFos;
 
                 profile.compatibility =
                     getUserCompatibility(theirFos);
 
-                // Hide profiles with conflicting
-                // doubles preferences.
+                // Preserve the existing conflict filtering.
                 if (
                     profile.compatibility &&
                     profile.compatibility.type === "conflict"
@@ -774,33 +718,23 @@ async function loadUsers(reset = false) {
 
                 visibleUsersAdded++;
 
-                if (
-                    visibleUsersAdded >= targetVisibleUsers
-                ) {
+                if (visibleUsersAdded >= targetVisibleUsers) {
                     break;
                 }
             }
 
             currentOffset += loadedProfiles.length;
 
-            if (
-                loadedProfiles.length < USERS_PER_PAGE
-            ) {
+            if (loadedProfiles.length < USERS_PER_PAGE) {
                 hasMoreUsers = false;
             }
         }
-
-        // --------------------------------------------------
-        // STATUS MESSAGE
-        // --------------------------------------------------
 
         if (searchMessage) {
             const searchParts = [];
 
             if (currentSearch !== "") {
-                searchParts.push(
-                    `search for "${currentSearch}"`
-                );
+                searchParts.push(`search for "${currentSearch}"`);
             }
 
             if (currentFandomId !== "") {
@@ -823,10 +757,7 @@ async function loadUsers(reset = false) {
                 hasMoreUsers ? "block" : "none";
         }
 
-        if (
-            reset &&
-            visibleUsersAdded === 0
-        ) {
+        if (reset && visibleUsersAdded === 0) {
             userList.innerHTML = `
                 <p class="search-hint">
                     No compatible users found yet! ♡
@@ -849,22 +780,15 @@ async function loadUsers(reset = false) {
 // --------------------------------------------------
 
 if (userSearch) {
-    userSearch.addEventListener(
-        "input",
-        function () {
-            currentSearch =
-                userSearch.value.trim();
+    userSearch.addEventListener("input", function () {
+        currentSearch = userSearch.value.trim();
 
-            clearTimeout(searchTimer);
+        clearTimeout(searchTimer);
 
-            searchTimer = setTimeout(
-                function () {
-                    loadUsers(true);
-                },
-                300
-            );
-        }
-    );
+        searchTimer = setTimeout(function () {
+            loadUsers(true);
+        }, 300);
+    });
 }
 
 
@@ -873,33 +797,24 @@ if (userSearch) {
 // --------------------------------------------------
 
 if (fandomSearch) {
-    fandomSearch.addEventListener(
-        "input",
-        function () {
-            clearTimeout(fandomSearchTimer);
+    fandomSearch.addEventListener("input", function () {
+        clearTimeout(fandomSearchTimer);
 
-            fandomSearchTimer = setTimeout(
-                function () {
-                    showFandomSuggestions();
-                },
-                150
+        fandomSearchTimer = setTimeout(function () {
+            showFandomSuggestions();
+        }, 150);
+    });
+
+    fandomSearch.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            fandomSuggestions.hidden = true;
+
+            fandomSearch.setAttribute(
+                "aria-expanded",
+                "false"
             );
         }
-    );
-
-    fandomSearch.addEventListener(
-        "keydown",
-        function (event) {
-            if (event.key === "Escape") {
-                fandomSuggestions.hidden = true;
-
-                fandomSearch.setAttribute(
-                    "aria-expanded",
-                    "false"
-                );
-            }
-        }
-    );
+    });
 }
 
 
@@ -908,12 +823,9 @@ if (fandomSearch) {
 // --------------------------------------------------
 
 if (clearFandomFilter) {
-    clearFandomFilter.addEventListener(
-        "click",
-        function () {
-            clearFandomSelection();
-        }
-    );
+    clearFandomFilter.addEventListener("click", function () {
+        clearFandomSelection();
+    });
 }
 
 
@@ -922,12 +834,9 @@ if (clearFandomFilter) {
 // --------------------------------------------------
 
 if (loadMoreButton) {
-    loadMoreButton.addEventListener(
-        "click",
-        function () {
-            loadUsers(false);
-        }
-    );
+    loadMoreButton.addEventListener("click", function () {
+        loadUsers(false);
+    });
 }
 
 
@@ -936,20 +845,16 @@ if (loadMoreButton) {
 // --------------------------------------------------
 
 if (backToProfile) {
-    backToProfile.addEventListener(
-        "click",
-        async function () {
-            const user = await getCurrentUser();
+    backToProfile.addEventListener("click", async function () {
+        const user = await getCurrentUser();
 
-            if (user) {
-                window.location.href =
-                    `users-profile.html?id=${encodeURIComponent(user.id)}`;
-            } else {
-                window.location.href =
-                    "indexter.html";
-            }
+        if (user) {
+            window.location.href =
+                `users-profile.html?id=${encodeURIComponent(user.id)}`;
+        } else {
+            window.location.href = "indexter.html";
         }
-    );
+    });
 }
 
 
@@ -961,11 +866,8 @@ async function startDiscover() {
     currentUser = await getCurrentUser();
 
     await loadBlockedUsers();
-
     await loadCurrentUserFos();
-
     await loadFandoms();
-
     await loadUsers(true);
 }
 
