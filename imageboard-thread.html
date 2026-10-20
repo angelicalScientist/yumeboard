@@ -18,21 +18,21 @@
         }
     </script>
 
-    <script src="font-switcher.js"></script>
+    <script src="./font-switcher.js"></script>
 
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="style-dark.css">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./style-dark.css">
 </head>
 
 <body>
     <header class="site-header">
         <a
-            href="dashboard.html"
+            href="./dashboard.html"
             class="site-logo-link"
             aria-label="Go to Yumeboard's dashboard"
         >
             <img
-                src="logotype.png"
+                src="./logotype.png"
                 alt="Yumeboard"
                 class="site-logo"
             >
@@ -47,13 +47,13 @@
 
     <footer class="site-footer">
         <div class="site-footer-links">
-            <a href="terms.html">Terms of Service</a>
+            <a href="./terms.html">Terms of Service</a>
             <span aria-hidden="true">♡</span>
-            <a href="privacy.html">Privacy Policy</a>
+            <a href="./privacy.html">Privacy Policy</a>
             <span aria-hidden="true">♡</span>
-            <a href="guidelines.html">Community Guidelines</a>
+            <a href="./guidelines.html">Community Guidelines</a>
             <span aria-hidden="true">♡</span>
-            <a href="contact.html">Contact</a>
+            <a href="./contact.html">Contact</a>
         </div>
 
         <p class="site-footer-copy">
@@ -61,17 +61,19 @@
         </p>
     </footer>
 
-    <!-- Supabase -->
+    <!-- Supabase library and client initialization -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase.js"></script>
-    <script src="theme.js"></script>
+    <script src="./theme.js"></script>
 
     <!-- Markdown rendering and HTML sanitization -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 
-    <!-- Thread rendering and replies -->
+    <!-- Shared appreciation buttons: load before the thread renderer -->
     <script src="./yumeboard-likes.js"></script>
+
+    <!-- Thread rendering, replies, reports, and other thread features -->
     <script src="./imageboard-thread.js"></script>
 </body>
 </html>

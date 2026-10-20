@@ -1,339 +1,352 @@
 
 (() => {
-    "use strict";
+  "use strict";
 
-    const client = window.supabaseClient;
+  const LIKE_TYPES = {
+    gallery: {
+      table: "gallery_item_likes",
+      column: "gallery_item_id",
+      statsFunction: "get_gallery_item_like_stats",
+      label: "gallery artwork"
+    },
+    thread: {
+      table: "thread_likes",
+      column: "thread_id",
+      statsFunction: "get_thread_like_stats",
+      label: "thread"
+    },
+    post: {
+      table: "post_likes",
+      column: "post_id",
+      statsFunction: "get_post_like_stats",
+      label: "post"
+    }
+  };
 
-    const LIKE_TYPES = {
-        gallery: {
-            table: "gallery_item_likes",
-            column: "gallery_item_id",
-            label: "gallery artwork"
-        },
-        thread: {
-            table: "thread_likes",
-            column: "thread_id",
-            label: "thread"
-        },
-        post: {
-            table: "post_likes",
-            column: "post_id",
-            label: "post"
+  const BUTTON_TEXT = "⸜(｡˃ ᵕ ˂ )⸝♡";
+  const busy = new Set();
+  let initialized = false;
+
+  // Resolve the client when needed so the script can load before
+  // the Supabase client is initialized, provided initialization
+  // finishes before the first like operation.
+  function getClient() {
+    return window.supabaseClient || null;
+  }
+
+  function escapeAttribute(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function ensureStyles() {
+    if (document.getElementById("yb-like-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "yb-like-styles";
+    style.textContent = `
+      .yb-like-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.4rem 0.7rem;
+        border: 1px solid var(--yb-like-border, #e7b9d2);
+        border-radius: 999px;
+        background: var(--yb-like-background, transparent);
+        color: var(--yb-like-color, inherit);
+        font: inherit;
+        line-height: 1.4;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease,
+          border-color 150ms ease,
+          transform 150ms ease;
+      }
+
+      .yb-like-button:hover:not(:disabled) {
+        background: var(--yb-like-hover, #fff0f7);
+        border-color: var(--yb-like-hover-border, #df91bb);
+      }
+
+      .yb-like-button:active:not(:disabled) {
+        transform: scale(0.97);
+      }
+
+      .yb-like-button[aria-pressed="true"] {
+        background: var(--yb-like-active-background, #ffe4f1);
+        border-color: var(--yb-like-active-border, #df91bb);
+      }
+
+      .yb-like-button:disabled {
+        cursor: default;
+        opacity: 0.7;
+      }
+
+      .yb-like-button:focus-visible {
+        outline: 2px solid var(--yb-like-focus, #d86da5);
+        outline-offset: 3px;
+      }
+
+      .yb-like-button-text,
+      .yb-like-count {
+        display: inline-block;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .yb-like-button {
+          transition: none;
         }
-    };
+      }
+    `;
 
-    const BUTTON_TEXT = "⸜(｡˃ ᵕ ˂ )⸝♡";
-    const busy = new Set();
+    document.head.appendChild(style);
+  }
 
-    function escapeAttribute(value) {
-        return String(value ?? "").replace(/[&<>"']/g, char => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#039;"
-        })[char]);
+  function buttonMarkup(type, id) {
+    if (!LIKE_TYPES[type] || !id) {
+      console.error("[Yumeboard] Invalid like button type or ID.");
+      return "";
     }
 
-    function ensureStyles() {
-        if (document.getElementById("yumeboardLikesStyles")) return;
+    const safeType = escapeAttribute(type);
+    const safeId = escapeAttribute(id);
+    const label = escapeAttribute(BUTTON_TEXT);
 
-        const style = document.createElement("style");
-        style.id = "yumeboardLikesStyles";
+    return `
+      <button
+        type="button"
+        class="yb-like-button"
+        data-yb-like-type="${safeType}"
+        data-yb-like-id="${safeId}"
+        aria-pressed="false"
+        aria-label="Appreciate this ${escapeAttribute(LIKE_TYPES[type].label)}"
+        title="Send appreciation"
+        disabled
+      >
+        <span class="yb-like-button-text">${label}</span>
+        <span class="yb-like-count" aria-label="Appreciation count">0</span>
+      </button>
+    `;
+  }
 
-        style.textContent = `
-            .yb-like-button {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.45rem;
-                padding: 0.4rem 0.7rem;
-                border: 1px solid var(--border-color, #d8c8df);
-                border-radius: 999px;
-                background: var(--card-background, transparent);
-                color: inherit;
-                font: inherit;
-                font-size: 0.9rem;
-                line-height: 1.4;
-                cursor: pointer;
-                transition:
-                    background-color 0.15s ease,
-                    transform 0.15s ease,
-                    border-color 0.15s ease;
-            }
+  function getButtons(root = document) {
+    const buttons = [];
 
-            .yb-like-button:hover:not(:disabled) {
-                transform: translateY(-1px);
-                border-color: #c49bd8;
-            }
-
-            .yb-like-button[aria-pressed="true"] {
-                background: rgba(196, 155, 216, 0.2);
-                border-color: #b48ead;
-            }
-
-            .yb-like-button:disabled {
-                cursor: wait;
-                opacity: 0.65;
-            }
-
-            .yb-like-count {
-                min-width: 1ch;
-                font-variant-numeric: tabular-nums;
-            }
-
-            .yb-like-message {
-                font-size: 0.85rem;
-                opacity: 0.8;
-            }
-        `;
-
-        document.head.appendChild(style);
+    if (
+      root instanceof Element &&
+      root.matches(".yb-like-button")
+    ) {
+      buttons.push(root);
     }
 
-    function buttonMarkup(type, id) {
-        if (!LIKE_TYPES[type] || !id) return "";
-
-        return `
-            <button
-                type="button"
-                class="yb-like-button"
-                data-yb-like-type="${escapeAttribute(type)}"
-                data-yb-like-id="${escapeAttribute(id)}"
-                aria-pressed="false"
-                aria-label="Like this ${LIKE_TYPES[type].label}"
-                title="Show appreciation"
-            >
-                <span class="yb-like-label">${BUTTON_TEXT}</span>
-                <span class="yb-like-count" aria-label="Like count">0</span>
-            </button>
-        `;
+    if (root && typeof root.querySelectorAll === "function") {
+      buttons.push(...root.querySelectorAll(".yb-like-button"));
     }
 
-    function getButtons(root = document) {
-        return Array.from(
-            root.querySelectorAll(
-                ".yb-like-button[data-yb-like-type][data-yb-like-id]"
-            )
+    return buttons;
+  }
+
+  function setButtonState(button, count, liked) {
+    const countElement = button.querySelector(".yb-like-count");
+    if (countElement) {
+      countElement.textContent = String(count);
+    }
+
+    button.dataset.ybLiked = liked ? "true" : "false";
+    button.setAttribute("aria-pressed", liked ? "true" : "false");
+
+    const type = button.dataset.ybLikeType;
+    const config = LIKE_TYPES[type];
+
+    if (config) {
+      button.setAttribute(
+        "aria-label",
+        `${liked ? "Remove appreciation from" : "Appreciate this"} ${config.label}. ${count} appreciation${count === 1 ? "" : "s"}.`
+      );
+    }
+  }
+
+  async function refresh(root = document) {
+    const client = getClient();
+
+    if (!client) {
+      console.error(
+        "[Yumeboard] Supabase client is unavailable. Make sure window.supabaseClient is initialized."
+      );
+      return;
+    }
+
+    const buttons = getButtons(root);
+    const buttonsByType = new Map();
+
+    for (const button of buttons) {
+      const type = button.dataset.ybLikeType;
+      const id = button.dataset.ybLikeId;
+
+      if (!LIKE_TYPES[type] || !id) continue;
+
+      if (!buttonsByType.has(type)) {
+        buttonsByType.set(type, []);
+      }
+
+      buttonsByType.get(type).push(button);
+    }
+
+    for (const [type, typeButtons] of buttonsByType) {
+      const config = LIKE_TYPES[type];
+      const ids = [...new Set(
+        typeButtons.map(button => button.dataset.ybLikeId)
+      )];
+
+      try {
+        const { data, error } = await client.rpc(
+          config.statsFunction,
+          { p_ids: ids }
         );
-    }
 
-    function setButtonState(button, count, liked) {
-        button.querySelector(".yb-like-count").textContent =
-            String(count);
+        if (error) throw error;
 
-        button.setAttribute("aria-pressed", String(liked));
-
-        const type = button.dataset.ybLikeType;
-        const label = LIKE_TYPES[type]?.label || "item";
-
-        button.setAttribute(
-            "aria-label",
-            `${liked ? "Unlike" : "Like"} this ${label}. ${count} likes.`
+        const statsById = new Map(
+          (data || []).map(row => [
+            String(row.target_id),
+            row
+          ])
         );
-    }
 
-    async function refresh(root = document) {
-        if (!client) return;
+        for (const button of typeButtons) {
+          if (!button.isConnected || busy.has(button)) continue;
 
-        const buttons = getButtons(root);
-        if (!buttons.length) return;
+          const id = button.dataset.ybLikeId;
+          const stats = statsById.get(String(id));
 
-        let user = null;
+          // The RPC only returns targets the viewer is allowed to see.
+          if (!stats) {
+            button.disabled = true;
+            continue;
+          }
 
-        try {
-            const { data, error } = await client.auth.getUser();
+          setButtonState(
+            button,
+            Number(stats.like_count) || 0,
+            stats.liked_by_me === true
+          );
 
-            if (error) {
-                console.warn("[Yumeboard Likes] Could not get user.", error);
-            } else {
-                user = data?.user || null;
-            }
-        } catch (error) {
-            console.warn("[Yumeboard Likes] Auth check failed.", error);
+          button.disabled = false;
         }
+      } catch (error) {
+        console.error(
+          `[Yumeboard] Could not refresh ${config.label} appreciation counts:`,
+          error
+        );
+      }
+    }
+  }
 
-        for (const [type, config] of Object.entries(LIKE_TYPES)) {
-            const typeButtons = buttons.filter(
-                button => button.dataset.ybLikeType === type
-            );
+  async function toggle(button) {
+    if (!button || busy.has(button)) return;
 
-            if (!typeButtons.length) continue;
+    const type = button.dataset.ybLikeType;
+    const id = button.dataset.ybLikeId;
+    const config = LIKE_TYPES[type];
 
-            const ids = [
-                ...new Set(typeButtons.map(
-                    button => button.dataset.ybLikeId
-                ))
-            ];
+    if (!config || !id) return;
 
-            try {
-                const { data, error } = await client
-                    .from(config.table)
-                    .select(`${config.column}, user_id`)
-                    .in(config.column, ids);
+    const client = getClient();
 
-                if (error) throw error;
+    if (!client) {
+      console.error("[Yumeboard] Supabase client is unavailable.");
+      return;
+    }
 
-                const counts = new Map();
-                const likedIds = new Set();
+    busy.add(button);
+    button.disabled = true;
 
-                for (const row of data || []) {
-                    const id = row[config.column];
+    try {
+      const { data: userResult, error: userError } =
+        await client.auth.getUser();
 
-                    counts.set(id, (counts.get(id) || 0) + 1);
+      if (userError) throw userError;
 
-                    if (user && row.user_id === user.id) {
-                        likedIds.add(id);
-                    }
-                }
+      const user = userResult && userResult.user;
 
-                for (const button of typeButtons) {
-                    // Don't overwrite a button while its toggle is in flight.
-                    if (busy.has(button)) continue;
+      if (!user) {
+        window.alert("Please sign in to send appreciation. ♡");
+        return;
+      }
 
-                    const id = button.dataset.ybLikeId;
+      const alreadyLiked = button.dataset.ybLiked === "true";
 
-                    setButtonState(
-                        button,
-                        counts.get(id) || 0,
-                        likedIds.has(id)
-                    );
+      if (alreadyLiked) {
+        const { error } = await client
+          .from(config.table)
+          .delete()
+          .eq(config.column, id)
+          .eq("user_id", user.id);
 
-                    button.disabled = false;
-                }
-            } catch (error) {
-                console.error(
-                    `[Yumeboard Likes] Could not load ${type} likes.`,
-                    error
-                );
+        if (error) throw error;
+      } else {
+        const insertValues = {
+          [config.column]: id,
+          user_id: user.id
+        };
 
-                for (const button of typeButtons) {
-                    button.disabled = true;
-                    button.title = "Likes could not be loaded. Please refresh.";
-                }
-            }
+        const { error } = await client
+          .from(config.table)
+          .insert(insertValues);
+
+        // A duplicate like is harmless: the primary key prevents
+        // the same account from liking the same item twice.
+        if (error && error.code !== "23505") {
+          throw error;
         }
+      }
+    } catch (error) {
+      console.error("[Yumeboard] Could not update appreciation:", error);
+      window.alert("Sorry, appreciation couldn't be updated. Please try again.");
+    } finally {
+      busy.delete(button);
+
+      // Refresh after the operation, even if it failed, so the
+      // displayed state can recover from a stale button state.
+      await refresh(document);
     }
+  }
 
-    async function toggle(button) {
-        if (!client || busy.has(button)) return;
+  function setup() {
+    if (initialized) return;
+    initialized = true;
 
-        const type = button.dataset.ybLikeType;
-        const id = button.dataset.ybLikeId;
-        const config = LIKE_TYPES[type];
+    ensureStyles();
 
-        if (!config || !id) return;
+    document.addEventListener("click", event => {
+      const button = event.target.closest(".yb-like-button");
 
-        busy.add(button);
-        button.disabled = true;
+      if (!button || !document.contains(button)) return;
 
-        const originalText = button.querySelector(".yb-like-label");
-        const previousLabel = originalText?.textContent;
+      event.preventDefault();
+      void toggle(button);
+    });
 
-        try {
-            const { data, error: authError } = await client.auth.getUser();
+    // Refresh only on setup and when a page renderer explicitly
+    // calls YumeboardLikes.refresh(container). No mutation observer:
+    // updating the count must not trigger another refresh.
+    void refresh(document);
+  }
 
-            if (authError || !data?.user) {
-                window.alert("Please log in to leave some appreciation. ♡");
-                return;
-            }
+  window.YumeboardLikes = {
+    buttonMarkup,
+    refresh,
+    setup
+  };
 
-            const userId = data.user.id;
-            const alreadyLiked =
-                button.getAttribute("aria-pressed") === "true";
-
-            if (alreadyLiked) {
-                const { error } = await client
-                    .from(config.table)
-                    .delete()
-                    .eq(config.column, id)
-                    .eq("user_id", userId);
-
-                if (error) throw error;
-            } else {
-                const { error } = await client
-                    .from(config.table)
-                    .insert({
-                        [config.column]: id,
-                        user_id: userId
-                    });
-
-                if (error) {
-                    // A duplicate can occur if two requests overlap.
-                    // The primary key prevents duplicate likes.
-                    if (error.code !== "23505") throw error;
-                }
-            }
-
-            await refresh(document);
-        } catch (error) {
-            console.error("[Yumeboard Likes] Could not toggle like.", error);
-
-            window.alert(
-                "Couldn't update your like. Please try again. ♡"
-            );
-
-            await refresh(document);
-        } finally {
-            busy.delete(button);
-            button.disabled = false;
-
-            if (originalText && previousLabel) {
-                originalText.textContent = BUTTON_TEXT;
-            }
-        }
-    }
-
-    function setup() {
-        ensureStyles();
-
-        document.addEventListener("click", event => {
-            const target = event.target;
-
-            if (!(target instanceof Element)) return;
-
-            const button = target.closest(".yb-like-button");
-
-            if (!button) return;
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            toggle(button);
-        });
-
-        // Refresh likes when the page's gallery/thread content changes.
-        // A short delay batches multiple DOM changes into one refresh.
-        let refreshTimer = null;
-
-        const observer = new MutationObserver(() => {
-            if (refreshTimer !== null) {
-                window.clearTimeout(refreshTimer);
-            }
-
-            refreshTimer = window.setTimeout(() => {
-                refreshTimer = null;
-                refresh(document);
-            }, 150);
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        refresh(document);
-    }
-
-    window.YumeboardLikes = {
-        buttonMarkup,
-        refresh,
-        setup
-    };
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", setup, { once: true });
-    } else {
-        setup();
-    }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup, { once: true });
+  } else {
+    setup();
+  }
 })();
