@@ -88,9 +88,7 @@
     function setReplyMessage(message) {
         const element = getReplyMessage();
 
-        if (element) {
-            element.textContent = message;
-        }
+        if (element) element.textContent = message;
     }
 
     function setSubmitButtonState(disabled, text) {
@@ -102,6 +100,126 @@
 
         button.disabled = disabled;
         button.textContent = text;
+    }
+
+    // --------------------------------------------------
+    // Image optimization
+    // JPEG and PNG only; GIF animations are preserved.
+    // --------------------------------------------------
+
+    async function optimizeImageBeforeUpload(file) {
+        if (
+            !file ||
+            !["image/jpeg", "image/png"].includes(file.type)
+        ) {
+            return file;
+        }
+
+
+        if (file.size <= 500 * 1024) {
+            return file;
+        }
+
+        let bitmap;
+
+        try {
+            if (typeof createImageBitmap !== "function") {
+                return file;
+            }
+
+            bitmap = await createImageBitmap(file);
+
+            const maxDimension = 1920;
+            const longestSide = Math.max(
+                bitmap.width,
+                bitmap.height
+            );
+
+            const scale = Math.min(
+                1,
+                maxDimension / longestSide
+            );
+
+            const width = Math.max(
+                1,
+                Math.round(bitmap.width * scale)
+            );
+
+            const height = Math.max(
+                1,
+                Math.round(bitmap.height * scale)
+            );
+
+            // If it's already reasonably small and within
+            // the dimensions limit, leave it alone.
+            if (
+                width === bitmap.width &&
+                height === bitmap.height &&
+                file.size <= 1024 * 1024
+            ) {
+                return file;
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            const context = canvas.getContext("2d");
+
+            if (!context) return file;
+
+            context.drawImage(
+                bitmap,
+                0,
+                0,
+                width,
+                height
+            );
+
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(
+                    resolve,
+                    "image/webp",
+                    0.82
+                );
+            });
+
+            // Some browsers may not support WebP encoding.
+            // Never replace the original with a larger result.
+            if (!blob || blob.size >= file.size) {
+                return file;
+            }
+
+            const baseName = file.name.replace(/\.[^.]+$/, "");
+
+            const optimizedFile = new File(
+                [blob],
+                `${baseName || "image"}.webp`,
+                {
+                    type: "image/webp",
+                    lastModified: Date.now()
+                }
+            );
+
+            console.info("[Yumeboard] Image optimized", {
+                originalKB: Math.round(file.size / 1024),
+                optimizedKB: Math.round(optimizedFile.size / 1024),
+                savedPercent: Math.round(
+                    (1 - optimizedFile.size / file.size) * 100
+                )
+            });
+
+            return optimizedFile;
+        } catch (error) {
+            console.warn(
+                "[Yumeboard] Image optimization failed; using original.",
+                error
+            );
+
+            return file;
+        } finally {
+            bitmap?.close();
+        }
     }
 
     // --------------------------------------------------
@@ -288,9 +406,7 @@
                     start(source) {
                         const index = source.indexOf(">>");
 
-                        return index === -1
-                            ? undefined
-                            : index;
+                        return index === -1 ? undefined : index;
                     },
 
                     tokenizer(source) {
@@ -332,9 +448,7 @@
                     start(source) {
                         const index = source.indexOf("||");
 
-                        return index === -1
-                            ? undefined
-                            : index;
+                        return index === -1 ? undefined : index;
                     },
 
                     tokenizer(source) {
@@ -367,8 +481,6 @@
         return true;
     }
 
-    // FIX: Normalize newlines and explicitly preserve single
-    // line breaks when converting Markdown to HTML.
     function formatPostContent(content) {
         if (content == null || content === "") {
             return "";
@@ -396,10 +508,7 @@
                 }
             });
         } catch (error) {
-            console.error(
-                "Markdown rendering error:",
-                error
-            );
+            console.error("Markdown rendering error:", error);
 
             return escapeHtml(text).replace(/\n/g, "<br>\n");
         }
@@ -436,14 +545,9 @@
                 ? value.length
                 : lineEndIndex;
 
-            const selectionEnd = selected
-                ? end
-                : lineEnd;
+            const selectionEnd = selected ? end : lineEnd;
 
-            const text = value.slice(
-                lineStart,
-                selectionEnd
-            );
+            const text = value.slice(lineStart, selectionEnd);
 
             const quoted = text
                 .split("\n")
@@ -558,9 +662,7 @@
                 return;
             }
 
-            const link = target.closest(
-                "[data-post-reference]"
-            );
+            const link = target.closest("[data-post-reference]");
 
             if (!link) return;
 
@@ -576,9 +678,7 @@
                 block: "start"
             });
 
-            post.classList.add(
-                "thread-post-reference-highlight"
-            );
+            post.classList.add("thread-post-reference-highlight");
 
             window.history.replaceState(
                 null,
@@ -594,18 +694,13 @@
         });
 
         document.addEventListener("keydown", event => {
-            if (
-                event.key !== "Enter" &&
-                event.key !== " "
-            ) {
+            if (event.key !== "Enter" && event.key !== " ") {
                 return;
             }
 
             if (!(event.target instanceof Element)) return;
 
-            const spoiler = event.target.closest(
-                ".thread-spoiler"
-            );
+            const spoiler = event.target.closest(".thread-spoiler");
 
             if (!spoiler) return;
 
@@ -902,10 +997,7 @@
 
             if (postsError) {
                 console.error("Posts loading error:", postsError);
-
-                renderError(
-                    "Unable to load the posts in this thread."
-                );
+                renderError("Unable to load the posts in this thread.");
                 return;
             }
 
@@ -940,15 +1032,11 @@
         const statuses = [];
 
         if (thread.is_locked) {
-            statuses.push(
-                '<span class="thread-status">Locked</span>'
-            );
+            statuses.push('<span class="thread-status">Locked</span>');
         }
 
         if (thread.is_archived) {
-            statuses.push(
-                '<span class="thread-status">Archived</span>'
-            );
+            statuses.push('<span class="thread-status">Archived</span>');
         }
 
         threadPage.innerHTML = `
@@ -1192,6 +1280,7 @@
 
                     <p class="upload-help">
                         Images must be 10 MB or smaller.
+                        Large JPEG and PNG images may be optimized before upload.
                     </p>
 
                     <div id="replyImagePreview" class="image-preview" hidden></div>
@@ -1307,10 +1396,9 @@
             return;
         }
 
-        // Do not trim the content itself: leading/trailing newlines
-        // and intentional line breaks should be preserved.
         const content = contentInput.value;
-        const file = imageInput.files?.[0] || null;
+        let file = imageInput.files?.[0] || null;
+        const originalFileName = file?.name || null;
         const isAnonymous = anonymousInput.checked;
 
         if (!content.trim() && !file) {
@@ -1339,6 +1427,22 @@
         let failureMessage = null;
 
         try {
+            // Optimize inside the try/finally block so the form's
+            // submitting state is always reset, even if processing fails.
+            if (file) {
+                message.textContent = "Optimizing image...";
+
+                file = await optimizeImageBeforeUpload(file);
+
+                if (file.size > MAX_IMAGE_SIZE) {
+                    throw new Error(
+                        "The image is still larger than 10 MB."
+                    );
+                }
+            }
+
+            message.textContent = "Posting reply...";
+
             const {
                 data: { user } = {},
                 error: userError
@@ -1398,6 +1502,8 @@
                     `${postId}.${extension}`
                 ].join("/");
 
+                message.textContent = "Uploading image...";
+
                 const { error: uploadError } = await client.storage
                     .from(STORAGE_BUCKET)
                     .upload(storagePath, file, {
@@ -1418,7 +1524,7 @@
                     .insert({
                         post_id: postId,
                         storage_path: storagePath,
-                        alt_text: file.name
+                        alt_text: originalFileName || file.name
                     });
 
                 if (imageInsertError) {
