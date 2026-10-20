@@ -543,14 +543,14 @@ button:focus-visible {
     border-radius: 15px;
 }
 
-/* Grid for side F/Os */
+/* Grid for other F/Os */
 .side-fos-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
 }
 
-/* Individual side F/O card */
+/* Individual other F/O card */
 .side-fo {
     min-width: 0;
     padding: 15px;
@@ -3317,7 +3317,7 @@ button:focus-visible {
     }
 
     /* -----------------------------------------------------
-       SIDE F/O CARDS
+       OTHER F/O CARDS
        ----------------------------------------------------- */
 
     .side-fos-list {

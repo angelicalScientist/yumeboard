@@ -76,7 +76,7 @@ async function loadFos(profileId) {
 
 
     // ==========================
-    // SIDE F/Os
+    // Other F/Os
     // ==========================
 
     sideFosList.innerHTML = "";
@@ -86,7 +86,7 @@ async function loadFos(profileId) {
 
         sideFosList.innerHTML = `
             <p>
-                No side F/Os yet! ♡
+                No other F/Os yet! ♡
             </p>
         `;
 
