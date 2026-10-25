@@ -3006,25 +3006,37 @@ async function performArtworkDelete(
 
 ) {
 
-    if (
+   if (storagePath) {
+    try {
+        if (
+            artwork.image_url &&
+            artwork.image_url.includes(
+                "/storage/v1/object/public/"
+            )
+        ) {
+            const { error: storageError } = await client
+                .storage
+                .from("gallery")
+                .remove([storagePath]);
 
-        !currentUser ||
-
-        !isGalleryOwner ||
-
-        String(artwork.user_id) !==
-
-            String(currentUser.id)
-
-    ) {
-
-        throw new Error(
-
-            "You don't own this artwork."
-
-        );
-
-    }
+            if (storageError) {
+                throw storageError;
+            }
+        } else {
+            await deleteImageFromR2(
+                client,
+                "gallery",
+                storagePath
+            );
+        }
+    } catch (storageError) {
+        throw new Error(
+            `The image couldn't be removed from storage: ${
+                storageError?.message || "Unknown error"
+            }`
+        );
+    }
+}
 
     const storagePath =
 

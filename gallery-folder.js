@@ -1231,14 +1231,35 @@ async function performArtworkDelete(artwork) {
         null;
 
     if (storagePath) {
-        const { error: storageError } = await client
-            .storage
-            .from("gallery")
-            .remove([storagePath]);
+        try {
+            if (
+                artwork.image_url &&
+                artwork.image_url.includes(
+                    "/storage/v1/object/public/"
+                )
+            ) {
+                // Legacy image: delete from Supabase Storage.
+                const { error: storageError } = await client
+                    .storage
+                    .from("gallery")
+                    .remove([storagePath]);
 
-        if (storageError) {
+                if (storageError) {
+                    throw storageError;
+                }
+            } else {
+                // New image: delete from R2 through the Worker.
+                await deleteImageFromR2(
+                    client,
+                    "gallery",
+                    storagePath
+                );
+            }
+        } catch (storageError) {
             throw new Error(
-                `The image couldn't be removed from storage: ${storageError.message}`
+                `The image couldn't be removed from storage: ${
+                    storageError?.message || "Unknown error"
+                }`
             );
         }
     }
@@ -1530,25 +1551,14 @@ async function uploadArtwork(event) {
         storagePath =
             `${currentUser.id}/${uniqueId}.${extension}`;
 
-        const { error: uploadStorageError } = await client
-            .storage
-            .from("gallery")
-            .upload(storagePath, file, {
-                cacheControl: "3600",
-                contentType: file.type,
-                upsert: false
-            });
+        const uploadedImage = await uploadImageToR2(
+            client,
+            "gallery",
+            storagePath,
+            file
+        );
 
-        if (uploadStorageError) {
-            throw uploadStorageError;
-        }
-
-        const { data: publicUrlData } = client
-            .storage
-            .from("gallery")
-            .getPublicUrl(storagePath);
-
-        const imageUrl = publicUrlData?.publicUrl;
+        const imageUrl = uploadedImage.url;
 
         if (!imageUrl) {
             throw new Error(
@@ -1630,14 +1640,14 @@ async function uploadArtwork(event) {
 
         if (storagePath && !createdArtworkId) {
             try {
-                await client
-                    .storage
-                    .from("gallery")
-                    .remove([storagePath]);
-
+                await deleteImageFromR2(
+                    client,
+                    "gallery",
+                    storagePath
+                );
             } catch (cleanupError) {
                 console.error(
-                    "GALLERY FOLDER: storage cleanup error:",
+                    "GALLERY FOLDER: R2 cleanup error:",
                     cleanupError
                 );
             }

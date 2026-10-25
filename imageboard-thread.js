@@ -58,13 +58,23 @@
     }
 
     function getImageUrl(storagePath) {
-        if (!storagePath || !client) return null;
+        if (!storagePath) {
+            return null;
+        }
 
-        const { data } = client.storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(storagePath);
+        try {
+            return getR2ImageUrl(
+                STORAGE_BUCKET,
+                storagePath
+            );
+        } catch (error) {
+            console.error(
+                "Could not create R2 image URL:",
+                error
+            );
 
-        return data?.publicUrl || null;
+            return null;
+        }
     }
 
     function renderError(message) {
@@ -1557,16 +1567,18 @@
                 ].join("/");
 
                 message.textContent = "Uploading image...";
-
-                const { error: uploadError } = await client.storage
-                    .from(STORAGE_BUCKET)
-                    .upload(storagePath, file, {
-                        upsert: false,
-                        contentType: file.type
-                    });
-
-                if (uploadError) {
-                    console.error("Image upload error:", uploadError);
+                try {
+                    await uploadImageToR2(
+                        client,
+                        STORAGE_BUCKET,
+                        storagePath,
+                        file
+                    );
+                } catch (uploadError) {
+                    console.error(
+                        "Image upload error:",
+                        uploadError
+                    );
 
                     throw new Error(
                         "Your reply was posted, but the image upload failed. Your reply is still saved."

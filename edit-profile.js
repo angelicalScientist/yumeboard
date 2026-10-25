@@ -447,68 +447,57 @@ async function uploadProfileImage(
         throw error;
     }
 
-    const {
-        data: publicUrlData
-    } = supabaseClient
-        .storage
-        .from(
-            PROFILE_IMAGE_BUCKET
-        )
-        .getPublicUrl(
-            data.path
+    try {
+        return await uploadImageToR2(
+            supabaseClient,
+            PROFILE_IMAGE_BUCKET,
+            filePath,
+            file
+        );
+    } catch (error) {
+        console.error(
+            "PROFILE IMAGE R2 UPLOAD ERROR:",
+            error
         );
 
-    if (
-        !publicUrlData ||
-        !publicUrlData.publicUrl
-    ) {
-
-        throw new Error(
-            "The image uploaded, but its public URL could not be created."
-        );
+        throw error;
     }
-
-    return {
-        url:
-            publicUrlData.publicUrl,
-
-        path:
-            data.path
-    };
 }
-
 
 // ==============================
 // CHECK WHETHER URL IS ONE OF
 // OUR PROFILE IMAGE FILES
 // ==============================
 
-function getProfileImageStoragePath(
-    url
-) {
-
+function getProfileImageStoragePath(url) {
     if (!url) {
         return null;
     }
 
-    const marker =
-        `/storage/v1/object/public/${PROFILE_IMAGE_BUCKET}/`;
+    const markers = [
+        `/storage/v1/object/public/${PROFILE_IMAGE_BUCKET}/`,
+        `/${PROFILE_IMAGE_BUCKET}/`
+    ];
 
-    const markerIndex =
-        url.indexOf(marker);
+    for (const marker of markers) {
+        const markerIndex = url.indexOf(marker);
 
-    if (
-        markerIndex === -1
-    ) {
-        return null;
+        if (markerIndex === -1) {
+            continue;
+        }
+
+        const rawPath = url
+            .slice(markerIndex + marker.length)
+            .split(/[?#]/)[0];
+
+        try {
+            return decodeURIComponent(rawPath);
+        } catch {
+            return rawPath;
+        }
     }
 
-    return decodeURIComponent(
-        url.substring(
-            markerIndex +
-            marker.length
-        )
-    );
+    return null;
 }
 
 
@@ -516,39 +505,41 @@ function getProfileImageStoragePath(
 // DELETE OLD PROFILE IMAGE
 // ==============================
 
-async function deleteOldProfileImage(
-    url
-) {
-
-    const path =
-        getProfileImageStoragePath(
-            url
-        );
-
-    /*
-     * External URLs are not ours,
-     * so there is nothing to delete.
-     */
-
-    if (!path) {
+async function deleteOldProfileImage(url) {
+    if (!url) {
         return;
     }
 
-    const {
-        error
-    } = await supabaseClient
-        .storage
-        .from(
-            PROFILE_IMAGE_BUCKET
-        )
-        .remove([
-            path
-        ]);
+    const storagePath = getProfileImageStoragePath(url);
 
-    if (error) {
+    if (!storagePath) {
+        console.warn(
+            "Could not determine profile image storage path:",
+            url
+        );
+        return;
+    }
 
+    try {
+        if (url.includes("/storage/v1/object/public/")) {
+            const { error } = await supabaseClient
+                .storage
+                .from(PROFILE_IMAGE_BUCKET)
+                .remove([storagePath]);
+
+            if (error) {
+                throw error;
+            }
+        } else {
+            await deleteImageFromR2(
+                supabaseClient,
+                PROFILE_IMAGE_BUCKET,
+                storagePath
+            );
+        }
+    } catch (error) {
         console.error(
-            "OLD PROFILE IMAGE DELETE ERROR:",
+            "PROFILE IMAGE DELETE ERROR:",
             error
         );
     }

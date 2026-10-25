@@ -551,15 +551,15 @@
                 "status"
             );
 
-            const { error: uploadError } = await client.storage
-                .from(STORAGE_BUCKET)
-                .upload(storagePath, file, {
-                    contentType: file.type,
-                    upsert: false
-                });
-
-            if (uploadError) {
-                fail("Uploading image to Storage", uploadError);
+            try {
+                await uploadImageToR2(
+                    client,
+                    STORAGE_BUCKET,
+                    storagePath,
+                    file
+                );
+            } catch (uploadError) {
+                fail("Uploading image to Cloudflare R2", uploadError);
             }
 
             // Stage 3: attach the uploaded image to the first post.
