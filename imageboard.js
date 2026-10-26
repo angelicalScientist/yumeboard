@@ -35,11 +35,19 @@
             return "";
         }
 
-        const { data } = client.storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(storagePath);
+        try {
+            return getR2ImageUrl(
+                STORAGE_BUCKET,
+                storagePath
+            );
+        } catch (error) {
+            console.error(
+                "Imageboard: could not create R2 image URL:",
+                error
+            );
 
-        return data?.publicUrl || "";
+            return "";
+        }
     }
 
     function getOpeningImage(thread) {
