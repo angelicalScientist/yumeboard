@@ -54,9 +54,8 @@ const GALLERY_REPORT_REASONS = [
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
-
-    await loadGallery();
-
+    bindGalleryButtons();
+    await loadGallery();
 });
 
 
