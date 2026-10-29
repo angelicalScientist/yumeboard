@@ -1180,7 +1180,6 @@ function createArtworkCard(artwork) {
 
         );
 
-    }
 }
     const image =
 
@@ -1525,6 +1524,7 @@ if (actions.children.length) {
     content.appendChild(actions);
 }
 
+
 if (
     window.YumeboardLikes &&
     typeof window.YumeboardLikes.buttonMarkup === "function"
@@ -1535,7 +1535,7 @@ if (
         window.YumeboardLikes.buttonMarkup("gallery", artwork.id);
 
     content.appendChild(likeContainer);
-
+}
 
 card.appendChild(content);
 
