@@ -1535,12 +1535,12 @@ if (
         window.YumeboardLikes.buttonMarkup("gallery", artwork.id);
 
     content.appendChild(likeContainer);
-}
+
 
 card.appendChild(content);
 
 return card;
-
+}
 
 
 
