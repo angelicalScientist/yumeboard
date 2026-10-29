@@ -53,11 +53,12 @@ const GALLERY_REPORT_REASONS = [
 
 // =========================================================
 
+
 document.addEventListener("DOMContentLoaded", async () => {
-
-    await loadGallery();
-
+    bindGalleryButtons();
+    await loadGallery();
 });
+
 
 
 
@@ -1180,7 +1181,7 @@ function createArtworkCard(artwork) {
         );
 
     }
-
+}
     const image =
 
         document.createElement(
@@ -4839,4 +4840,4 @@ window.galleryEditArtwork =
 
 window.galleryDeleteArtwork =
 
-    deleteArtwork;}
+    deleteArtwork;
