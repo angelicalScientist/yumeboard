@@ -54,8 +54,9 @@ const GALLERY_REPORT_REASONS = [
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
-    bindGalleryButtons();
-    await loadGallery();
+
+    await loadGallery();
+
 });
 
 
@@ -678,6 +679,113 @@ function renderFolders() {
 // CREATE FOLDER ELEMENT
 
 // =========================================================
+
+function bindGalleryButtons() {
+    const dialog = document.getElementById("folderDialog");
+    const form = document.getElementById("folderForm");
+    const nameInput = document.getElementById("folderName");
+    const errorBox = document.getElementById("folderDialogError");
+
+    function openNewFolderDialog() {
+        if (!currentUser || !isGalleryOwner) {
+            showStatus("Only the gallery owner can create folders.", true);
+            return;
+        }
+
+        editingFolder = null;
+
+        document.getElementById("folderDialogTitle").textContent = "📁 New Folder";
+        errorBox.hidden = true;
+        errorBox.textContent = "";
+        form.reset();
+
+        if (!dialog.open) dialog.showModal();
+    }
+
+    document.getElementById("newFolderButton")
+        ?.addEventListener("click", openNewFolderDialog);
+
+    document.getElementById("emptyNewFolderButton")
+        ?.addEventListener("click", openNewFolderDialog);
+
+    document.getElementById("refreshFoldersButton")
+        ?.addEventListener("click", async () => {
+            try {
+                clearStatus();
+                await loadGallery();
+                showStatus("Gallery refreshed! ♡");
+            } catch (error) {
+                console.error("GALLERY: refresh error:", error);
+                showStatus(`Couldn't refresh: ${error.message || "Unknown error"}`, true);
+            }
+        });
+
+    document.getElementById("folderCancelButton")
+        ?.addEventListener("click", () => dialog.close());
+
+    form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (!currentUser || !isGalleryOwner) {
+            errorBox.textContent = "Only the gallery owner can create folders.";
+            errorBox.hidden = false;
+            return;
+        }
+
+        const name = nameInput.value.trim();
+
+        if (!name) {
+            errorBox.textContent = "Please enter a folder name.";
+            errorBox.hidden = false;
+            nameInput.focus();
+            return;
+        }
+
+        try {
+            const saveButton = document.getElementById("folderSaveButton");
+            saveButton.disabled = true;
+            errorBox.hidden = true;
+
+            if (editingFolder) {
+                const { error } = await client
+                    .from("gallery_folders")
+                    .update({
+                        name,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq("id", editingFolder.id)
+                    .eq("user_id", currentUser.id);
+
+                if (error) throw error;
+            } else {
+                const { error } = await client
+                    .from("gallery_folders")
+                    .insert({
+                        user_id: currentUser.id,
+                        name
+                    });
+
+                if (error) throw error;
+            }
+
+            dialog.close();
+            form.reset();
+            editingFolder = null;
+
+            await loadGallery();
+            showStatus("Folder saved! ♡");
+        } catch (error) {
+            console.error("GALLERY: save folder error:", error);
+            errorBox.textContent =
+                `Couldn't save folder: ${error.message || "Unknown error"}`;
+            errorBox.hidden = false;
+        } finally {
+            const saveButton = document.getElementById("folderSaveButton");
+            if (saveButton) saveButton.disabled = false;
+        }
+    });
+}
+
 
 function createFolderElement(folder) {
 
